@@ -1,0 +1,23 @@
+# Local OS/editor files
+.DS_Store
+.idea/
+*.iml
+
+# Android and Gradle output
+.gradle/
+.kotlin/
+**/build/
+local.properties
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Local signing and environment files
+*.jks
+*.keystore
+.env
+.env.*
+
+# Raw design downloads; selected references live in docs/design/stitch/
+/stitch_rick_y_morty_showcase_app*/
+/docs/design/stitch-v1-notes.txt
