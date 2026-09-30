@@ -1,4 +1,4 @@
-**Status:** implemented, locally validated and accepted for publication. Remote CI validation pending.
+**Status:** implemented, validated locally and in GitHub Actions, accepted and archived.
 
 ## Why
 

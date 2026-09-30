@@ -1,6 +1,6 @@
 # Implementation backlog
 
-Status: product/design preparation complete; OpenSpec initialized. C01 is accepted and archived; C02 is accepted and locally validated; remote CI validation is pending. Remaining identifiers are queued tickets, not existing OpenSpec changes. Work advances after acceptance and human review. No time estimates are assigned.
+Status: product/design preparation complete; OpenSpec initialized. C01 is accepted and archived; C02 is accepted, validated locally and in CI, and archived. Remaining identifiers are queued tickets, not existing OpenSpec changes. Work advances after acceptance and human review. No time estimates are assigned.
 
 Move each ticket into its OpenSpec change when it is prepared, then replace its detailed entry here with a link. OpenSpec owns that change's tasks and evidence from then on. Retire this temporary file when the remaining queue has been migrated; do not maintain two copies. Product priorities live in [PRD](PRD.md), screen design in [UI/UX Definition](UI_UX.md), technical decisions in [ARCHITECTURE](ARCHITECTURE.md), and the shared process in [DEVELOPMENT](DEVELOPMENT.md).
 
@@ -25,7 +25,7 @@ These statuses describe completed planning, not a working Android application. N
 
 ### C02 — Shared quality checks
 
-**Accepted and locally validated; remote CI validation pending.** See the [proposal](../openspec/changes/shared-quality-checks/proposal.md), [acceptance scenarios](../openspec/changes/shared-quality-checks/specs/shared-quality-checks/spec.md), [design](../openspec/changes/shared-quality-checks/design.md) and [tasks](../openspec/changes/shared-quality-checks/tasks.md). OpenSpec owns the detailed scope and evidence.
+**Accepted, validated locally and in CI, and archived.** See the [proposal](../openspec/changes/archive/2026-09-30-shared-quality-checks/proposal.md), [acceptance scenarios](../openspec/changes/archive/2026-09-30-shared-quality-checks/specs/shared-quality-checks/spec.md), [design](../openspec/changes/archive/2026-09-30-shared-quality-checks/design.md) and [tasks](../openspec/changes/archive/2026-09-30-shared-quality-checks/tasks.md). OpenSpec owns the detailed scope and evidence.
 
 ### C03 — Character card and image loading
 

@@ -26,7 +26,7 @@ The tracked daemon criteria now select JDK 17, matching README and CI. The previ
 
 Working-tree hook checks can detect unstaged violations. Hook safety was validated in temporary clones: custom local/inherited hook protection, repeat installation, failure propagation, nested working directories and unchanged source/index. The actual pre-commit also passed its Gradle checks without changing source/index hashes. No auxiliary hook verification script or task is retained; installation remains available through `installGitHooks`.
 
-Remote CI has not run because this change has not been published. Product tests are not present; current JVM tasks have no source. Temporary failing fixtures validate gate propagation and are excluded from the project.
+The published Quality workflow passed on 2026-09-30. Product tests are not present; current JVM tasks have no source. Temporary failing fixtures validate gate propagation and are excluded from the project.
 
 ## Assistance and evidence
 
@@ -48,7 +48,7 @@ All agent Gradle commands used the managed `gradle-run` wrapper. A dedicated dia
 | Android compatibility check | `./gradlew :app:lintDebug`: passed after removing the redundant API 27-only `windowLightNavigationBar` item from the minSdk 26 base theme. `MainActivity` continues to set dark system-bar styling |
 | Hook installation and actual execution | `installGitHooks` passed after previous installation in a temporary clone. The actual installed pre-commit passed ktlint/Detekt; hashes confirmed no versionable source or index changes |
 | Complete gate after fixture removal | `qualityCheck --warning-mode all` passed in the isolated copy and real project on JDK 17. The project run processed 220 tasks: 27 executed, 12 from cache and 181 up-to-date. All five applicable Android lint tasks completed without errors; no product tests exist yet |
-| Workflow configuration | actionlint 1.7.12 passed after verifying its official archive checksum. Action pins were resolved to commit SHAs; the Gradle v5 annotated tag was dereferenced. Runner documentation confirms required Android SDK packages. No remote run was performed |
+| Workflow configuration | actionlint 1.7.12 passed after verifying its official archive checksum. Action pins were resolved to commit SHAs; the Gradle v5 annotated tag was dereferenced. Runner documentation confirms required Android SDK packages. The subsequent published run is recorded below |
 
 An initial formatter failure identified wrapping in the module list and was corrected. The first format probe also triggered Detekt's constant rule; replacing it with an unformatted constant isolated the formatter failure. Android Lint initially blocked the JVM-failure probe because of the real base-theme API mismatch; the source fix was checked before resuming the probe. No failing fixture or analyzer baseline is retained.
 
@@ -61,3 +61,5 @@ Final scope review makes Konsist mandatory in C05A after the initial Home/Detail
 Final validation: managed `gradle-run` asked “¿Pasa qualityCheck tras retirar la comprobación auxiliar de hooks?”; `./gradlew qualityCheck` passed with 219 tasks (7 executed, 212 up-to-date). The remaining gate still runs formatting, static analysis, Android lint, JVM test tasks and debug assembly. No product tests exist yet. The final diff and spec were reviewed before publication.
 
 The first remote run stopped before Gradle because `sdkmanager` was absent from PATH. CI now explicitly prepares pinned Android command-line tools through the setup action before installing the required SDK packages; it no longer relies on the runner exposing that command.
+
+Remote validation: [Quality run 36769336718](https://github.com/asensiodev/RickAndMortyCharacters/actions/runs/36769336718) passed on commit `a61fb9df2ffd8a948d39c3c04b33c1a6a7b69312` with Temurin 17 on Ubuntu 24.04. SDK preparation, `./gradlew qualityCheck` and report upload succeeded. C02 is accepted and archived; product tests remain absent until their owning capabilities are implemented.

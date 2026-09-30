@@ -24,7 +24,7 @@ Selected Stitch mockups for the planned native app. See [UI/UX Definition](docs/
 
 Home and details have separate feature modules. They share pure character-domain contracts, data access and a design system; the app composes navigation and dependencies. The six-module graph is defined in [ARCHITECTURE](docs/ARCHITECTURE.md).
 
-Presentation follows unidirectional data flow with ViewModel/StateFlow and explicit actions. ViewModels consume repository interfaces directly; use cases are introduced where business logic warrants them. The proposed stack includes Hilt, Retrofit/OkHttp, Coil 3, unit and instrumented tests. ktlint, Detekt, Android Lint and a GitHub Actions workflow are configured; remote CI validation is pending its first run. The foundation toolchain and setup are documented below; the remaining libraries and checks land in their corresponding changes.
+Presentation follows unidirectional data flow with ViewModel/StateFlow and explicit actions. ViewModels consume repository interfaces directly; use cases are introduced where business logic warrants them. The proposed stack includes Hilt, Retrofit/OkHttp, Coil 3, unit and instrumented tests. ktlint, Detekt, Android Lint and a GitHub Actions workflow are configured; the shared gate has passed in GitHub Actions. The foundation toolchain and setup are documented below; the remaining libraries and checks land in their corresponding changes.
 
 ## Development setup
 
@@ -64,7 +64,7 @@ The shell displays the resource-based application name in a native dark Material
 ./gradlew installGitHooks
 ```
 
-`qualityCheck` runs ktlint 1.8.0, Detekt 2.0.0-alpha.6, Android debug lint, JVM test tasks and debug assembly. Detekt uses its isolated CLI for source analysis without type resolution; the pinned alpha is build tooling only. Tool versions live in the catalogue. See [C02](openspec/changes/shared-quality-checks/design.md) for compatibility and executed validation.
+`qualityCheck` runs ktlint 1.8.0, Detekt 2.0.0-alpha.6, Android debug lint, JVM test tasks and debug assembly. Detekt uses its isolated CLI for source analysis without type resolution; the pinned alpha is build tooling only. Tool versions live in the catalogue. See [C02](openspec/changes/archive/2026-09-30-shared-quality-checks/design.md) for compatibility and executed validation.
 
 Install the hook explicitly once per clone. The pre-commit runs `ktlintCheck detekt` against working-tree source, including unstaged Kotlin changes. It never formats, stages or stashes files. Installation is repeatable and refuses to replace custom hook configuration. Full tests/build/lint remain in `qualityCheck` and CI.
 
