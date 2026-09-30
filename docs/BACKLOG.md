@@ -1,34 +1,27 @@
 # Implementation backlog
 
-Status: temporary planning queue until OpenSpec is initialized. Each ticket has one reviewable result; work advances after its acceptance criteria and human review are complete. These identifiers are planning references, not existing OpenSpec changes. No time estimates are assigned.
+Status: product/design preparation complete; OpenSpec initialized. C01 implementation and validation are ready for final review; C02 is next after acceptance. Remaining identifiers are queued tickets, not existing OpenSpec changes. Work advances after acceptance and human review. No time estimates are assigned.
 
 Move each ticket into its OpenSpec change when it is prepared, then replace its detailed entry here with a link. OpenSpec owns that change's tasks and evidence from then on. Retire this temporary file when the remaining queue has been migrated; do not maintain two copies. Product priorities live in [PRD](PRD.md), screen design in [UI/UX Definition](UI_UX.md), technical decisions in [ARCHITECTURE](ARCHITECTURE.md), and the shared process in [DEVELOPMENT](DEVELOPMENT.md).
 
 Before implementation, expand only the next ticket into a change with observable scenarios, agreed public test interfaces and small tasks. A capability spec can evolve through several changes. Split a ticket if its diff contains independent decisions that cannot be reviewed comfortably together.
 
-## Product and design
+## Product and design — completed preparation
 
-### P01 — Confirm requirements and module contracts
+| Ticket | Reviewed result |
+|---|---|
+| P01 — Requirements and module contracts | Scope, priorities and the six-module graph selected in PRD/ARCHITECTURE; toolchain compatibility verified in C01 |
+| P02 — Content screens | Selected Home/Detail references and API-backed fields reviewed in UI/UX Definition |
+| P03 — Home state variants | Visual references reviewed; loading/contrast adjustments recorded for Compose implementation |
+| P04 — Detail states and handoff | Content/loading/error references reviewed; Share-glyph omission recorded for implementation |
 
-Review Must/Should/Could priorities, the six-module dependency graph and the proposed stack. Confirm independent home/details presentation, shared pure domain contracts and data implementation isolation. Complete when dependencies and responsibilities are clear enough to guide the scaffold. Documentation review only.
-
-### P02 — Review and correct the two content screens
-
-Depends on P01. Selected exports and handoff decisions are linked in UI/UX Definition. The content composition and API-backed detail fields provide the implementation reference, including “Episode appearances”. Preserve the exports. Native behavior, contrast and layout checks remain pending and will be performed as the corresponding components are implemented.
-
-### P03 — Home state variants
-
-Depends on P02. Selected Home states provide sufficient visual references. Follow UI/UX Definition's handoff: the loading PNG is stale but its HTML removes counter/tune; unify selected-chip styling and retain name shortcuts. Resolve pagination and local image states directly in Compose. Verify their documented visibility, search/filter behavior, retries, keyboard/large-text layout and end-of-scroll clearance in the implementation. No additional Home generation is queued.
-
-### P04 — Detail state variants, navigation and motion
-
-Depends on P03. The selected export includes the requested Detail loading and API-error references. Omit the generated Share glyph from loading and preserve the content screen's Back/portrait geometry. Use the selected feedback style for not-found and a neutral portrait fallback for image failure; no separate mockups are needed. The visual handoff is ready for C01. Validate optional/unknown fields, long text, the grid → detail → back journey, retries and motion during the relevant implementation changes; static review does not establish working navigation or animation.
+These statuses describe completed planning, not a working Android application. Native layout, navigation, motion, keyboard, contrast and touch-target checks belong to the implementation changes.
 
 ## Implementation changes
 
 ### C01 — Android foundation
 
-Depends on P04. Create the agreed module graph, compatible toolchain/version catalogue, minimal runnable app and OpenSpec configuration. Document actual build commands. Verify assembly and startup; domain must not acquire Android/Compose/HTTP-library dependencies. This is configuration validation, not a fabricated TDD cycle.
+**Implementation validated; final human review pending.** See the [OpenSpec proposal](../openspec/changes/android-foundation/proposal.md), [acceptance scenarios](../openspec/changes/android-foundation/specs/android-foundation/spec.md), [design](../openspec/changes/android-foundation/design.md) and [tasks](../openspec/changes/android-foundation/tasks.md). OpenSpec owns C01's detailed requirements, tasks and evidence.
 
 ### C02 — Shared quality checks
 

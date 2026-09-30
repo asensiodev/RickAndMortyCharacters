@@ -7,6 +7,10 @@
 .gradle/
 .kotlin/
 **/build/
+*.apk
+*.aab
+*.hprof
+*.log
 local.properties
 captures/
 .externalNativeBuild/

@@ -1,0 +1,14 @@
+schema: spec-driven
+
+context: |
+  Product: Rick And Morty Characters, a native Android app in Kotlin/Compose.
+  Read docs/PRD.md for scope, docs/ARCHITECTURE.md for module contracts,
+  docs/UI_UX.md for screen behavior and docs/DEVELOPMENT.md for the workflow.
+  docs/BACKLOG.md is the ordered queue; prepare only the next bounded change.
+
+rules:
+  tasks:
+    - Keep implementation tasks small and independently verifiable.
+    - Define observable test boundaries before behavior-focused TDD.
+    - Record executed checks, results and limitations with the change.
+    - Complete human review before advancing to the next change.

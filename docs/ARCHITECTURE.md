@@ -1,6 +1,6 @@
 # Architecture and technical decisions
 
-Status: module organization selected; implementation pending. Home and details are independent feature modules, with shared character-domain contracts, data access and UI foundations. No Android modules have been generated yet.
+Status: the six-module foundation is implemented and its dependency graph verified. Home/details, domain/data and the design system currently reserve their selected responsibilities; character behavior is pending. The app launches a minimal Compose shell.
 
 ## Module boundaries
 
@@ -30,7 +30,7 @@ Arrows represent project dependencies. Neither feature imports the other feature
 
 This split provides compiler-enforced separation between presentation, contracts and remote implementation, plus a controlled UI foundation. Its costs are additional Gradle configuration and public APIs to maintain. Build-time improvements will not be claimed without measurements. A single module would reduce configuration but would enforce these boundaries only by convention.
 
-The initial graph does not require a separate network module: there is one remote data owner. Extract shared networking or test utilities when a second consumer creates a concrete need. No automatic `api/impl` split is applied to every module.
+The initial graph does not require a separate network module: there is one remote data owner. Extract shared networking or test utilities when a second consumer creates a concrete need. No automatic `api/impl` split is applied to every module. C01 uses direct module build files and a version catalogue. Convention plugins can be extracted when shared build policy becomes substantial enough to justify a separate build-logic module.
 
 ## Decision: separate presentation features, shared data
 
@@ -48,8 +48,6 @@ Layer ownership remains shared for character data:
 ```
 
 Do not create empty `data` and `domain` folders inside each feature or duplicate the character model and cache. Feature-owned business rules can be introduced when there is actual behavior to own; reusable rules belong with the shared domain. Package boundaries within a module are conventions, while the project graph enforces module dependencies.
-
-[Pokedex Compose](https://github.com/skydoves/pokedex-compose/blob/main/settings.gradle.kts) also separates home and details, with shared repositories in `core:data` and models in `core:model`. Its [detail ViewModel](https://github.com/skydoves/pokedex-compose/blob/main/feature/details/src/main/kotlin/com/skydoves/pokedex/compose/feature/details/DetailsViewModel.kt) directly consumes a repository from `core:data`. This product additionally separates the repository contract into a pure domain module, keeping feature compilation independent of the remote implementation.
 
 ## UDF/MVI presentation
 

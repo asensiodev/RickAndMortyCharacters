@@ -139,17 +139,17 @@ The API returns 404 for multiple situations. Map by request context and the reco
 
 ## Detail: hierarchy and components
 
-Define the required information now and let Stitch explore its presentation within this hierarchy.
+Implement the selected detail composition with the following information hierarchy.
 
 | Region | Content and intended behaviour |
 |---|---|
 | Hero and Back | Prominent character portrait, bounded height, controlled crop and floating Back button. A subtle theme gradient can frame the image. |
 | Identity | Character name as the main heading, status badge and species. Place immediately below the image or on a reliably contrasted lower hero surface. |
-| Character facts | Gender and Type when meaningful. Species may move here if the selected layout keeps identity simpler; avoid redundant display. |
+| Character facts | Gender and Type when meaningful. Species stays in identity; avoid redundant display. |
 | Locations | Clearly labelled Origin and Last known location, allowing long names to wrap. |
 | Appearances | A visible “Episode appearances” label with a single count value/badge; no episode names or links to another screen. |
 
-Stitch can choose rows, compact cards or grouped sections for the facts, locations and count. Preserve the labels and information priority. These regions are read-only; do not make them appear to navigate when no destination exists.
+Use the selected grouped fact rows for gender, optional type, locations and the episode count. Preserve their labels and information priority. These regions are read-only; do not make them appear to navigate when no destination exists.
 
 The hero uses the existing character portrait, not an assumed second image. Prefer a contained or approximately square presentation over an oversized panoramic crop. A mild scroll-linked parallax moves the image more slowly than the content; constrain movement to its clipped bounds and keep the Back control steady. The title scrolls naturally with the content and does not become a collapsing top app bar. Provide a static motion alternative. Inspect image sharpness on a device before accepting the final hero size.
 

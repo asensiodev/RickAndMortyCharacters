@@ -1,13 +1,13 @@
 # Development
 
-Status: planning. [PRD](PRD.md) owns product requirements and priorities; [ARCHITECTURE](ARCHITECTURE.md) owns module responsibilities and technical decisions. This document defines the shared development process. Work proceeds through individually reviewed changes without task estimates.
+Status: Android foundation implemented and validated; final C01 review pending. [PRD](PRD.md) owns product requirements and priorities; [ARCHITECTURE](ARCHITECTURE.md) owns module responsibilities and technical decisions. This document defines the shared development process. Work proceeds through individually reviewed changes without task estimates.
 
 ## Sequence
 
 1. Review requirements, module interfaces and stack compatibility.
 2. Define home and detail content from the API; explore them together in one visual system.
-3. Correct the existing Home/Detail content screens in place, preserving their appearance and the selected export. Review the pair, then create additional state frames and validate navigation/motion.
-4. Create the Android project, configure checks and initialize OpenSpec.
+3. Correct the existing Home/Detail content screens in place, preserving their appearance and the selected export. Review the selected content and state references; validate navigation and motion during implementation.
+4. Initialize OpenSpec and review the foundation proposal; create the Android project, then configure shared checks in the next change.
 5. Implement small changes with behavior-focused TDD and human review.
 6. Validate the application and update setup instructions, screenshots and documentation from actual results.
 
@@ -32,11 +32,11 @@ The temporary [BACKLOG](BACKLOG.md) preserves the pending work. When a change is
 | CI | GitHub Actions | Automated validation of changes |
 | Local checks | Explicit hook installation, planned `installGitHooks` task | Pre-commit feedback without automatic staging |
 
-Exact versions and runnable commands will be recorded when the project exists. Prefer fakes at repository interfaces; introduce MockK only for a concrete external dependency. Robolectric is not initially required by the planned JVM test boundaries. Screenshot tests, Konsist and Kover remain candidates for a demonstrated verification need.
+The foundation versions and runnable commands are recorded in [README](../README.md#development-setup). Remaining toolchain rows describe planned changes; formatting/static analysis, hooks and CI are configured together in C02. Prefer fakes at repository interfaces; introduce MockK only for a concrete external dependency. Robolectric is not initially required by the planned JVM test boundaries. Screenshot tests, Konsist and Kover remain candidates for a demonstrated verification need.
 
 ## Visual design
 
-[UI/UX Definition](UI_UX.md) owns the API-to-screen mapping, component responsibilities, state variants, motion and Stitch prompt. Explore both screens together, refine their components and states separately, then review the complete journey. Choose tokens in screen context and refine the selected design before translating its reviewed colour palette into Compose Material 3 roles, checking foreground/background contrast.
+[UI/UX Definition](UI_UX.md) owns the API-to-screen mapping, component responsibilities, state variants, motion and visual references. Explore both screens together, refine their components and states separately, then review the complete journey. Choose tokens in screen context and refine the selected design before translating its reviewed colour palette into Compose Material 3 roles, checking foreground/background contrast.
 
 The selected export is stored in `docs/design/stitch/` and linked through UI/UX Definition. It supplies sufficient content and state references for implementation; no further Stitch generation is queued. Its handoff records an outdated Home-loading PNG, an unsupported Share glyph in Detail loading and selected-chip contrast to correct in Compose. Use the reviewed components and state contracts, then validate previews and device behavior. Final-card/Retry clearance, native scrolling, large text and contrast remain pending. Generated HTML and PNGs are visual references; the application will use native Compose components.
 
@@ -62,8 +62,8 @@ Install hooks explicitly for each clone. They complement CI and must not stage o
 
 | Tool | Role | Current status |
 |---|---|---|
-| Codex app | Planning, source inspection, implementation assistance and diff review | Used for documentation and research |
-| OpenSpec | Capability requirements, change proposals, tasks and archives | CLI available; project initialization pending |
+| Codex app | Planning, source inspection, implementation assistance and diff review | Used for documentation, research and C01 scaffolding/verification |
+| OpenSpec | Capability requirements, change proposals, tasks and archives | Initialized with the spec-driven schema; C01 implementation validated, final review pending |
 | Codebase Memory | Symbol/dependency exploration and impact analysis | New-project connection/indexing pending; graph tools unavailable in the planning session |
 | Focused development skills | TDD, module design and Kotlin/Compose guidance | Relevant planning, component and animation guidance consulted |
 | Visual design tooling | Generate or refine UI alternatives | Selected PNG/HTML reviewed; visual handoff ready with bounded Compose corrections; native validation pending |
@@ -71,6 +71,10 @@ Install hooks explicitly for each clone. They complement CI and must not stage o
 AI and skills assist the work; human review accepts scope, design and behavior. Apply skills to the actual concern rather than loading every available guide. The application must build and run without AI tooling.
 
 ## OpenSpec and TDD workflow
+
+The project uses OpenSpec 1.3.1 through its CLI with `openspec/config.yaml` and the `spec-driven` schema. Planning artifacts use proposal → specs/design → tasks; implementation starts after proposal review.
+
+Inspect the first change with `openspec status --change android-foundation`. Validate it with `openspec validate android-foundation --strict --no-interactive`. The validator checks specification structure; it does not build or test the Android application. Active changes are linked from BACKLOG. Accepted specifications move into `openspec/specs/` when a completed change is archived.
 
 One capability spec can evolve through several changes, such as grid, pagination, search and filters. Each change completes a bounded observable result and may cross layers. [OpenSpec concepts](https://github.com/Fission-AI/OpenSpec/blob/main/docs/concepts.md).
 
@@ -87,6 +91,6 @@ Each change records its identifier/objective, AI tool and task (model when known
 
 ## Planning record
 
-On 2026-09-30, planning selected the two-screen browsing flow, Must search/chips and image/HTTP caching, and separate presentation features with shared domain/data. Primary sources and Pokedex Compose informed the technical review. The UI brief and Stitch prompts define a shared dark theme with a nuanced blue-family accent chosen during design exploration, card loading and detail parallax without standard top app bars or bottom navigation. A review across all six public documents clarified in-place empty/error states, keyboard behaviour, retry scope and responsive layout. Three additional live API probes informed contextual 404 mapping. Connectivity feedback remains a separate Should; offline browsing stays outside scope.
+On 2026-09-30, planning selected the two-screen browsing flow, Must search/chips and image/HTTP caching, and separate presentation features with shared domain/data. The UI brief and Stitch prompts define a shared dark theme with a nuanced blue-family accent chosen during design exploration, card loading and detail parallax without standard top app bars or bottom navigation. A review across all six public documents clarified in-place empty/error states, keyboard behaviour, retry scope and responsive layout. Three additional live API probes informed contextual 404 mapping. Connectivity feedback remains a separate Should; offline browsing stays outside scope.
 
-Two API GET probes returned cacheable responses and ETags; the observation and policy are recorded in [ARCHITECTURE](ARCHITECTURE.md). Documentation checks cover consistency and local links. Android implementation, Gradle/tests, OpenSpec changes and CI execution have not started.
+Two API GET probes returned cacheable responses and ETags; the observation and policy are recorded in [ARCHITECTURE](ARCHITECTURE.md). Documentation checks cover consistency and local links. C01 now has a buildable six-module Android shell, a verified wrapper and recorded build/dependency/device evidence. Final C01 review is pending; character behavior, behavioral tests, quality gates and CI execution remain planned.
