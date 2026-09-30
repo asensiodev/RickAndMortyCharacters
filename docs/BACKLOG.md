@@ -1,6 +1,6 @@
 # Implementation backlog
 
-Status: product/design preparation complete; OpenSpec initialized. C01 implementation and validation are ready for final review; C02 is next after acceptance. Remaining identifiers are queued tickets, not existing OpenSpec changes. Work advances after acceptance and human review. No time estimates are assigned.
+Status: product/design preparation complete; OpenSpec initialized. C01 is accepted and archived; C02 is accepted and locally validated; remote CI validation is pending. Remaining identifiers are queued tickets, not existing OpenSpec changes. Work advances after acceptance and human review. No time estimates are assigned.
 
 Move each ticket into its OpenSpec change when it is prepared, then replace its detailed entry here with a link. OpenSpec owns that change's tasks and evidence from then on. Retire this temporary file when the remaining queue has been migrated; do not maintain two copies. Product priorities live in [PRD](PRD.md), screen design in [UI/UX Definition](UI_UX.md), technical decisions in [ARCHITECTURE](ARCHITECTURE.md), and the shared process in [DEVELOPMENT](DEVELOPMENT.md).
 
@@ -21,11 +21,11 @@ These statuses describe completed planning, not a working Android application. N
 
 ### C01 — Android foundation
 
-**Implementation validated; final human review pending.** See the [OpenSpec proposal](../openspec/changes/android-foundation/proposal.md), [acceptance scenarios](../openspec/changes/android-foundation/specs/android-foundation/spec.md), [design](../openspec/changes/android-foundation/design.md) and [tasks](../openspec/changes/android-foundation/tasks.md). OpenSpec owns C01's detailed requirements, tasks and evidence.
+**Accepted and archived.** See the [OpenSpec proposal](../openspec/changes/archive/2026-09-30-android-foundation/proposal.md), [acceptance scenarios](../openspec/changes/archive/2026-09-30-android-foundation/specs/android-foundation/spec.md), [design](../openspec/changes/archive/2026-09-30-android-foundation/design.md) and [tasks](../openspec/changes/archive/2026-09-30-android-foundation/tasks.md). OpenSpec owns C01's detailed requirements, tasks and evidence.
 
 ### C02 — Shared quality checks
 
-Depends on C01. Configure formatting, Detekt, Android Lint, JVM test/build tasks, a GitHub Actions workflow and explicit hook installation. Verify a controlled check failure and recovery, without automatic staging. Record local results; a written workflow is not evidence of a successful remote run.
+**Accepted and locally validated; remote CI validation pending.** See the [proposal](../openspec/changes/shared-quality-checks/proposal.md), [acceptance scenarios](../openspec/changes/shared-quality-checks/specs/shared-quality-checks/spec.md), [design](../openspec/changes/shared-quality-checks/design.md) and [tasks](../openspec/changes/shared-quality-checks/tasks.md). OpenSpec owns the detailed scope and evidence.
 
 ### C03 — Character card and image loading
 
@@ -39,9 +39,15 @@ Depends on C03. Deliver API → shared repository contract → home ViewModel �
 
 Depends on C04. Implement the independent details module; the app connects home and details using an ID and callbacks. Both features consume the shared character-domain contract and neither imports the other feature. Cover loading/error/retry/not-found, optional fields and episode count without extra episode requests. Use repository/state tests and a deterministic instrumented grid → detail → back journey. Verify normal return keeps query, filter and scroll without reopening the keyboard; missing detail is a state of that destination, never a route used for empty search. Include the approved portrait/detail structure, subtle parallax with a static alternative, an always-available Back control, the basic navigation transition and preserved browsing context.
 
+### C05A — Architecture checks with Konsist — Must
+
+Depends on C05 and is completed before C06. Pin a compatible Konsist version and add focused JVM architecture tests to an existing module's test sources, retaining the six-module graph. Select rules against the implemented code, such as internal data DTOs and ViewModels that expose read-only state rather than mutable flows. Avoid duplicating boundaries already enforced by Gradle/Kotlin or naming checks already enforced by ktlint/Detekt.
+
+Expose a `konsistCheck` task and include it in `qualityCheck` so the same checks run locally and in CI. Observe a representative forbidden declaration fail, then restore it and verify recovery. Keep the rules readable and document their commands with the owning OpenSpec change.
+
 ### C06 — Complete pagination
 
-Depends on C04; review after C05. Add subsequent pages, remote completion and append retry while retaining loaded cards. Prevent duplicate concurrent loads. Verify multipage fixtures, failing/retried pages and one state owner. Include the floating counter with the real loaded-item count and API total for the current query; test growth across pages, retention on append failure and end-of-list behavior without counting placeholders. Distinguish a confirmed API list-end response from retryable append errors, retaining loaded cards in both cases. Review the Paging adapter and load-state contract without leaking Paging into domain.
+Depends on C04 and C05A; review after C05A. Add subsequent pages, remote completion and append retry while retaining loaded cards. Prevent duplicate concurrent loads. Verify multipage fixtures, failing/retried pages and one state owner. Include the floating counter with the real loaded-item count and API total for the current query; test growth across pages, retention on append failure and end-of-list behavior without counting placeholders. Distinguish a confirmed API list-end response from retryable append errors, retaining loaded cards in both cases. Review the Paging adapter and load-state contract without leaking Paging into domain.
 
 ### C07 — Search by name — Must
 
@@ -67,7 +73,7 @@ Depends on the implemented main flow. Reconcile cards, chips, detail, loading fe
 
 ### C12 — Reproducible release candidate
 
-Depends on all Must changes and selected optional work. Verify build instructions, automated checks, instrumented journey, release assembly and runtime behavior. Add actual screenshots and concise limitations to README; complete the AI/change record. Confirm the documentation matches the code and distinguish checks not executed from successful validation.
+Depends on all Must changes, including C05A Konsist checks, and selected optional work. Verify build instructions, automated checks, instrumented journey, release assembly and runtime behavior. Add actual screenshots and concise limitations to README; complete the AI/change record. Confirm the documentation matches the code and distinguish checks not executed from successful validation.
 
 ## Preferred enhancement
 
@@ -83,6 +89,6 @@ Use a fake monitor to verify initial Unknown, disconnection/recovery, duplicate 
 
 **O02 — Catalogue accessibility demonstration:** verify TalkBack traversal of cards/search/chips/retry, meaningful announcements, large text and contrast. Record manual evidence and the exact screen scope.
 
-**O03 — Additional verification:** add a focused architectural rule or screenshot scenario only after identifying the behavior or dependency rule it protects. Avoid assertions that merely restate implementation details.
+**O03 — Additional visual verification:** add a focused screenshot scenario only after identifying the visual behavior it protects. Avoid assertions that merely restate implementation details. Mandatory architecture checks belong to C05A.
 
 Each optional change is selected and reviewed independently before C12.

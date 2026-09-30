@@ -19,7 +19,7 @@ MoSCoW distinguishes required capabilities, preferred improvements, optional enh
 | **Must** | HTTP response caching | Reuse fresh eligible JSON responses and revalidate stale entries when validators are available |
 | **Must** | Consistent UI and motion | Defined components, typography, spacing, loading feedback and navigation transitions |
 | **Must** | Accessible component foundations | Meaningful semantics, adequate contrast, text-based status and touch targets of at least 48dp |
-| **Must** | Verifiable quality | Critical behavior covered by tests, automated checks and reproducible development instructions |
+| **Must** | Verifiable quality | Critical behavior covered by tests, mandatory Konsist architecture checks, automated checks and reproducible development instructions |
 | **Should** | Connectivity awareness | An app-level snackbar reports observed internet unavailability without removing content or blocking requests |
 | **Should** | Light/dark themes | Consistent visual variants following system appearance |
 | **Should** | State restoration | Restore minimal query, filter and destination state after recreation; refetch remote data as needed |

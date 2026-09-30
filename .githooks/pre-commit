@@ -1,0 +1,7 @@
+#!/bin/sh
+set -eu
+
+repository_root=$(git rev-parse --show-toplevel)
+cd "$repository_root"
+printf '%s\n' 'Checking working-tree Kotlin formatting and static analysis...'
+exec ./gradlew ktlintCheck detekt --console=plain --no-scan

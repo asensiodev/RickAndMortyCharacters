@@ -2,7 +2,7 @@
 
 An Android app for exploring Rick and Morty characters, searching by name, filtering by status and viewing character details.
 
-**Status:** Android foundation implemented and validated; final review of [C01](openspec/changes/android-foundation/proposal.md) is pending. The current app is a minimal Compose shell; character screens remain planned.
+**Status:** Android foundation implemented and validated; [C01](openspec/changes/archive/2026-09-30-android-foundation/proposal.md) accepted and archived. The current app is a minimal Compose shell; character screens remain planned.
 
 ## Planned experience
 
@@ -24,11 +24,11 @@ Selected Stitch mockups for the planned native app. See [UI/UX Definition](docs/
 
 Home and details have separate feature modules. They share pure character-domain contracts, data access and a design system; the app composes navigation and dependencies. The six-module graph is defined in [ARCHITECTURE](docs/ARCHITECTURE.md).
 
-Presentation follows unidirectional data flow with ViewModel/StateFlow and explicit actions. ViewModels consume repository interfaces directly; use cases are introduced where business logic warrants them. The proposed stack includes Hilt, Retrofit/OkHttp, Coil 3, unit and instrumented tests, static analysis and GitHub Actions. The foundation toolchain and setup are documented below; the remaining libraries and checks land in their corresponding changes.
+Presentation follows unidirectional data flow with ViewModel/StateFlow and explicit actions. ViewModels consume repository interfaces directly; use cases are introduced where business logic warrants them. The proposed stack includes Hilt, Retrofit/OkHttp, Coil 3, unit and instrumented tests. ktlint, Detekt, Android Lint and a GitHub Actions workflow are configured; remote CI validation is pending its first run. The foundation toolchain and setup are documented below; the remaining libraries and checks land in their corresponding changes.
 
 ## Development setup
 
-Open this repository root in Android Studio and sync Gradle. Use JDK 17 for Gradle and install Android SDK Platform 37.0, Build Tools 36.0.0 and Platform Tools. Configure the SDK through Android Studio, `ANDROID_HOME` or an untracked `local.properties` containing `sdk.dir=/path/to/android-sdk`.
+Open this repository root in Android Studio and sync Gradle. The tracked daemon criteria select JDK 17; install it locally and install Android SDK Platform 37.0, Build Tools 36.0.0 and Platform Tools. Configure the SDK through Android Studio, `ANDROID_HOME` or an untracked `local.properties` containing `sdk.dir=/path/to/android-sdk`.
 
 | Foundation tool | Pinned version |
 |---|---|
@@ -40,7 +40,7 @@ Open this repository root in Android Studio and sync Gradle. Use JDK 17 for Grad
 | Java / JVM target | 17 |
 | Android compile / target / minimum SDK | 37.0 / 36 / 26 |
 
-Plugin/library versions and SDK levels live in [the version catalogue](gradle/libs.versions.toml). AGP provides Kotlin support in Android modules; the domain module applies Kotlin/JVM.
+Plugin/library versions and SDK levels live in [the version catalogue](gradle/libs.versions.toml). AGP provides Kotlin support in Android modules; the domain module applies Kotlin/JVM. Build output caching, parallel module tasks and parallel IDE tooling actions are enabled in `gradle.properties`; the daemon heap remains 2 GB. No build-time improvement has been measured.
 
 With JDK 17 selected, run from the repository root:
 
@@ -55,7 +55,20 @@ adb install --no-streaming -r app/build/outputs/apk/debug/app-debug.apk
 adb shell am start -W -n com.asensiodev.rickandmortycharacters/.MainActivity
 ```
 
-The shell displays the resource-based application name in a native dark Material 3 surface. The final theme and character UI follow in later changes. Debug assembly, a source-only build copy, module dependencies and startup/portrait behavior on a Pixel 9a emulator (API 37) have been checked; see [C01 evidence](openspec/changes/android-foundation/design.md#assistance-and-validation-record). Formatting/static-analysis gates, hooks and CI are scheduled in C02. Behavioral tests begin with the capabilities they verify.
+The shell displays the resource-based application name in a native dark Material 3 surface. The final theme and character UI follow in later changes. Debug assembly, a source-only build copy, module dependencies and startup/portrait behavior on a Pixel 9a emulator (API 37) have been checked; see [C01 evidence](openspec/changes/archive/2026-09-30-android-foundation/design.md#assistance-and-validation-record). C02 configures formatting/static-analysis gates, explicit hooks and CI. Behavioral tests begin with the capabilities they verify; current modules have no product tests.
+
+## Quality checks
+
+```sh
+./gradlew qualityCheck
+./gradlew installGitHooks
+```
+
+`qualityCheck` runs ktlint 1.8.0, Detekt 2.0.0-alpha.6, Android debug lint, JVM test tasks and debug assembly. Detekt uses its isolated CLI for source analysis without type resolution; the pinned alpha is build tooling only. Tool versions live in the catalogue. See [C02](openspec/changes/shared-quality-checks/design.md) for compatibility and executed validation.
+
+Install the hook explicitly once per clone. The pre-commit runs `ktlintCheck detekt` against working-tree source, including unstaged Kotlin changes. It never formats, stages or stashes files. Installation is repeatable and refuses to replace custom hook configuration. Full tests/build/lint remain in `qualityCheck` and CI.
+
+Reports: `build/reports/ktlint/ktlint.xml`, `build/reports/detekt/`, and each Android module's `build/reports/lint-results-debug.html`. JVM test reports appear in module `build/reports/tests/` when tests exist. The [Quality workflow](.github/workflows/quality.yml) runs the full gate for pull requests, main pushes and manual dispatch, with pinned actions and read-only repository permissions. Reports are uploaded even after failed checks; deployment is not configured.
 
 ## Documentation
 

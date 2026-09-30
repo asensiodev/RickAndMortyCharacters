@@ -1,6 +1,6 @@
 # Development
 
-Status: Android foundation implemented and validated; final C01 review pending. [PRD](PRD.md) owns product requirements and priorities; [ARCHITECTURE](ARCHITECTURE.md) owns module responsibilities and technical decisions. This document defines the shared development process. Work proceeds through individually reviewed changes without task estimates.
+Status: Android foundation implemented and validated; C01 accepted and archived; C02 accepted and locally validated; remote CI validation pending. [PRD](PRD.md) owns product requirements and priorities; [ARCHITECTURE](ARCHITECTURE.md) owns module responsibilities and technical decisions. This document defines the shared development process. Work proceeds through individually reviewed changes without task estimates.
 
 ## Sequence
 
@@ -30,9 +30,9 @@ The temporary [BACKLOG](BACKLOG.md) preserves the pending work. When a change is
 | Instrumented tests | AndroidX Test and Compose UI Test | Semantics, interactions and navigation journeys |
 | Quality | ktlint, Detekt and Android Lint | Formatting, Kotlin analysis and Android checks |
 | CI | GitHub Actions | Automated validation of changes |
-| Local checks | Explicit hook installation, planned `installGitHooks` task | Pre-commit feedback without automatic staging |
+| Local checks | Explicit `installGitHooks`, checked-in pre-commit | Pre-commit feedback without automatic staging |
 
-The foundation versions and runnable commands are recorded in [README](../README.md#development-setup). Remaining toolchain rows describe planned changes; formatting/static analysis, hooks and CI are configured together in C02. Prefer fakes at repository interfaces; introduce MockK only for a concrete external dependency. Robolectric is not initially required by the planned JVM test boundaries. Screenshot tests, Konsist and Kover remain candidates for a demonstrated verification need.
+The foundation versions and runnable commands are recorded in [README](../README.md#development-setup). Remaining runtime-library rows describe planned changes. C02 configures quality checks through pinned CLI tools, Android Lint and the shared gate; executed evidence lives in its OpenSpec design record. Prefer fakes at repository interfaces; introduce MockK only for a concrete external dependency. Robolectric is not initially required by the planned JVM test boundaries. Konsist architecture checks are mandatory in C05A, after C05 and before C06; they will join the existing local/CI quality gate. Screenshot tests and Kover remain candidates for a demonstrated verification need.
 
 ## Visual design
 
@@ -54,16 +54,16 @@ Once a Figma file is connected, its [MCP tools](https://developers.figma.com/doc
 
 Unit tests cover observable ViewModel state, query coordination, cancellation and model mapping. JVM integration tests exercise real repositories against MockWebServer, including parameters, failures, pagination and the HTTP caching contract. Instrumented tests cover grid → detail → back and search/filter behavior with controlled data and images. Exercise contextual error/retry paths as well as successful content. Use focused Compose tests for persistent input/chips across loading/empty/error states, filter-only emptiness, Retry callbacks and keyboard Search; use navigation tests to show that those states add no route and that returning from detail preserves the browsing context. Repository fixtures distinguish the observed first-page/detail/append 404 outcomes. If the Should connectivity monitor is implemented, verify its shared snackbar through a fake monitor, independently from API error tests.
 
-CI initially runs JVM tests, formatting, static analysis, Android Lint and debug assembly. Add the instrumented journey when it exists and runs deterministically. Actual GitHub Actions availability and cost depend on runner, plan and project visibility; a written workflow is not evidence of a successful run.
+The configured `qualityCheck` task aggregates JVM test tasks, formatting, static analysis, Android Lint, debug assembly. The Quality workflow invokes it on pull requests, main pushes and manual dispatch. No product tests exist yet; empty test tasks do not establish coverage. A real remote run remains pending publication. Add the instrumented journey when it exists and runs deterministically. Actual GitHub Actions availability and cost depend on runner, plan and project visibility; a written workflow is not evidence of a successful run.
 
-Install hooks explicitly for each clone. They complement CI and must not stage or modify unrelated changes. Before publishing an implementation claim, validate release assembly and a real-device/emulator journey, including R8 behavior if minification is enabled. Performance claims require observations or measurements.
+Install hooks explicitly for each clone with `./gradlew installGitHooks`. The hook checks working-tree Kotlin/Kotlin DSL through `ktlintCheck detekt`, so unstaged violations can block commits. It never formats, stages or stashes; custom hooks are preserved. Run `./gradlew qualityCheck` for the full gate. They complement CI and must not stage or modify unrelated changes. Before publishing an implementation claim, validate release assembly and a real-device/emulator journey, including R8 behavior if minification is enabled. Performance claims require observations or measurements.
 
 ## AI toolchain
 
 | Tool | Role | Current status |
 |---|---|---|
-| Codex app | Planning, source inspection, implementation assistance and diff review | Used for documentation, research and C01 scaffolding/verification |
-| OpenSpec | Capability requirements, change proposals, tasks and archives | Initialized with the spec-driven schema; C01 implementation validated, final review pending |
+| Codex app | Planning, source inspection, implementation assistance and diff review | Used for documentation, research, C01 scaffolding and C02 quality tooling/verification |
+| OpenSpec | Capability requirements, change proposals, tasks and archives | Initialized with the spec-driven schema; C01 accepted and archived; C02 accepted and locally validated; remote CI validation pending |
 | Codebase Memory | Symbol/dependency exploration and impact analysis | New-project connection/indexing pending; graph tools unavailable in the planning session |
 | Focused development skills | TDD, module design and Kotlin/Compose guidance | Relevant planning, component and animation guidance consulted |
 | Visual design tooling | Generate or refine UI alternatives | Selected PNG/HTML reviewed; visual handoff ready with bounded Compose corrections; native validation pending |
@@ -74,7 +74,7 @@ AI and skills assist the work; human review accepts scope, design and behavior. 
 
 The project uses OpenSpec 1.3.1 through its CLI with `openspec/config.yaml` and the `spec-driven` schema. Planning artifacts use proposal → specs/design → tasks; implementation starts after proposal review.
 
-Inspect the first change with `openspec status --change android-foundation`. Validate it with `openspec validate android-foundation --strict --no-interactive`. The validator checks specification structure; it does not build or test the Android application. Active changes are linked from BACKLOG. Accepted specifications move into `openspec/specs/` when a completed change is archived.
+Inspect the next change with `openspec status --change shared-quality-checks`. Validate it with `openspec validate shared-quality-checks --strict --no-interactive`. C01 is archived and its accepted requirements live in `openspec/specs/android-foundation/spec.md`. The validator checks specification structure; it does not build or test the Android application. Active changes are linked from BACKLOG. Accepted specifications move into `openspec/specs/` when a completed change is archived.
 
 One capability spec can evolve through several changes, such as grid, pagination, search and filters. Each change completes a bounded observable result and may cross layers. [OpenSpec concepts](https://github.com/Fission-AI/OpenSpec/blob/main/docs/concepts.md).
 
@@ -93,4 +93,4 @@ Each change records its identifier/objective, AI tool and task (model when known
 
 On 2026-09-30, planning selected the two-screen browsing flow, Must search/chips and image/HTTP caching, and separate presentation features with shared domain/data. The UI brief and Stitch prompts define a shared dark theme with a nuanced blue-family accent chosen during design exploration, card loading and detail parallax without standard top app bars or bottom navigation. A review across all six public documents clarified in-place empty/error states, keyboard behaviour, retry scope and responsive layout. Three additional live API probes informed contextual 404 mapping. Connectivity feedback remains a separate Should; offline browsing stays outside scope.
 
-Two API GET probes returned cacheable responses and ETags; the observation and policy are recorded in [ARCHITECTURE](ARCHITECTURE.md). Documentation checks cover consistency and local links. C01 now has a buildable six-module Android shell, a verified wrapper and recorded build/dependency/device evidence. Final C01 review is pending; character behavior, behavioral tests, quality gates and CI execution remain planned.
+Two API GET probes returned cacheable responses and ETags; the observation and policy are recorded in [ARCHITECTURE](ARCHITECTURE.md). Documentation checks cover consistency and local links. C01 now has a buildable six-module Android shell, a verified wrapper and recorded build/dependency/device evidence. C01 is accepted and archived; character behavior and behavioral tests remain planned. C02 configures quality gates and CI; remote validation is pending its first run.

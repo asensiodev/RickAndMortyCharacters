@@ -13,4 +13,4 @@
 ## 3. Documentation and review
 
 - [x] 3.1 Update README with actual prerequisites and verified setup/build commands; append observed checks and AI assistance to this change's design record.
-- [ ] 3.2 Review the complete foundation diff and acceptance scenarios with the human reviewer before preparing C02; archive only after acceptance.
+- [x] 3.2 Review the complete foundation diff and acceptance scenarios with the human reviewer before preparing C02; archive only after acceptance.
