@@ -2,6 +2,7 @@ package com.asensiodev.rickandmortycharacters.feature.home.composables
 
 import android.graphics.Color
 import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -105,6 +106,11 @@ fun HomeContent(
     }
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
+    LaunchedEffect(gridState, keyboard) {
+        gridState.interactionSource.interactions.collect { interaction ->
+            if (interaction is DragInteraction.Start) keyboard?.hide()
+        }
+    }
     val searchAction: (HomeSearchAction) -> Unit = { action ->
         onSearchAction(action)
         if (action is HomeSearchAction.Submit || action is HomeSearchAction.Suggest) {

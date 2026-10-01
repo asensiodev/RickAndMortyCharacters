@@ -117,7 +117,7 @@ Reserve enough bottom scroll padding for the final cards and footer Retry to cle
 
 Typing updates the query after a short debounce; the keyboard Search action applies the current input immediately without duplicating an equivalent pending/requested query. A changed name or status starts a new result set at the beginning; previous-query cards must not masquerade as current matches. Clearing the input preserves status; All preserves the name. Selecting an already-selected chip does nothing.
 
-The input stays mounted and keeps its text, selection and focus across loading, empty and error results. Home does not automatically open the keyboard on entry. Search on the keyboard dismisses it after applying the query; dismissing it otherwise changes no filters. Opening detail dismisses the keyboard. Returning restores query, status and scroll without automatically reopening it.
+The input stays mounted and keeps its text, selection and focus across loading, empty and error results. Home does not automatically open the keyboard on entry. Search on the keyboard dismisses it after applying the query; starting a manual drag of the result grid also dismisses it, preserving text, selection, focus and filters. Programmatic scrolling and query-generation resets do not dismiss it. Tapping the input can reopen it; dismissing it otherwise changes no filters. Opening detail dismisses the keyboard. Returning restores query, status and scroll without automatically reopening it.
 
 No matches from a name, a status or both displays feedback below the unchanged controls on Home. There is no Back, Go home, Retry or separate empty-results destination. Users recover by editing/clearing the name, selecting another status or choosing a suggested search.
 

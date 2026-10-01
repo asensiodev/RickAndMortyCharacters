@@ -12,6 +12,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.SoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -41,6 +43,7 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.unit.Density
@@ -93,6 +96,74 @@ class HomeSearchTest {
     @After
     fun tearDown() {
         imageLoader.shutdown()
+    }
+
+    @Test
+    fun GIVEN_an_active_search_WHEN_the_user_drags_results_THEN_it_hides_the_keyboard_and_preserves_the_query() {
+        var hideRequests = 0
+        val actions = mutableListOf<HomeSearchAction>()
+        val keyboard = object : SoftwareKeyboardController {
+            override fun show() = Unit
+            override fun hide() {
+                hideRequests++
+            }
+        }
+        val search = HomePagingState(searchText = "Rick", appliedName = "Rick", selectedStatus = CharacterStatus.Alive)
+        val characters = (1..30).map { CharacterCardUiModel(it, "Character $it", "Human", CharacterStatus.Alive, null) }
+        compose.setContent {
+            CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboard) {
+                RickAndMortyTheme {
+                    HomeContent(
+                        HomeUiState.Content(characters, 30),
+                        imageLoader,
+                        {},
+                        {},
+                        searchState = search,
+                        onSearchAction = actions::add,
+                    )
+                }
+            }
+        }
+        compose.onNodeWithContentDescription("Search characters").performClick()
+        compose.onNodeWithContentDescription("Search characters").performSemanticsAction(SemanticsActions.SetSelection) { it(1, 3, false) }
+
+        compose.onNode(hasScrollToIndexAction()).performTouchInput { swipeUp() }
+
+        compose.runOnIdle {
+            assertTrue(hideRequests > 0)
+            assertTrue(actions.isEmpty())
+        }
+        compose.onNodeWithContentDescription("Search characters").assertIsFocused()
+        val input = compose.onNodeWithContentDescription("Search characters").fetchSemanticsNode().config
+        assertEquals("Rick", input[SemanticsProperties.EditableText].text)
+        assertEquals(TextRange(1, 3), input[SemanticsProperties.TextSelectionRange])
+        compose.onNode(hasText("Alive") and SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)).assertIsSelected()
+    }
+
+    @Test
+    fun GIVEN_a_focused_search_WHEN_the_grid_scrolls_and_resets_programmatically_THEN_it_does_not_dismiss_the_keyboard() {
+        var hideRequests = 0
+        val keyboard = object : SoftwareKeyboardController {
+            override fun show() = Unit
+            override fun hide() {
+                hideRequests++
+            }
+        }
+        var search by mutableStateOf(HomePagingState(searchText = "Rick", appliedName = "Rick"))
+        val characters = (1..30).map { CharacterCardUiModel(it, "Character $it", "Human", CharacterStatus.Alive, null) }
+        compose.setContent {
+            CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboard) {
+                RickAndMortyTheme { HomeContent(HomeUiState.Content(characters, 30), imageLoader, {}, {}, searchState = search) }
+            }
+        }
+        compose.onNodeWithContentDescription("Search characters").performClick()
+
+        compose.onNode(hasScrollToIndexAction()).performScrollToIndex(20)
+        compose.runOnIdle { search = search.copy(generation = 1) }
+
+        compose.onNodeWithText("Character 1").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Search characters").assertIsFocused()
+        compose.runOnIdle { assertEquals(0, hideRequests) }
     }
 
     @Test

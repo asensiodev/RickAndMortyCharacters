@@ -92,3 +92,5 @@ Each optional change is selected and reviewed independently before C12.
 ## Independently selected visual adjustment
 
 **Portal gun launcher and native splash:** implemented, locally validated on API 37 and accepted by the user on 2026-10-01; not yet archived. [Change and evidence](../openspec/changes/add-portal-gun-branding/proposal.md). This adjustment does not advance the C08/C09 queue.
+
+**Search keyboard dismissal on result drag:** independently approved by the user on 2026-10-01; implemented, locally validated and accepted for publication; archival pending. [Change and evidence](../openspec/changes/hide-search-keyboard-on-scroll/proposal.md). This refinement preserves the active name/status and does not advance the C09/C10 queue.
