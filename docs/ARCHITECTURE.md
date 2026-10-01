@@ -1,6 +1,6 @@
 # Architecture and technical decisions
 
-Status: the six-module foundation is implemented and its dependency graph verified. Home/details, domain/data and the design system currently reserve their selected responsibilities; character behavior is pending. The app launches a minimal Compose shell.
+Status: the six-module foundation and shared checks are implemented. C03 adds Home card components, generic theme/loading primitives and the app-owned Coil loader, accepted and archived. Domain/data contracts, ViewModels, navigation and the real catalogue remain planned. The production entry point is a minimal Compose shell.
 
 ## Module boundaries
 
@@ -89,7 +89,7 @@ The reason for app ownership is visible behaviour: switching between home and de
 
 ## Images and response caching
 
-Coil 3 is the initial recommendation: a shared loader, appropriately sized requests, placeholder/error states and library-managed memory/disk caches. No independent bitmap cache is planned. [Coil ImageLoader](https://coil-kt.github.io/coil/image_loaders/).
+C03 configures Coil 3.6.3 through the application’s `SingletonImageLoader.Factory`. Home accepts the shared loader and uses `coil-compose-core`; its square portrait constraints bound request size. Coil owns a 20% memory cache and a 32 MiB disk cache in `cacheDir/character_images`, with a crossfade on success. Loading and failure affect only the portrait; metadata and selection remain available. The presentation-only `CharacterCardUiModel` has no domain conversion yet. No independent bitmap cache is added. [Coil ImageLoader](https://coil-kt.github.io/coil/image_loaders/).
 
 HTTP response caching is a Must. Configure one API OkHttp client with one bounded disk `Cache` in the app cache directory, initially targeting 10 MiB. The cache belongs to `data:characters`; its directory is distinct from Coil's image cache. Let the HTTP library own response storage and validation, without a custom JSON store or header-rewriting interceptor.
 

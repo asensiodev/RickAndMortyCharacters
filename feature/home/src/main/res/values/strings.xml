@@ -1,0 +1,8 @@
+<resources>
+    <string name="status_alive">Alive</string>
+    <string name="status_dead">Dead</string>
+    <string name="status_unknown">Unknown</string>
+    <string name="portrait_loading">Loading portrait</string>
+    <string name="portrait_unavailable">Portrait unavailable</string>
+    <string name="character_loading">Loading character</string>
+</resources>

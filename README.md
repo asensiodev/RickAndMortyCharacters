@@ -2,7 +2,7 @@
 
 An Android app for exploring Rick and Morty characters, searching by name, filtering by status and viewing character details.
 
-**Status:** Android foundation implemented and validated; [C01](openspec/changes/archive/2026-09-30-android-foundation/proposal.md) accepted and archived. The current app is a minimal Compose shell; character screens remain planned.
+**Status:** Android foundation and quality tooling accepted; [C03](openspec/changes/archive/2026-10-01-character-card-images/proposal.md) implements character cards, image states and the dark theme, accepted and archived. The production entry point remains a minimal Compose shell; the real catalogue is the next increment.
 
 ## Planned experience
 
@@ -24,7 +24,7 @@ Selected Stitch mockups for the planned native app. See [UI/UX Definition](docs/
 
 Home and details have separate feature modules. They share pure character-domain contracts, data access and a design system; the app composes navigation and dependencies. The six-module graph is defined in [ARCHITECTURE](docs/ARCHITECTURE.md).
 
-Presentation follows unidirectional data flow with ViewModel/StateFlow and explicit actions. ViewModels consume repository interfaces directly; use cases are introduced where business logic warrants them. The proposed stack includes Hilt, Retrofit/OkHttp, Coil 3, unit and instrumented tests. ktlint, Detekt, Android Lint and a GitHub Actions workflow are configured; the shared gate has passed in GitHub Actions. The foundation toolchain and setup are documented below; the remaining libraries and checks land in their corresponding changes.
+Presentation follows unidirectional data flow with ViewModel/StateFlow and explicit actions. ViewModels consume repository interfaces directly; use cases are introduced where business logic warrants them. Coil 3 is configured with a shared image loader and bounded memory/disk caches. Compose interaction tests will cover implemented screen states and user flows; screenshot checks remain later visual verification. Hilt, Retrofit/OkHttp, repository/ViewModel tests and the application journey land with their corresponding capabilities. ktlint, Detekt, Android Lint and a GitHub Actions workflow are configured; the shared gate has passed in GitHub Actions. The foundation toolchain and setup are documented below; the remaining libraries and checks land in their corresponding changes.
 
 ## Development setup
 
@@ -38,7 +38,7 @@ Open this repository root in Android Studio and sync Gradle. The tracked daemon 
 | Compose BOM | 2026.09.00 |
 | Activity Compose | 1.13.0 |
 | Java / JVM target | 17 |
-| Android compile / target / minimum SDK | 37.0 / 36 / 26 |
+| Android compile / target / minimum SDK | 37.0 / 37 / 26 |
 
 Plugin/library versions and SDK levels live in [the version catalogue](gradle/libs.versions.toml). AGP provides Kotlin support in Android modules; the domain module applies Kotlin/JVM. Build output caching, parallel module tasks and parallel IDE tooling actions are enabled in `gradle.properties`; the daemon heap remains 2 GB. No build-time improvement has been measured.
 
@@ -55,7 +55,9 @@ adb install --no-streaming -r app/build/outputs/apk/debug/app-debug.apk
 adb shell am start -W -n com.asensiodev.rickandmortycharacters/.MainActivity
 ```
 
-The shell displays the resource-based application name in a native dark Material 3 surface. The final theme and character UI follow in later changes. Debug assembly, a source-only build copy, module dependencies and startup/portrait behavior on a Pixel 9a emulator (API 37) have been checked; see [C01 evidence](openspec/changes/archive/2026-09-30-android-foundation/design.md#assistance-and-validation-record). C02 configures formatting/static-analysis gates, explicit hooks and CI. Behavioral tests begin with the capabilities they verify; current modules have no product tests.
+The shell displays the resource-based application name using the shared dark Material 3 theme. See [C01 evidence](openspec/changes/archive/2026-09-30-android-foundation/design.md#assistance-and-validation-record) for the foundation checks and [C03 evidence](openspec/changes/archive/2026-10-01-character-card-images/design.md#validation-record) for implementation and verification.
+
+Components have standard Android Studio previews. Product behavior will be exercised through the real Home and Detail screens as they are implemented.
 
 ## Quality checks
 
@@ -67,6 +69,8 @@ The shell displays the resource-based application name in a native dark Material
 `qualityCheck` runs ktlint 1.8.0, Detekt 2.0.0-alpha.6, Android debug lint, JVM test tasks and debug assembly. Detekt uses its isolated CLI for source analysis without type resolution; the pinned alpha is build tooling only. Tool versions live in the catalogue. See [C02](openspec/changes/archive/2026-09-30-shared-quality-checks/design.md) for compatibility and executed validation.
 
 Install the hook explicitly once per clone. The pre-commit runs `ktlintCheck detekt` against working-tree source, including unstaged Kotlin changes. It never formats, stages or stashes files. Installation is repeatable and refuses to replace custom hook configuration. Full tests/build/lint remain in `qualityCheck` and CI.
+
+Instrumented screen and journey tests will be configured with their real product flows. They are not included in the current `qualityCheck` or CI workflow. Screenshot regression tooling remains later optional work.
 
 Reports: `build/reports/ktlint/ktlint.xml`, `build/reports/detekt/`, and each Android module's `build/reports/lint-results-debug.html`. JVM test reports appear in module `build/reports/tests/` when tests exist. The [Quality workflow](.github/workflows/quality.yml) runs the full gate for pull requests, main pushes and manual dispatch, with pinned actions and read-only repository permissions. Reports are uploaded even after failed checks; deployment is not configured.
 

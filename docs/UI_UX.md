@@ -202,7 +202,7 @@ The selected references and implementation adjustments are recorded above. Visua
 
 ## Component and icon inventory
 
-Status: visual inventory from the reviewed content exports and agreed state contracts, checked 2026-09-30. Selected content and Home/Detail state references have been reviewed with the handoff adjustments above; pagination and image samples can be resolved directly in Compose. Names below identify design pieces, not implemented Kotlin classes or a requirement for one class/file per row. Earlier sections own behavior; this table records the pieces and their assets without creating another specification.
+Status: visual inventory from the reviewed content exports and agreed state contracts, checked 2026-09-30. Selected content and Home/Detail state references have been reviewed with the handoff adjustments above; pagination and image samples can be resolved directly in Compose. Names below identify design pieces, not implemented Kotlin classes or a requirement for one class/file per row. Earlier sections own behavior; this table records the pieces and their assets without creating another specification. C03 implements the Home card, local portrait feedback and skeleton plus shared theme/loading primitives; standard previews support visual review, while interaction tests will cover the implemented screens; C03 is accepted and archived. Complete Home and Detail screens remain later increments.
 
 | Component | Where and required variants | Icons or visual marks | Evidence/status |
 |---|---|---|---|

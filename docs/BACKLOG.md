@@ -1,6 +1,6 @@
 # Implementation backlog
 
-Status: product/design preparation complete; OpenSpec initialized. C01 is accepted and archived; C02 is accepted, validated locally and in CI, and archived. Remaining identifiers are queued tickets, not existing OpenSpec changes. Work advances after acceptance and human review. No time estimates are assigned.
+Status: product/design preparation complete; OpenSpec initialized. C01 is accepted and archived; C02 is accepted, validated locally and in CI, and archived. C03 is accepted and archived; later identifiers are queued tickets, not existing OpenSpec changes. Work advances after acceptance and human review. No time estimates are assigned.
 
 Move each ticket into its OpenSpec change when it is prepared, then replace its detailed entry here with a link. OpenSpec owns that change's tasks and evidence from then on. Retire this temporary file when the remaining queue has been migrated; do not maintain two copies. Product priorities live in [PRD](PRD.md), screen design in [UI/UX Definition](UI_UX.md), technical decisions in [ARCHITECTURE](ARCHITECTURE.md), and the shared process in [DEVELOPMENT](DEVELOPMENT.md).
 
@@ -29,11 +29,11 @@ These statuses describe completed planning, not a working Android application. N
 
 ### C03 — Character card and image loading
 
-Depends on C01 and uses C02 checks. Implement generic visual foundations in the design system and a character card in home with a noninteractive skeleton variant, independent image/content/error states, status text and selection callback. Configure one shared image loader and correctly sized requests. Test observable semantics/interaction with controlled images and inspect previews. Do not duplicate the image library's internal cache tests or introduce catalogue networking yet.
+**Accepted, locally validated and archived.** See the [proposal](../openspec/changes/archive/2026-10-01-character-card-images/proposal.md), [scenarios](../openspec/changes/archive/2026-10-01-character-card-images/specs/character-card-images/spec.md), [design/evidence](../openspec/changes/archive/2026-10-01-character-card-images/design.md) and [tasks](../openspec/changes/archive/2026-10-01-character-card-images/tasks.md).
 
 ### C04 — First remote catalogue page
 
-Depends on C03. Deliver API → shared repository contract → home ViewModel → grid, with card-skeleton loading/content/error/retry. Test repository HTTP mapping and errors with MockWebServer and state behavior through a fake repository. Preserve cancellation and keep DTOs inside data. This increment does not yet complete catalogue browsing.
+Depends on C03. Deliver API → shared repository contract → home ViewModel → grid, with card-skeleton loading/content/error/retry. Test repository HTTP mapping and errors with MockWebServer and state behavior through a fake repository. Once the real Home screen is integrated, add Compose tests for its loading/content/error/retry states, card selection and image-failure behavior, using controlled data and images; configure compatible AndroidX instrumentation at that point and run the real screen tests on API 37. Preserve cancellation and keep DTOs inside data. This increment does not yet complete catalogue browsing.
 
 ### C05 — Character detail and back navigation
 
@@ -89,6 +89,6 @@ Use a fake monitor to verify initial Unknown, disconnection/recovery, duplicate 
 
 **O02 — Catalogue accessibility demonstration:** verify TalkBack traversal of cards/search/chips/retry, meaningful announcements, large text and contrast. Record manual evidence and the exact screen scope.
 
-**O03 — Additional visual verification:** add a focused screenshot scenario only after identifying the visual behavior it protects. Avoid assertions that merely restate implementation details. Mandatory architecture checks belong to C05A.
+**O03 — Additional visual verification:** use focused screenshot tests for card/skeleton geometry, portrait composition, theme and large text after identifying the visual behavior they protect. Compose interaction tests remain at real screen/flow boundaries; screenshots do not replace callbacks, retries or navigation assertions. Avoid assertions that merely restate implementation details. Mandatory architecture checks belong to C05A.
 
 Each optional change is selected and reviewed independently before C12.
