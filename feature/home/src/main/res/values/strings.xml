@@ -5,4 +5,9 @@
     <string name="portrait_loading">Loading portrait</string>
     <string name="portrait_unavailable">Portrait unavailable</string>
     <string name="character_loading">Loading character</string>
+    <string name="catalogue_error">Couldn\'t load characters</string>
+    <string name="catalogue_error_description">Something went wrong. Please try again.</string>
+    <string name="retry">Retry</string>
+    <string name="catalogue_empty">No characters available.</string>
+    <string name="catalogue_empty_description">The character catalogue is currently empty.</string>
 </resources>

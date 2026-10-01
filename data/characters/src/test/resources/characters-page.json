@@ -1,0 +1,7 @@
+{
+  "info": {"count": 57, "pages": 3, "next": "https://rickandmortyapi.com/api/character?page=2", "prev": null},
+  "results": [
+    {"id": 1, "name": "Rick Sanchez", "species": "Human", "status": "Alive", "image": "https://images.example/rick.jpeg", "type": "", "episode": ["episode/1"]},
+    {"id": 2, "name": "Morty Smith", "species": "Human", "status": "unknown", "image": null, "gender": "Male"}
+  ]
+}

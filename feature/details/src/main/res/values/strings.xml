@@ -1,0 +1,21 @@
+<resources>
+    <string name="back">Back</string>
+    <string name="retry">Retry</string>
+    <string name="entity_profile">ENTITY PROFILE #%1$d</string>
+    <string name="character_specifications">CHARACTER SPECIFICATIONS</string>
+    <string name="type">Type</string>
+    <string name="gender">Gender</string>
+    <string name="origin">Origin</string>
+    <string name="last_location">Last known location</string>
+    <string name="episode_appearances">Episode appearances</string>
+    <string name="status_alive">Alive</string>
+    <string name="status_dead">Dead</string>
+    <string name="unknown">Unknown</string>
+    <string name="portrait_loading">Loading portrait</string>
+    <string name="portrait_unavailable">Portrait unavailable</string>
+    <string name="detail_loading">Loading character details</string>
+    <string name="detail_error">Couldn\'t load character</string>
+    <string name="detail_error_description">Something went wrong. Please try again.</string>
+    <string name="detail_not_found">Character not found</string>
+    <string name="detail_not_found_description">This character is no longer available.</string>
+</resources>

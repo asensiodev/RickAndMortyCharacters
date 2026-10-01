@@ -7,11 +7,13 @@ import coil3.SingletonImageLoader
 import coil3.disk.DiskCache
 import coil3.memory.MemoryCache
 import coil3.request.crossfade
+import dagger.hilt.android.HiltAndroidApp
 import okio.Path.Companion.toOkioPath
 
 private const val IMAGE_MEMORY_FRACTION = 0.20
 private const val IMAGE_DISK_CACHE_BYTES = 32L * 1024 * 1024
 
+@HiltAndroidApp
 class RickAndMortyApplication :
     Application(),
     SingletonImageLoader.Factory {

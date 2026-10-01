@@ -1,0 +1,13 @@
+{
+  "id": 361,
+  "name": "Toxic Rick",
+  "status": "Dead",
+  "species": "Humanoid",
+  "type": "Rick's toxic side",
+  "gender": "Male",
+  "origin": { "name": "Detoxifier", "url": "https://rickandmortyapi.com/api/location/64" },
+  "location": { "name": "Earth (Replacement Dimension)", "url": "https://rickandmortyapi.com/api/location/20" },
+  "image": "https://rickandmortyapi.com/api/character/avatar/361.jpeg",
+  "episode": ["https://rickandmortyapi.com/api/episode/27"],
+  "url": "https://rickandmortyapi.com/api/character/361"
+}

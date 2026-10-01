@@ -1,0 +1,119 @@
+package com.asensiodev.rickandmortycharacters.feature.details.composables
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import com.asensiodev.rickandmortycharacters.core.designsystem.theme.Spacing
+import com.asensiodev.rickandmortycharacters.feature.details.R
+import com.asensiodev.rickandmortycharacters.feature.details.model.CharacterDetailsUiModel
+
+@Composable
+internal fun DetailsFacts(character: CharacterDetailsUiModel, modifier: Modifier = Modifier) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = DetailsTokens.factsShape,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+    ) {
+        Column(
+            Modifier.padding(Spacing.large),
+            verticalArrangement = Arrangement.spacedBy(Spacing.extraLarge),
+        ) {
+            Text(
+                stringResource(R.string.character_specifications),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            character.type?.takeIf { it.isNotBlank() }?.let {
+                DetailFact(R.string.type, R.drawable.ic_fingerprint, displayFact(it))
+            }
+            DetailFact(R.string.gender, R.drawable.ic_wc, displayFact(character.gender))
+            DetailFact(R.string.origin, R.drawable.ic_public, displayFact(character.origin))
+            DetailFact(
+                R.string.last_location,
+                R.drawable.ic_location_on,
+                displayFact(character.location),
+            )
+            Row(
+                Modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
+                horizontalArrangement = Arrangement.spacedBy(Spacing.large),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                FactLabel(
+                    R.string.episode_appearances,
+                    R.drawable.ic_movie,
+                    Modifier.weight(DetailsTokens.FACT_VALUE_WEIGHT),
+                )
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                ) {
+                    Text(
+                        character.episodeCount.toString(),
+                        Modifier.padding(horizontal = Spacing.small, vertical = Spacing.tiny),
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DetailFact(label: Int, icon: Int, value: String) {
+    Row(
+        Modifier.fillMaxWidth().semantics(mergeDescendants = true) {},
+        horizontalArrangement = Arrangement.spacedBy(Spacing.large),
+        verticalAlignment = Alignment.Top,
+    ) {
+        FactLabel(label, icon, Modifier.weight(DetailsTokens.FACT_VALUE_WEIGHT))
+        Text(
+            value,
+            Modifier.weight(DetailsTokens.FACT_VALUE_WEIGHT),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.End,
+        )
+    }
+}
+
+@Composable
+private fun FactLabel(label: Int, icon: Int, modifier: Modifier = Modifier) {
+    Row(
+        modifier,
+        horizontalArrangement = Arrangement.spacedBy(Spacing.small),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(
+            painterResource(icon),
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(DetailsTokens.iconSize),
+        )
+        Text(
+            stringResource(label),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
+internal fun displayFact(value: String): String =
+    if (value.equals("unknown", ignoreCase = true)) stringResource(R.string.unknown) else value
