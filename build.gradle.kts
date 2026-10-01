@@ -68,12 +68,20 @@ val androidModules =
         ":core:designsystem",
     )
 
+val konsistCheck by tasks.registering {
+    group = "verification"
+    description = "Runs the JVM production architecture checks."
+    dependsOn(":domain:characters:konsistCheck")
+}
+
 tasks.register("qualityCheck") {
     group = "verification"
-    description = "Runs formatting, static analysis, Android lint, JVM tests and debug assembly."
+    description =
+        "Runs formatting, static analysis, architecture checks, Android lint, JVM tests and debug assembly."
     dependsOn(
         ktlintCheck,
         detekt,
+        konsistCheck,
         ":domain:characters:test",
         ":app:assembleDebug",
     )
