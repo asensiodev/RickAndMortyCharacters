@@ -1,6 +1,6 @@
 # Implementation backlog
 
-Status: product/design preparation complete; OpenSpec initialized. C01 is accepted and archived; C02 is accepted, validated locally and in CI, and archived. C03 is accepted and archived; later identifiers are queued tickets, not existing OpenSpec changes. Work advances after acceptance and human review. No time estimates are assigned.
+Status: product/design preparation complete; OpenSpec initialized. C01 is accepted and archived; C02 is accepted, validated locally and in CI, and archived. C03 is accepted and archived; C04 is accepted, locally validated and archived; C05 is accepted, locally validated and archived; C05A is accepted, locally validated and archived; later identifiers remain queued tickets. Work advances after acceptance and human review. No time estimates are assigned.
 
 Move each ticket into its OpenSpec change when it is prepared, then replace its detailed entry here with a link. OpenSpec owns that change's tasks and evidence from then on. Retire this temporary file when the remaining queue has been migrated; do not maintain two copies. Product priorities live in [PRD](PRD.md), screen design in [UI/UX Definition](UI_UX.md), technical decisions in [ARCHITECTURE](ARCHITECTURE.md), and the shared process in [DEVELOPMENT](DEVELOPMENT.md).
 
@@ -33,21 +33,19 @@ These statuses describe completed planning, not a working Android application. N
 
 ### C04 — First remote catalogue page
 
-Depends on C03. Deliver API → shared repository contract → home ViewModel → grid, with card-skeleton loading/content/error/retry. Test repository HTTP mapping and errors with MockWebServer and state behavior through a fake repository. Once the real Home screen is integrated, add Compose tests for its loading/content/error/retry states, card selection and image-failure behavior, using controlled data and images; configure compatible AndroidX instrumentation at that point and run the real screen tests on API 37. Preserve cancellation and keep DTOs inside data. This increment does not yet complete catalogue browsing.
+**Accepted, locally validated and archived.** See the [proposal](../openspec/changes/archive/2026-10-01-first-remote-catalogue/proposal.md), [scenarios](../openspec/changes/archive/2026-10-01-first-remote-catalogue/specs/character-catalogue/spec.md), [design/test boundaries](../openspec/changes/archive/2026-10-01-first-remote-catalogue/design.md) and [tasks](../openspec/changes/archive/2026-10-01-first-remote-catalogue/tasks.md). OpenSpec owns the detailed C04 work.
 
 ### C05 — Character detail and back navigation
 
-Depends on C04. Implement the independent details module; the app connects home and details using an ID and callbacks. Both features consume the shared character-domain contract and neither imports the other feature. Cover loading/error/retry/not-found, optional fields and episode count without extra episode requests. Use repository/state tests and a deterministic instrumented grid → detail → back journey. Verify normal return keeps query, filter and scroll without reopening the keyboard; missing detail is a state of that destination, never a route used for empty search. Include the approved portrait/detail structure, subtle parallax with a static alternative, an always-available Back control, the basic navigation transition and preserved browsing context.
+**Accepted, locally validated and archived.** See the [proposal](../openspec/changes/archive/2026-10-01-character-detail-navigation/proposal.md), [scenarios](../openspec/changes/archive/2026-10-01-character-detail-navigation/specs/character-detail/spec.md), [navigation contract](../openspec/changes/archive/2026-10-01-character-detail-navigation/specs/character-navigation/spec.md), [design/test boundaries](../openspec/changes/archive/2026-10-01-character-detail-navigation/design.md) and [tasks](../openspec/changes/archive/2026-10-01-character-detail-navigation/tasks.md). OpenSpec owns the detailed C05 work.
 
 ### C05A — Architecture checks with Konsist — Must
 
-Depends on C05 and is completed before C06. Pin a compatible Konsist version and add focused JVM architecture tests to an existing module's test sources, retaining the six-module graph. Select rules against the implemented code, such as internal data DTOs and ViewModels that expose read-only state rather than mutable flows. Avoid duplicating boundaries already enforced by Gradle/Kotlin or naming checks already enforced by ktlint/Detekt.
-
-Expose a `konsistCheck` task and include it in `qualityCheck` so the same checks run locally and in CI. Observe a representative forbidden declaration fail, then restore it and verify recovery. Keep the rules readable and document their commands with the owning OpenSpec change.
+**Accepted, locally validated and archived.** See the [proposal](../openspec/changes/archive/2026-10-01-konsist-architecture-checks/proposal.md), [scenarios](../openspec/changes/archive/2026-10-01-konsist-architecture-checks/specs/architecture-checks/spec.md), [design/test boundaries](../openspec/changes/archive/2026-10-01-konsist-architecture-checks/design.md) and [tasks](../openspec/changes/archive/2026-10-01-konsist-architecture-checks/tasks.md). OpenSpec owns the detailed C05A work. It follows accepted C05 and precedes C06.
 
 ### C06 — Complete pagination
 
-Depends on C04 and C05A; review after C05A. Add subsequent pages, remote completion and append retry while retaining loaded cards. Prevent duplicate concurrent loads. Verify multipage fixtures, failing/retried pages and one state owner. Include the floating counter with the real loaded-item count and API total for the current query; test growth across pages, retention on append failure and end-of-list behavior without counting placeholders. Distinguish a confirmed API list-end response from retryable append errors, retaining loaded cards in both cases. Review the Paging adapter and load-state contract without leaking Paging into domain.
+Depends on accepted C04 and C05A; next change to prepare for scope and test-boundary review. Add subsequent pages, remote completion and append retry while retaining loaded cards. Prevent duplicate concurrent loads. Verify multipage fixtures, failing/retried pages and one state owner. Include the floating counter with the real loaded-item count and API total for the current query; test growth across pages, retention on append failure and end-of-list behavior without counting placeholders. Distinguish a confirmed API list-end response from retryable append errors, retaining loaded cards in both cases. Review the Paging adapter and load-state contract without leaking Paging into domain.
 
 ### C07 — Search by name — Must
 
@@ -69,7 +67,7 @@ Depends on C09. Specify and verify recreation behavior for query, status and des
 
 ### C11 — Visual and motion consistency
 
-Depends on the implemented main flow. Reconcile cards, chips, detail, loading feedback, image fades and transitions with the approved design. Check system animation settings, narrow layouts, text size and image-heavy scrolling. Address observed issues and add regression tests where they protect behavior. Visual quality is implemented throughout earlier changes; this pass closes inconsistencies.
+Depends on the implemented main flow. Reconcile cards, chips, detail, loading feedback, image fades and transitions with the approved design. Evaluate additional UI animations, including skeleton-to-content and navigation transitions, and add only motion that improves continuity or feedback without delaying data or disrupting interaction. Choose its scope and native Compose API after reviewing the integrated screens. Check system animation settings, narrow layouts, text size and image-heavy scrolling. Address observed issues and add regression tests where they protect behavior. Visual quality is implemented throughout earlier changes; this pass closes inconsistencies.
 
 ### C12 — Reproducible release candidate
 

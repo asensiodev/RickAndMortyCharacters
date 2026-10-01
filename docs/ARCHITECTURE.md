@@ -1,6 +1,6 @@
 # Architecture and technical decisions
 
-Status: the six-module foundation and shared checks are implemented. C03 adds Home card components, generic theme/loading primitives and the app-owned Coil loader, accepted and archived. Domain/data contracts, ViewModels, navigation and the real catalogue remain planned. The production entry point is a minimal Compose shell.
+Status: the six-module foundation and shared checks are implemented. C03 adds Home card components, generic theme/loading primitives and the app-owned Coil loader, accepted and archived. C04 implements domain/data contracts, Hilt and repository-backed Home first-page states, accepted and archived. C05 implements character detail and typed Navigation 3 wiring, accepted, locally validated and archived. C05A architecture checks are accepted, locally validated and archived. Further browsing capabilities remain planned; the production entry point opens Home.
 
 ## Module boundaries
 
@@ -49,15 +49,46 @@ Layer ownership remains shared for character data:
 
 Do not create empty `data` and `domain` folders inside each feature or duplicate the character model and cache. Feature-owned business rules can be introduced when there is actual behavior to own; reusable rules belong with the shared domain. Package boundaries within a module are conventions, while the project graph enforces module dependencies.
 
+## Source packages
+
+Group existing files by responsibility within their module:
+
+| Owner | Packages |
+|---|---|
+| Home and Details | `composables` for rendering and its layout/card tokens; `model` for immutable UI models, state and actions. Private IDE previews and their fixtures live with their rendering composables. Route and ViewModel remain at the feature root |
+| Character domain | `model` for character/page values; `repository` for the interface and its result/failure contract |
+| Character data | `remote` for API/DTOs; `repository` for the implementation; `di` for bindings |
+| Design system | `theme` for colours, typography, shapes, spacing and theme composition; `composables` for generic UI primitives |
+
+Tests mirror the package of the subject they exercise. Keep constants with their consumer and create packages only when they have content. App entry points remain at the root, with typed destinations and wiring in `navigation`; Details uses the same feature packages as Home. These folders improve navigation without changing module boundaries or adding layers.
+
+The package refactor was assisted by Codex on 2026-10-01 and verified through `gradle_run.py`: the 16 JVM tests and seven Home tests pass on API 37; `qualityCheck` and debug/release assembly also pass. It preserves screen behavior and test boundaries.
+
+## Executable architecture checks
+
+C05A adds three Konsist source checks in the existing domain test sources. Data remote/repository top-level types remain internal/private; feature ViewModels remain internal; their visible state has an explicit read-only `StateFlow` type. Other outward properties declare `val` types, preventing inferred or declared mutable flow owners from escaping. The public DI replacement module remains allowed.
+
+`konsistCheck` scans explicit main Kotlin roots and tracks those files as Gradle inputs, so feature/data edits invalidate the JVM task. It participates in `qualityCheck` and domain `check`, without a production dependency or module. These bounded checks complement compiler-enforced dependencies and behavior tests; they do not prove deep immutability or coroutine correctness. Actual failure/recovery evidence lives in [C05A](../openspec/changes/archive/2026-10-01-konsist-architecture-checks/design.md#implementation-and-validation-record).
+
 ## UDF/MVI presentation
 
 Screens render immutable state and emit explicit actions. ViewModels coordinate requests and state transitions, and Compose collects state with lifecycle awareness. This is a pragmatic MVI implementation using Android UDF practices, not a dependency on a dedicated MVI framework. [Android architecture recommendations](https://developer.android.com/topic/architecture/recommendations).
 
-Planned `HomeContent` and `DetailsContent` render immutable presentation state and callbacks independently from ViewModel/navigation wiring. Composition owns keyboard, focus and scroll objects; ViewModels own query/request state. Keep the search controls outside the results-state branch so loading or empty content does not recreate the input.
+`HomeContent` and `DetailsContent` render immutable presentation state and callbacks independently from ViewModel/navigation wiring. Composition owns keyboard, focus and scroll objects; ViewModels own query/request state. Keep the search controls outside the results-state branch so loading or empty content does not recreate the input.
 
 Durable loading/content/error outcomes are represented in state. A card click can invoke a navigation callback; navigation does not require a global event bus. Search, filter and load-state changes never navigate. Query changes cancel or supersede previous work, and cancellation must not be converted into a user error.
 
 If Paging 3 is selected, its page generation and load state have one owner. The screen may consume a control `UiState` alongside a paginated flow; it must not maintain a competing list of copied items. A presentation-side PagingSource can adapt the pure repository page contract without exposing Paging types from domain. The concrete contract will be reviewed before implementation. The pure page result also carries the active query total mapped from API `info.count`. Keep that metadata tied to the same query generation as the items; obsolete results must not update the counter. Derive the loaded count from real items available in that generation, without counting placeholders or maintaining a second item list. The counter needs no separate API call; reset it with query changes.
+
+## Implemented detail and navigation
+
+`CharactersRepository.getDetails(id)` returns a pure `CharacterDetailsResult`: Success, NotFound or Failure. Data reuses the page client, validates the returned identity and maps the episode array length without related requests. Only the recognized detail 404 body is NotFound; other HTTP errors are Service, malformed required data is InvalidResponse, and I/O failures are Network. Cancellation propagates. The existing first-page catalogue 404 contract is preserved.
+
+`DetailsViewModel` owns one entry identity and immutable Loading/Content/Error/NotFound state. Load is idempotent; Retry applies only in Error and changes state to Loading before starting work, preventing duplicate pending actions. `DetailsRoute` wires lifecycle-aware collection to stateless `DetailsContent` and receives Back as a callback.
+
+App owns serializable Home and Detail(ID) keys through `rememberNavBackStack` and `NavDisplay`, with the saveable-state decorator before the ViewModel-store decorator. Hilt resolves ViewModels inside their entry owners. Selection is accepted only while Home is the top entry; detail Back only pops its active entry, never the root. Home's ViewModel and saveable grid position survive normal return; popping detail cancels its request owner.
+
+The portrait uses the shared Coil loader, clipped bounds and layer-phase scroll reads. Its local effect observes the framework `MotionDurationScale` signal; scale zero disables scroll-linked translation without a second platform observer. `StatusColors` supplies the same Alive/Dead palette to both features. See [C05 evidence](../openspec/changes/archive/2026-10-01-character-detail-navigation/design.md#validation-and-ai-record) for the tests and native motion check. Process-death acceptance remains C10.
 
 ## Direct repositories and selective use cases
 
@@ -89,7 +120,7 @@ The reason for app ownership is visible behaviour: switching between home and de
 
 ## Images and response caching
 
-C03 configures Coil 3.6.3 through the application’s `SingletonImageLoader.Factory`. Home accepts the shared loader and uses `coil-compose-core`; its square portrait constraints bound request size. Coil owns a 20% memory cache and a 32 MiB disk cache in `cacheDir/character_images`, with a crossfade on success. Loading and failure affect only the portrait; metadata and selection remain available. The presentation-only `CharacterCardUiModel` has no domain conversion yet. No independent bitmap cache is added. [Coil ImageLoader](https://coil-kt.github.io/coil/image_loaders/).
+C03 configures Coil 3.6.3 through the application’s `SingletonImageLoader.Factory`. Home accepts the shared loader and uses `coil-compose-core`; its square portrait constraints bound request size. Coil owns a 20% memory cache and a 32 MiB disk cache in `cacheDir/character_images`, with a crossfade on success. Loading and failure affect only the portrait; metadata and selection remain available. Home maps domain summaries into the presentation-only `CharacterCardUiModel`. No independent bitmap cache is added. [Coil ImageLoader](https://coil-kt.github.io/coil/image_loaders/).
 
 HTTP response caching is a Must. Configure one API OkHttp client with one bounded disk `Cache` in the app cache directory, initially targeting 10 MiB. The cache belongs to `data:characters`; its directory is distinct from Coil's image cache. Let the HTTP library own response storage and validation, without a custom JSON store or header-rewriting interceptor.
 

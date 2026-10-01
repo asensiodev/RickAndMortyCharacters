@@ -2,7 +2,7 @@
 
 An Android app for exploring Rick and Morty characters, searching by name, filtering by status and viewing character details.
 
-**Status:** Android foundation and quality tooling accepted; [C03](openspec/changes/archive/2026-10-01-character-card-images/proposal.md) implements character cards, image states and the dark theme, accepted and archived. The production entry point remains a minimal Compose shell; the real catalogue is the next increment.
+**Status:** Home loads the first remote character page and opens character details by ID. Both screens handle their applicable loading and error states; detail also handles missing characters. Back retains Home content and scroll. [C05](openspec/changes/archive/2026-10-01-character-detail-navigation/design.md) is accepted, locally validated on API 37 and archived. C01–C05 are accepted and archived; C05A architecture checks are accepted, locally validated and archived. Pagination, search/filter and HTTP response caching remain subsequent increments.
 
 ## Planned experience
 
@@ -24,7 +24,7 @@ Selected Stitch mockups for the planned native app. See [UI/UX Definition](docs/
 
 Home and details have separate feature modules. They share pure character-domain contracts, data access and a design system; the app composes navigation and dependencies. The six-module graph is defined in [ARCHITECTURE](docs/ARCHITECTURE.md).
 
-Presentation follows unidirectional data flow with ViewModel/StateFlow and explicit actions. ViewModels consume repository interfaces directly; use cases are introduced where business logic warrants them. Coil 3 is configured with a shared image loader and bounded memory/disk caches. Compose interaction tests will cover implemented screen states and user flows; screenshot checks remain later visual verification. Hilt, Retrofit/OkHttp, repository/ViewModel tests and the application journey land with their corresponding capabilities. ktlint, Detekt, Android Lint and a GitHub Actions workflow are configured; the shared gate has passed in GitHub Actions. The foundation toolchain and setup are documented below; the remaining libraries and checks land in their corresponding changes.
+Presentation follows unidirectional data flow with ViewModel/StateFlow and explicit actions. ViewModels consume repository interfaces directly; use cases are introduced where business logic warrants them. Coil 3 is configured with a shared image loader and bounded memory/disk caches. Compose interaction tests cover implemented screen states and navigation journeys; screenshot checks remain later visual verification. Hilt creates entry-scoped Home and Details ViewModels through Navigation 3; Retrofit/OkHttp and kotlinx.serialization stay inside data. Repository tests use real HTTP fixtures through MockWebServer; ViewModel tests use fakes, coroutines-test and Turbine; Home/Details screen tests use Compose with controlled images; navigation tests run the production Activity with test-only Hilt repository replacement. ktlint, Detekt, Konsist, Android Lint and a GitHub Actions workflow are configured. The previously published Quality run passed; C05A's extended gate is verified locally and awaits a remote run. The foundation toolchain and setup are documented below; the remaining libraries and checks land in their corresponding changes.
 
 ## Development setup
 
@@ -55,24 +55,33 @@ adb install --no-streaming -r app/build/outputs/apk/debug/app-debug.apk
 adb shell am start -W -n com.asensiodev.rickandmortycharacters/.MainActivity
 ```
 
-The shell displays the resource-based application name using the shared dark Material 3 theme. See [C01 evidence](openspec/changes/archive/2026-09-30-android-foundation/design.md#assistance-and-validation-record) for the foundation checks and [C03 evidence](openspec/changes/archive/2026-10-01-character-card-images/design.md#validation-record) for implementation and verification.
+The application opens the real Home grid using the shared dark Material 3 theme and requests the first unfiltered catalogue page. Selecting a card opens its detail through Navigation 3. See [C01 evidence](openspec/changes/archive/2026-09-30-android-foundation/design.md#assistance-and-validation-record) for the foundation checks and [C03 evidence](openspec/changes/archive/2026-10-01-character-card-images/design.md#validation-record) for implementation and verification.
 
-Components have standard Android Studio previews. Product behavior will be exercised through the real Home and Detail screens as they are implemented.
+Components have standard Android Studio previews. Home includes previews for Loading, Content, Empty and Error at ordinary and narrow/large-text sizes. Details includes ordinary-size Content, Loading, Error and NotFound previews. Previews live beside their rendering composables, with controlled images and private fixtures.
 
 ## Quality checks
 
 ```sh
 ./gradlew qualityCheck
+./gradlew konsistCheck
 ./gradlew installGitHooks
 ```
 
-`qualityCheck` runs ktlint 1.8.0, Detekt 2.0.0-alpha.6, Android debug lint, JVM test tasks and debug assembly. Detekt uses its isolated CLI for source analysis without type resolution; the pinned alpha is build tooling only. Tool versions live in the catalogue. See [C02](openspec/changes/archive/2026-09-30-shared-quality-checks/design.md) for compatibility and executed validation.
+`qualityCheck` runs ktlint 1.8.0, Detekt 2.0.0-alpha.6, Konsist 0.17.3 architecture checks, Android debug lint, JVM test tasks and debug assembly. Detekt uses its isolated CLI for source analysis without type resolution; the pinned alpha is build tooling only. Tool versions live in the catalogue. See [C02](openspec/changes/archive/2026-09-30-shared-quality-checks/design.md) for compatibility and executed validation.
+
+`konsistCheck` verifies internal data implementation types, internal feature ViewModels and explicitly read-only state, with private mutable flow owners. It scans main sources from the six modules through test-only dependencies in domain; it also runs through `qualityCheck` and the module's `check`. See [C05A evidence](openspec/changes/archive/2026-10-01-konsist-architecture-checks/design.md#implementation-and-validation-record).
 
 Install the hook explicitly once per clone. The pre-commit runs `ktlintCheck detekt` against working-tree source, including unstaged Kotlin changes. It never formats, stages or stashes files. Installation is repeatable and refuses to replace custom hook configuration. Full tests/build/lint remain in `qualityCheck` and CI.
 
-Instrumented screen and journey tests will be configured with their real product flows. They are not included in the current `qualityCheck` or CI workflow. Screenshot regression tooling remains later optional work.
+Current coverage includes 34 JVM tests (17 repository + 14 ViewModel + 3 architecture), validated locally in C05A, and 20 instrumented tests (7 Home + 7 Details + 6 production navigation journeys), previously verified on API 37 in C05. Run the screen/journey suites with a connected API 37 emulator/device:
 
-Reports: `build/reports/ktlint/ktlint.xml`, `build/reports/detekt/`, and each Android module's `build/reports/lint-results-debug.html`. JVM test reports appear in module `build/reports/tests/` when tests exist. The [Quality workflow](.github/workflows/quality.yml) runs the full gate for pull requests, main pushes and manual dispatch, with pinned actions and read-only repository permissions. Reports are uploaded even after failed checks; deployment is not configured.
+```sh
+./gradlew :feature:home:connectedDebugAndroidTest :feature:details:connectedDebugAndroidTest :app:connectedDebugAndroidTest
+```
+
+Instrumented tests are not included in the current `qualityCheck` or CI workflow; they currently run locally. Screenshot regression tooling remains later optional work.
+
+Reports: `build/reports/ktlint/ktlint.xml`, `build/reports/detekt/`, and each Android module's `build/reports/lint-results-debug.html`. JVM test reports appear in module `build/reports/tests/` when tests exist; architecture reports are in `domain/characters/build/reports/tests/konsistCheck/`. The [Quality workflow](.github/workflows/quality.yml) runs the full gate for pull requests, main pushes and manual dispatch, with pinned actions and read-only repository permissions. Reports are uploaded even after failed checks; deployment is not configured.
 
 ## Documentation
 
