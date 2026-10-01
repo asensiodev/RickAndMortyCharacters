@@ -40,11 +40,16 @@ internal class RemoteCharactersRepository @Inject constructor(private val api: C
         CharacterDetailsResult.Failure(CharacterRequestFailure.Network)
     }
 
-    override suspend fun getPage(page: Int): CharactersPageResult = try {
-        val response = api.getPage(page)
+    override suspend fun getPage(page: Int, name: String?): CharactersPageResult = try {
+        val requestedName = name?.trim()?.takeIf { it.isNotEmpty() }
+        val response = api.getPage(page, requestedName)
         if (!response.isSuccessful) {
-            if (page > 1 && isCatalogueEnd(response)) {
-                CharactersPageResult.EndOfCatalogue
+            if ((page > 1 || requestedName != null) && isCatalogueEnd(response)) {
+                if (page > 1) {
+                    CharactersPageResult.EndOfCatalogue
+                } else {
+                    CharactersPageResult.Success(CharacterPage(emptyList(), 0, null))
+                }
             } else {
                 response.errorBody()?.close()
                 CharactersPageResult.Failure(CharacterRequestFailure.Service)

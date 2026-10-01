@@ -2,7 +2,7 @@
 
 An Android app for exploring Rick and Morty characters, searching by name, filtering by status and viewing character details.
 
-**Status:** Home browses remote pages with Paging 3, contextual append Retry and a real loaded/total counter. Character detail opens by ID; Back retains loaded data and scroll. Both screens handle applicable loading/error states; detail also handles missing characters. C01–C05 and C05A are accepted and archived. [C06 pagination](openspec/changes/archive/2026-10-01-complete-catalogue-pagination/design.md) is accepted, locally validated on API 37 and archived. Search/filter and HTTP response caching remain subsequent increments.
+**Status:** Home browses remote pages with Paging 3, contextual append Retry and a real loaded/total counter. Character detail opens by ID; Back retains loaded data and scroll. Both screens handle applicable loading/error states; detail also handles missing characters. C01–C05 and C05A are accepted and archived. [C06 pagination](openspec/changes/archive/2026-10-01-complete-catalogue-pagination/design.md) is accepted, locally validated on API 37 and archived. [C07 name search](openspec/changes/archive/2026-10-01-search-characters-by-name/design.md) is accepted, locally validated and archived, with debounce, keyboard submission, clear and no-match shortcuts. Status filters and HTTP response caching remain subsequent increments.
 
 ## Planned experience
 
@@ -55,7 +55,7 @@ adb install --no-streaming -r app/build/outputs/apk/debug/app-debug.apk
 adb shell am start -W -n com.asensiodev.rickandmortycharacters/.MainActivity
 ```
 
-The application opens the real Home grid using the shared dark Material 3 theme and loads further unfiltered catalogue pages as the grid approaches the loaded end. The floating counter uses presented items and the API total; append failures retain cards with footer Retry. Selecting a card opens its detail through Navigation 3. See [C01 evidence](openspec/changes/archive/2026-09-30-android-foundation/design.md#assistance-and-validation-record) for the foundation checks and [C03 evidence](openspec/changes/archive/2026-10-01-character-card-images/design.md#validation-record) for implementation and verification.
+The application opens the real Home grid using the shared dark Material 3 theme and loads further pages for the applied name as the grid approaches the loaded end. Search is debounced; keyboard Search submits immediately, and Clear removes the name constraint. The floating counter uses presented items and the API total; append failures retain cards with footer Retry. Selecting a card opens its detail through Navigation 3. See [C01 evidence](openspec/changes/archive/2026-09-30-android-foundation/design.md#assistance-and-validation-record) for the foundation checks and [C03 evidence](openspec/changes/archive/2026-10-01-character-card-images/design.md#validation-record) for implementation and verification.
 
 Components have standard Android Studio previews. Home includes previews for Loading, Content, Empty, Error and append progress/error, including ordinary and narrow/large-text sizes. Details includes ordinary-size Content, Loading, Error and NotFound previews. Previews live beside their rendering composables, with controlled images and private fixtures.
 
@@ -73,7 +73,7 @@ Components have standard Android Studio previews. Home includes previews for Loa
 
 Install the hook explicitly once per clone. The pre-commit runs `ktlintCheck detekt` against working-tree source, including unstaged Kotlin changes. It never formats, stages or stashes files. Installation is repeatable and refuses to replace custom hook configuration. Full tests/build/lint remain in `qualityCheck` and CI.
 
-C06 validates 43 JVM tests (20 repository + 15 ViewModel + 5 PagingSource + 3 architecture). Following the test-readability and card-layout reviews, all 28 instrumented tests pass together on API 37 (14 Home + 7 Details + 7 production navigation journeys). The full local quality gate and release assembly pass; execution evidence lives in the C06 design record. Run the screen/journey suites with a connected API 37 emulator/device:
+C07 validates 54 JVM tests (24 repository + 22 ViewModel + 5 PagingSource + 3 architecture) and 35 instrumented tests on API 37 (19 Home + 7 Details + 9 production navigation journeys), with zero failures/errors/skips. The full local quality gate and release assembly pass; [C07 evidence](openspec/changes/archive/2026-10-01-search-characters-by-name/design.md#implementation-and-validation-record) records executed checks and native search/error recovery. C07 is accepted and archived. Run the screen/journey suites with a connected API 37 emulator/device:
 
 ```sh
 ./gradlew :feature:home:connectedDebugAndroidTest :feature:details:connectedDebugAndroidTest :app:connectedDebugAndroidTest

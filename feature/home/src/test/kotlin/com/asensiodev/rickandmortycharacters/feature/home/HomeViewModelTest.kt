@@ -16,12 +16,16 @@ import com.asensiodev.rickandmortycharacters.domain.characters.repository.Charac
 import com.asensiodev.rickandmortycharacters.domain.characters.repository.CharactersRepository
 import com.asensiodev.rickandmortycharacters.feature.home.model.CharacterCardUiModel
 import com.asensiodev.rickandmortycharacters.feature.home.model.CharacterStatusUi
+import com.asensiodev.rickandmortycharacters.feature.home.model.HomeSearchAction
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -48,6 +52,177 @@ class HomeViewModelTest {
     fun tearDown() {
         viewModelStore.clear()
     }
+
+    @Test
+    fun `GIVEN a pending name request WHEN another name is applied THEN it cancels obsolete loading without a user error`() =
+        runTest(mainDispatcher.dispatcher) {
+            val cancelled = CompletableDeferred<Unit>()
+            val pending = CompletableDeferred<Unit>()
+            fakeCharactersRepository.response = { _, name ->
+                if (name == "Rick") {
+                    try {
+                        pending.await()
+                    } catch (error: CancellationException) {
+                        cancelled.complete(Unit)
+                        throw error
+                    }
+                }
+                CharactersPageResult.Success(
+                    CharacterPage(
+                        listOf(CharacterSummary(1, "Beth", "Human", CharacterStatus.Alive, null)),
+                        1,
+                        null,
+                    ),
+                )
+            }
+            homeViewModel.onSearchAction(HomeSearchAction.Edit("Rick"))
+            homeViewModel.onSearchAction(HomeSearchAction.Submit)
+            backgroundScope.launch { homeViewModel.characters.asSnapshot() }
+            repeat(10) { runCurrent() }
+
+            homeViewModel.onSearchAction(HomeSearchAction.Edit("Beth"))
+            homeViewModel.onSearchAction(HomeSearchAction.Submit)
+            repeat(10) { runCurrent() }
+            val snapshot = homeViewModel.characters.asSnapshot()
+
+            assertTrue(cancelled.isCompleted)
+            assertEquals(listOf("Beth"), snapshot.map { it.name })
+            assertEquals(1, homeViewModel.state.value.totalCount)
+        }
+
+    @Test
+    fun `GIVEN an applied name WHEN an equivalent name is submitted THEN it preserves the generation and pages`() =
+        runTest(mainDispatcher.dispatcher) {
+            homeViewModel.onSearchAction(HomeSearchAction.Edit("Rick"))
+            homeViewModel.onSearchAction(HomeSearchAction.Submit)
+            val first = homeViewModel.characters.asSnapshot()
+
+            homeViewModel.onSearchAction(HomeSearchAction.Edit(" Rick "))
+            homeViewModel.onSearchAction(HomeSearchAction.Submit)
+            advanceTimeBy(500)
+            val second = homeViewModel.characters.asSnapshot()
+
+            assertEquals(first, second)
+            assertEquals(1L, homeViewModel.state.value.generation)
+            assertEquals(listOf("Rick"), fakeCharactersRepository.requestedNames)
+        }
+
+    @Test
+    fun `GIVEN a pending name edit WHEN search is cleared THEN it reloads the unfiltered result immediately`() =
+        runTest(mainDispatcher.dispatcher) {
+            homeViewModel.onSearchAction(HomeSearchAction.Edit("Rick"))
+            homeViewModel.onSearchAction(HomeSearchAction.Submit)
+            homeViewModel.characters.asSnapshot()
+            homeViewModel.onSearchAction(HomeSearchAction.Edit("Beth"))
+
+            homeViewModel.onSearchAction(HomeSearchAction.Clear)
+            homeViewModel.characters.asSnapshot()
+            advanceTimeBy(500)
+            runCurrent()
+
+            assertEquals("", homeViewModel.state.value.searchText)
+            assertEquals(null, homeViewModel.state.value.appliedName)
+            assertEquals(listOf("Rick", null), fakeCharactersRepository.requestedNames)
+            assertEquals(2L, homeViewModel.state.value.generation)
+        }
+
+    @Test
+    fun `GIVEN a searched catalogue WHEN appending fails and is retried THEN every page retains its name`() =
+        runTest(mainDispatcher.dispatcher) {
+            fakeCharactersRepository.addThreePages()
+            fakeCharactersRepository.failOnce += 2
+            homeViewModel.onSearchAction(HomeSearchAction.Edit("Rick"))
+            homeViewModel.onSearchAction(HomeSearchAction.Submit)
+
+            val snapshot = homeViewModel.characters.asSnapshot(onError = { ErrorRecovery.RETRY }) { scrollTo(45) }
+
+            assertEquals(60, snapshot.size)
+            assertEquals(listOf(1, 2, 2, 3), fakeCharactersRepository.requestedPages)
+            assertEquals(listOf("Rick", "Rick", "Rick", "Rick"), fakeCharactersRepository.requestedNames)
+            assertTrue(snapshot.all { it.generation == 1L })
+        }
+
+    @Test
+    fun `GIVEN a late first query WHEN names change away and back THEN its old total cannot replace the current result`() =
+        runTest(mainDispatcher.dispatcher) {
+            val obsoleteResponse = CompletableDeferred<Unit>()
+            var firstRick = true
+            fakeCharactersRepository.response = { _, name ->
+                if (name == "Rick" && firstRick) {
+                    firstRick = false
+                    withContext(NonCancellable) { obsoleteResponse.await() }
+                    CharactersPageResult.Success(CharacterPage(emptyList(), 999, null))
+                } else {
+                    CharactersPageResult.Success(
+                        CharacterPage(
+                            listOf(CharacterSummary(42, name ?: "All", "Human", CharacterStatus.Alive, null)),
+                            1,
+                            null,
+                        ),
+                    )
+                }
+            }
+            homeViewModel.onSearchAction(HomeSearchAction.Edit("Rick"))
+            homeViewModel.onSearchAction(HomeSearchAction.Submit)
+            backgroundScope.launch { homeViewModel.characters.asSnapshot() }
+            repeat(10) { runCurrent() }
+            assertEquals(listOf("Rick"), fakeCharactersRepository.requestedNames)
+
+            homeViewModel.onSearchAction(HomeSearchAction.Edit("Beth"))
+            homeViewModel.onSearchAction(HomeSearchAction.Submit)
+            repeat(10) { runCurrent() }
+            homeViewModel.onSearchAction(HomeSearchAction.Edit("Rick"))
+            homeViewModel.onSearchAction(HomeSearchAction.Submit)
+            repeat(10) { runCurrent() }
+            obsoleteResponse.complete(Unit)
+            val snapshot = homeViewModel.characters.asSnapshot()
+
+            assertEquals(1, homeViewModel.state.value.totalCount)
+            assertEquals(3L, homeViewModel.state.value.generation)
+            assertEquals(listOf(42), snapshot.map { it.id })
+            assertTrue(snapshot.all { it.generation == 3L })
+        }
+
+    @Test
+    fun `GIVEN loaded pages WHEN a new name is submitted THEN it starts a fresh named first page`() = runTest(mainDispatcher.dispatcher) {
+        homeViewModel.characters.asSnapshot()
+        fakeCharactersRepository.pages[1] = CharacterPage(
+            listOf(CharacterSummary(90, "Beth", "Human", CharacterStatus.Alive, null)),
+            1,
+            null,
+        )
+        homeViewModel.onSearchAction(HomeSearchAction.Edit(" Beth "))
+
+        homeViewModel.onSearchAction(HomeSearchAction.Submit)
+        runCurrent()
+        val snapshot = homeViewModel.characters.asSnapshot()
+        advanceTimeBy(500)
+        runCurrent()
+
+        assertEquals(listOf(90), snapshot.map { it.id })
+        assertEquals(listOf(null, "Beth"), fakeCharactersRepository.requestedNames)
+        assertEquals(listOf(1, 1), fakeCharactersRepository.requestedPages)
+        assertEquals(" Beth ", homeViewModel.state.value.searchText)
+        assertEquals(1, homeViewModel.state.value.totalCount)
+    }
+
+    @Test
+    fun `GIVEN successive name edits WHEN the debounce elapses THEN only the latest name is applied`() =
+        runTest(mainDispatcher.dispatcher) {
+            homeViewModel.onSearchAction(HomeSearchAction.Edit("Ri"))
+            advanceTimeBy(200)
+            homeViewModel.onSearchAction(HomeSearchAction.Edit(" Rick "))
+            advanceTimeBy(299)
+            runCurrent()
+            assertEquals(null, homeViewModel.state.value.appliedName)
+
+            advanceTimeBy(1)
+            runCurrent()
+
+            assertEquals("Rick", homeViewModel.state.value.appliedName)
+            assertEquals(" Rick ", homeViewModel.state.value.searchText)
+            assertEquals(1L, homeViewModel.state.value.generation)
+        }
 
     @Test
     fun `GIVEN remote characters WHEN paging is collected THEN it emits the repository catalogue`() = runTest(mainDispatcher.dispatcher) {
@@ -168,9 +343,11 @@ class HomeViewModelTest {
 private class FakeCharactersRepository : CharactersRepository {
     val pages = mutableMapOf(1 to page(1, 20, null))
     val requestedPages = mutableListOf<Int>()
+    val requestedNames = mutableListOf<String?>()
     val failOnce = mutableSetOf<Int>()
     var pending: CompletableDeferred<Unit>? = null
     var cancelled = false
+    var response: (suspend (Int, String?) -> CharactersPageResult)? = null
 
     fun addThreePages() {
         pages[1] = page(1, 60, 2)
@@ -180,9 +357,11 @@ private class FakeCharactersRepository : CharactersRepository {
 
     override suspend fun getDetails(characterId: Int): CharacterDetailsResult = CharacterDetailsResult.NotFound
 
-    override suspend fun getPage(page: Int): CharactersPageResult {
+    override suspend fun getPage(page: Int, name: String?): CharactersPageResult {
         requestedPages += page
+        requestedNames += name
         return try {
+            response?.let { return it(page, name) }
             pending?.await()
             if (failOnce.remove(page)) {
                 CharactersPageResult.Failure(CharacterRequestFailure.Service)

@@ -13,4 +13,12 @@
     <string name="catalogue_append_loading">Loading more characters</string>
     <string name="catalogue_append_error">Couldn\'t load more characters</string>
     <string name="catalogue_loaded_count">Loaded %1$d of %2$d characters</string>
+    <string name="search_characters">Search characters</string>
+    <string name="clear_search">Clear search</string>
+    <string name="catalogue_no_matches">No characters found</string>
+    <string name="catalogue_no_matches_description">Try another name or status.</string>
+    <string name="suggest_rick" translatable="false">Rick</string>
+    <string name="suggest_morty" translatable="false">Morty</string>
+    <string name="suggest_beth" translatable="false">Beth</string>
+    <string name="suggest_summer" translatable="false">Summer</string>
 </resources>

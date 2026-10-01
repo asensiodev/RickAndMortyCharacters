@@ -3,6 +3,7 @@
 package com.asensiodev.rickandmortycharacters
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotFocused
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasText
@@ -11,7 +12,10 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.performTouchInput
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso
@@ -53,6 +57,51 @@ class NavigationJourneyTest {
     @After
     fun tearDown() {
         mainActivityScenario.close()
+    }
+
+    @Test
+    fun GIVEN_a_scrolled_search_WHEN_a_different_name_is_submitted_THEN_it_resets_the_grid_to_the_new_first_page() {
+        compose.runOnIdle { fakeCharactersRepository.pageCount = 2 }
+        compose.onNodeWithContentDescription("Search characters").performClick().performTextInput("Rick")
+        compose.onNodeWithContentDescription("Search characters").performImeAction()
+        compose.waitUntil { compose.onAllNodesWithText("Rick 1").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Rick 19"))
+        compose.waitUntil { compose.onAllNodesWithText("Loaded 40 of 40 characters").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Rick 40"))
+
+        compose.onNodeWithContentDescription("Search characters").performClick().performTextReplacement("Beth")
+        compose.onNodeWithContentDescription("Search characters").performImeAction()
+        compose.waitUntil { compose.onAllNodesWithText("Beth 1").fetchSemanticsNodes().isNotEmpty() }
+
+        compose.onNodeWithText("Beth 1").assertIsDisplayed()
+        compose.onNodeWithText("Rick 40").assertDoesNotExist()
+        compose.onNodeWithText("Loaded 20 of 40 characters").assertIsDisplayed()
+        assertEquals("Beth", fakeCharactersRepository.requestedNames.last())
+        assertEquals(1, fakeCharactersRepository.requestedPages.last())
+    }
+
+    @Test
+    fun GIVEN_a_name_search_WHEN_returning_from_later_detail_THEN_it_retains_query_pages_and_scroll_without_the_keyboard() {
+        compose.runOnIdle { fakeCharactersRepository.pageCount = 2 }
+        compose.onNodeWithContentDescription("Search characters").performClick().performTextInput("Rick")
+        compose.onNodeWithContentDescription("Search characters").performImeAction()
+        compose.waitUntil { compose.onAllNodesWithText("Rick 1").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Rick 19"))
+        compose.waitUntil { compose.onAllNodesWithText("Loaded 40 of 40 characters").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Rick 40"))
+        val priorBounds = compose.onNodeWithText("Rick 40").fetchSemanticsNode().boundsInRoot
+        val requests = fakeCharactersRepository.requestedNames.toList()
+
+        compose.onNodeWithText("Rick 40").performClick()
+        compose.onNodeWithText("ENTITY PROFILE #40").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Back").performClick()
+
+        compose.onNodeWithText("Rick 40").assertIsDisplayed()
+        compose.onNodeWithText("Loaded 40 of 40 characters").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Search characters").assertIsNotFocused()
+        assertEquals(priorBounds, compose.onNodeWithText("Rick 40").fetchSemanticsNode().boundsInRoot)
+        assertEquals(requests, fakeCharactersRepository.requestedNames)
+        assertEquals(listOf("Rick", "Rick"), requests.filterNotNull())
     }
 
     @Test

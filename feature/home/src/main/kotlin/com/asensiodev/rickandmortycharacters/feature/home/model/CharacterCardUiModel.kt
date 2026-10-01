@@ -9,6 +9,7 @@ data class CharacterCardUiModel(
     val species: String,
     val status: CharacterStatusUi,
     val imageUrl: String?,
+    val generation: Long = 0,
 )
 
 enum class CharacterStatusUi {

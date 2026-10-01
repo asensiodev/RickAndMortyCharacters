@@ -5,6 +5,7 @@ package com.asensiodev.rickandmortycharacters.feature.home.composables
 import androidx.compose.ui.unit.dp
 
 internal object HomeLayoutTokens {
+    val searchIconSize = 24.dp
     val counterDotSize = 6.dp
     val paginationProgressSize = 24.dp
     val feedbackContainerSize = 80.dp

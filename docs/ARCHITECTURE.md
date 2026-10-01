@@ -1,6 +1,6 @@
 # Architecture and technical decisions
 
-Status: the six-production-module foundation and shared checks are implemented. C03 adds Home card components, generic theme/loading primitives and the app-owned Coil loader, accepted and archived. C04 implements domain/data contracts, Hilt and repository-backed Home first-page states, accepted and archived. C05 implements character detail and typed Navigation 3 wiring, accepted, locally validated and archived. C05A architecture checks are accepted, locally validated and archived. C06 implements pagination, append recovery and the loaded/total counter, locally validated, accepted and archived. Search/filter and HTTP caching remain planned; the production entry point opens Home.
+Status: the six-production-module foundation and shared checks are implemented. C03 adds Home card components, generic theme/loading primitives and the app-owned Coil loader, accepted and archived. C04 implements domain/data contracts, Hilt and repository-backed Home first-page states, accepted and archived. C05 implements character detail and typed Navigation 3 wiring, accepted, locally validated and archived. C05A architecture checks are accepted, locally validated and archived. C06 implements pagination, append recovery and the loaded/total counter, locally validated, accepted and archived. C07 adds remote name search and generation isolation; accepted and archived. Status filters and HTTP caching remain planned; the production entry point opens Home.
 
 ## Module boundaries
 
@@ -83,7 +83,17 @@ Durable loading/content/error outcomes are represented in state. A card click ca
 
 C06 uses Paging 3.5.1. `HomeViewModel` owns one Pager, mapped to card models and cached in its lifetime; `CharactersPagingSource` adapts the pure repository contract inside Home. Paging owns items, request coordination and loading/retry states. The ViewModel exposes only the API total in read-only `HomePagingState`; it has no second accumulated list or refresh/append jobs. `HomeRoute` collects `LazyPagingItems`, references its item snapshot in a render projection and performs indexed access during lazy card rendering to supply prefetch hints. Stable keys use snapshot IDs without accessing every Paging index.
 
-Page size and initial load size are 20, prefetch distance is 5, placeholders are disabled and loaded pages are retained for the bounded catalogue. `nextPage` drives forward traversal; there is no refresh gesture. The counter uses real presented items and the first-page API total. Confirmed append end preserves that total; errors retain the grid with footer Retry. Home owns measured overlay clearance and hides the counter while the IME is visible. Query generation/reset belongs to C07/C08 and is not implemented yet. See [C06 evidence](../openspec/changes/archive/2026-10-01-complete-catalogue-pagination/design.md).
+Page size and initial load size are 20, prefetch distance is 5, placeholders are disabled and loaded pages are retained for the bounded catalogue. `nextPage` drives forward traversal; there is no refresh gesture. The counter uses real presented items and the first-page API total. Confirmed append end preserves that total; errors retain the grid with footer Retry. Home owns measured overlay clearance and hides the counter while the IME is visible. C07 switches cached Pager generations for the applied name and resets pagination, counter and scroll. Status filtering remains C08. See [C06 evidence](../openspec/changes/archive/2026-10-01-complete-catalogue-pagination/design.md).
+
+## Implemented name search
+
+Home exposes explicit Edit, Submit, Clear and Suggest actions. `HomePagingState` separates raw input from the trimmed applied name, API total and generation identity. Typing waits 300 ms; keyboard Search and suggestions cancel debounce and apply immediately. Equivalent applied names preserve the generation. Clear immediately removes the constraint.
+
+The query flow uses `distinctUntilChanged` and `flatMapLatest` before `cachedIn(viewModelScope)`. Each PagingSource captures name/generation, supplies the name on every page and updates totals only for the current generation. Card models and typed Paging errors carry presentation-only generation identity so HomeRoute rejects older results/errors even while Paging replaces its snapshot. Missing current items remain Loading; only a completed zero-total result becomes Empty. Paging retains ownership of data, loads and Retry without a second item list.
+
+The repository's optional name parameter remains pure Kotlin; Retrofit query encoding and recognized filtered-first-page 404 mapping stay in data. Unfiltered first-page and malformed/unrecognized errors remain failures. Append-end and detail contracts retain their previous semantics.
+
+HomeContent keeps search mounted outside the results branch. Compose owns text selection, focus, keyboard and grid position; a generation change resets scroll once, while ordinary Detail → Back retains it. No matches offers fixed name shortcuts on Home; query errors retain contextual Retry. No new module or dependency is required. [C07 design and evidence](../openspec/changes/archive/2026-10-01-search-characters-by-name/design.md).
 
 ## Implemented detail and navigation
 

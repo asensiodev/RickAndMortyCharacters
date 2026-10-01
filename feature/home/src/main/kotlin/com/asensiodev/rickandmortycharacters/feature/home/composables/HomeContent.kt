@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,8 +21,10 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
+import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -30,12 +33,15 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -44,6 +50,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -63,6 +71,8 @@ import com.asensiodev.rickandmortycharacters.feature.home.R
 import com.asensiodev.rickandmortycharacters.feature.home.model.CharacterCardUiModel
 import com.asensiodev.rickandmortycharacters.feature.home.model.CharacterStatusUi
 import com.asensiodev.rickandmortycharacters.feature.home.model.HomeAppendState
+import com.asensiodev.rickandmortycharacters.feature.home.model.HomePagingState
+import com.asensiodev.rickandmortycharacters.feature.home.model.HomeSearchAction
 import com.asensiodev.rickandmortycharacters.feature.home.model.HomeUiState
 import kotlinx.collections.immutable.persistentListOf
 
@@ -79,16 +89,72 @@ fun HomeContent(
     onRetry: () -> Unit,
     onCharacterSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    cardContent: @Composable (Int, CharacterCardUiModel) -> Unit = { _, character ->
-        CharacterCard(character, imageLoader, onCharacterSelected)
-    },
+    searchState: HomePagingState = HomePagingState(),
+    onSearchAction: (HomeSearchAction) -> Unit = {},
+    cardContent: (@Composable (Int, CharacterCardUiModel) -> Unit)? = null,
 ) {
-    BoxWithConstraints(
+    val gridState = rememberLazyGridState()
+    var scrolledGeneration by rememberSaveable { mutableLongStateOf(searchState.generation) }
+    LaunchedEffect(searchState.generation) {
+        if (scrolledGeneration != searchState.generation) {
+            gridState.scrollToItem(0)
+            scrolledGeneration = searchState.generation
+        }
+    }
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    val searchAction: (HomeSearchAction) -> Unit = { action ->
+        onSearchAction(action)
+        if (action is HomeSearchAction.Submit || action is HomeSearchAction.Suggest) {
+            focusManager.clearFocus()
+            keyboard?.hide()
+        }
+    }
+    val selectCharacter: (Int) -> Unit = { id ->
+        focusManager.clearFocus()
+        keyboard?.hide()
+        onCharacterSelected(id)
+    }
+    Column(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .safeDrawingPadding(),
     ) {
+        HomeSearchField(
+            searchState.searchText,
+            searchAction,
+            Modifier.padding(start = Spacing.large, top = Spacing.large, end = Spacing.large),
+        )
+        HomeResultsPanel(
+            state,
+            searchState,
+            gridState,
+            onRetry,
+            searchAction,
+            modifier = Modifier.weight(1f).fillMaxWidth(),
+        ) { index, character ->
+            if (cardContent == null) {
+                CharacterCard(character, imageLoader, selectCharacter)
+            } else {
+                cardContent(index, character)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun HomeResultsPanel(
+    state: HomeUiState,
+    searchState: HomePagingState,
+    gridState: LazyGridState,
+    onRetry: () -> Unit,
+    onSearchAction: (HomeSearchAction) -> Unit,
+    modifier: Modifier = Modifier,
+    cardContent: @Composable (Int, CharacterCardUiModel) -> Unit,
+) {
+    BoxWithConstraints(modifier) {
         var counterHeightPx by rememberSaveable { mutableIntStateOf(0) }
         val content = state as? HomeUiState.Content
         val showCounter = content != null && content.characters.isNotEmpty() &&
@@ -111,7 +177,11 @@ fun HomeContent(
             .verticalScroll(rememberScrollState())
             .heightIn(min = maxHeight)
             .padding(Spacing.extraLarge)
-        HomeResults(state, columns, bottomPadding, feedbackModifier, onRetry, cardContent)
+        HomeResults(
+            state, columns, bottomPadding, feedbackModifier, onRetry, gridState,
+            searchState.appliedName != null, onSearchAction,
+            cardContent,
+        )
         if (showCounter) {
             HomeLoadedCounter(
                 loadedCount = content.characters.size,
@@ -133,6 +203,9 @@ private fun HomeResults(
     bottomPadding: Dp,
     feedbackModifier: Modifier,
     onRetry: () -> Unit,
+    gridState: LazyGridState,
+    hasNameConstraint: Boolean,
+    onSearchAction: (HomeSearchAction) -> Unit,
     cardContent: @Composable (Int, CharacterCardUiModel) -> Unit,
 ) {
     when (state) {
@@ -141,10 +214,11 @@ private fun HomeResults(
             columns,
             bottomPadding,
             onRetry,
+            gridState,
             cardContent,
         )
 
-        HomeUiState.Loading -> HomeGrid(columns) {
+        HomeUiState.Loading -> HomeGrid(columns, gridState) {
             items(HomeLayoutTokens.SKELETON_COUNT, contentType = { "skeleton" }) {
                 CharacterCardSkeleton()
             }
@@ -160,11 +234,34 @@ private fun HomeResults(
         }
 
         HomeUiState.Empty -> HomeFeedback(
-            title = stringResource(R.string.catalogue_empty),
-            description = stringResource(R.string.catalogue_empty_description),
+            title = stringResource(if (hasNameConstraint) R.string.catalogue_no_matches else R.string.catalogue_empty),
+            description = stringResource(
+                if (hasNameConstraint) {
+                    R.string.catalogue_no_matches_description
+                } else {
+                    R.string.catalogue_empty_description
+                },
+            ),
             icon = R.drawable.ic_travel_explore,
             modifier = feedbackModifier,
-        )
+        ) {
+            if (hasNameConstraint) HomeSearchSuggestions(onSearchAction)
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun HomeSearchSuggestions(onAction: (HomeSearchAction) -> Unit) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(Spacing.small, Alignment.CenterHorizontally),
+        verticalArrangement = Arrangement.spacedBy(Spacing.small),
+    ) {
+        listOf(R.string.suggest_rick, R.string.suggest_morty, R.string.suggest_beth, R.string.suggest_summer)
+            .forEach { resource ->
+                val name = stringResource(resource)
+                OutlinedButton(onClick = { onAction(HomeSearchAction.Suggest(name)) }) { Text(name) }
+            }
     }
 }
 
@@ -174,9 +271,10 @@ private fun HomeCharacterGrid(
     columns: Int,
     bottomPadding: Dp,
     onRetry: () -> Unit,
+    gridState: LazyGridState,
     cardContent: @Composable (Int, CharacterCardUiModel) -> Unit,
 ) {
-    HomeGrid(columns, bottomPadding = bottomPadding) {
+    HomeGrid(columns, gridState, bottomPadding = bottomPadding) {
         itemsIndexed(
             state.characters,
             key = { _, character ->
@@ -201,12 +299,14 @@ private fun HomeCharacterGrid(
 @Composable
 private fun HomeGrid(
     columns: Int,
+    gridState: LazyGridState,
     modifier: Modifier = Modifier,
     bottomPadding: Dp = Spacing.large,
     content: LazyGridScope.() -> Unit,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(columns),
+        state = gridState,
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             start = Spacing.large,

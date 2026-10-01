@@ -8,11 +8,13 @@ import com.asensiodev.rickandmortycharacters.domain.characters.repository.Charac
 
 internal class CharactersPagingSource(
     private val repository: CharactersRepository,
+    private val name: String? = null,
+    private val generation: Long = 0,
     private val onTotalCount: (Int) -> Unit,
 ) : PagingSource<Int, CharacterSummary>() {
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, CharacterSummary> {
         val page = params.key ?: 1
-        return when (val result = repository.getPage(page)) {
+        return when (val result = repository.getPage(page, name)) {
             is CharactersPageResult.Success -> {
                 if (page == 1) onTotalCount(result.page.totalCount)
                 LoadResult.Page(
@@ -29,7 +31,7 @@ internal class CharactersPagingSource(
             )
 
             is CharactersPageResult.Failure -> LoadResult.Error(
-                IllegalStateException(result.reason.name),
+                CharactersPagingException(result.reason, generation),
             )
         }
     }

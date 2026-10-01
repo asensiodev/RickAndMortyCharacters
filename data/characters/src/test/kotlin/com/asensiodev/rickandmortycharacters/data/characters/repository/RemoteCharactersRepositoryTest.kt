@@ -44,6 +44,50 @@ class RemoteCharactersRepositoryTest {
     }
 
     @Test
+    fun `GIVEN a spaced name WHEN each page is requested THEN it retains the trimmed encoded name`() = runTest {
+        val body = requireNotNull(javaClass.getResource("/characters-page.json")).readText()
+        for (page in 1..2) {
+            server.enqueue(MockResponse.Builder().body(body).build())
+
+            charactersRepository.getPage(page, "  Rick & Morty  ")
+
+            val request = server.takeRequest()
+            assertEquals("Rick & Morty", request.url.queryParameter("name"))
+            assertEquals(page.toString(), request.url.queryParameter("page"))
+        }
+    }
+
+    @Test
+    fun `GIVEN a blank name WHEN its page is requested THEN it omits the name constraint`() = runTest {
+        server.enqueue(MockResponse.Builder().body("""{"info":{"count":0,"next":null},"results":[]}""").build())
+
+        charactersRepository.getPage(1, "   ")
+
+        assertEquals(null, server.takeRequest().url.queryParameter("name"))
+    }
+
+    @Test
+    fun `GIVEN unknown filtered errors WHEN their first page is requested THEN they remain failures`() = runTest {
+        for (body in listOf("{broken", "{}", """{"error":"Unavailable"}""")) {
+            server.enqueue(MockResponse.Builder().code(404).body(body).build())
+
+            val result = charactersRepository.getPage(1, "Rick")
+
+            assertEquals(CharactersPageResult.Failure(CharacterRequestFailure.Service), result)
+        }
+    }
+
+    @Test
+    fun `GIVEN a name without matches WHEN its first page is requested THEN it returns an empty result`() = runTest {
+        server.enqueue(MockResponse.Builder().code(404).body("""{"error":"There is nothing here"}""").build())
+
+        val result = charactersRepository.getPage(1, "Missing name")
+
+        assertEquals(CharactersPageResult.Success(CharacterPage(emptyList(), 0, null)), result)
+        assertEquals("Missing name", server.takeRequest().url.queryParameter("name"))
+    }
+
+    @Test
     fun `GIVEN a recognized end response WHEN the next page is requested THEN it confirms the catalogue has ended`() = runTest {
         server.enqueue(
             MockResponse.Builder().code(
