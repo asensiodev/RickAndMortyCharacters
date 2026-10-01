@@ -1,6 +1,6 @@
 # Architecture and technical decisions
 
-Status: the six-production-module foundation and shared checks are implemented. C03 adds Home card components, generic theme/loading primitives and the app-owned Coil loader, accepted and archived. C04 implements domain/data contracts, Hilt and repository-backed Home first-page states, accepted and archived. C05 implements character detail and typed Navigation 3 wiring, accepted, locally validated and archived. C05A architecture checks are accepted, locally validated and archived. C06 implements pagination, append recovery and the loaded/total counter, locally validated, accepted and archived. C07 adds remote name search and generation isolation; accepted and archived. Status filters and HTTP caching remain planned; the production entry point opens Home.
+Status: the six-production-module foundation and shared checks are implemented. C03 adds Home card components, generic theme/loading primitives and the app-owned Coil loader, accepted and archived. C04 implements domain/data contracts, Hilt and repository-backed Home first-page states, accepted and archived. C05 implements character detail and typed Navigation 3 wiring, accepted, locally validated and archived. C05A architecture checks are accepted, locally validated and archived. C06 implements pagination, append recovery and the loaded/total counter, locally validated, accepted and archived. C07 adds remote name search and generation isolation; accepted and archived. C08 status filters are accepted and locally validated. C09 implements locally validated HTTP response caching, accepted for publication; archival pending; the production entry point opens Home.
 
 ## Module boundaries
 
@@ -137,7 +137,7 @@ The reason for app ownership is visible behaviour: switching between home and de
 
 C03 configures Coil 3.6.3 through the application’s `SingletonImageLoader.Factory`. Home accepts the shared loader and uses `coil-compose-core`; its square portrait constraints bound request size. Coil owns a 20% memory cache and a 32 MiB disk cache in `cacheDir/character_images`, with a crossfade on success. Loading and failure affect only the portrait; metadata and selection remain available. Home maps domain summaries into the presentation-only `CharacterCardUiModel`. No independent bitmap cache is added. [Coil ImageLoader](https://coil-kt.github.io/coil/image_loaders/).
 
-HTTP response caching is a Must. Configure one API OkHttp client with one bounded disk `Cache` in the app cache directory, initially targeting 10 MiB. The cache belongs to `data:characters`; its directory is distinct from Coil's image cache. Let the HTTP library own response storage and validation, without a custom JSON store or header-rewriting interceptor.
+C09 configures the singleton API OkHttp client with a 10 MiB disk `Cache` in `cacheDir/character_http`, distinct from Coil's `character_images`. The internal client factory and Hilt composition belong to `data:characters`; catalogue and detail share the client. OkHttp owns storage and validation without a custom JSON store or header-rewriting interceptor.
 
 The reuse contract is:
 
@@ -149,6 +149,6 @@ The reuse contract is:
 
 On 2026-09-30, GET probes of `/api/character?page=1&name=rick&status=alive` and `/api/character/1` returned `200`, an `ETag`, and `Cache-Control: public, max-age=7776000, immutable`. The advertised freshness lifetime is 90 days; this is an observation of the provider's policy, not an application constant or a guarantee for every response. The client must account for response age and recheck actual headers during implementation. No conditional request or Android cache implementation was tested by these probes.
 
-MockWebServer tests will verify our configuration and contract: fresh reuse avoids a second request; stale data triggers conditional validation when possible; `no-store` is not retained; changed queries do not mix; and an expired entry with a failed network request does not trigger a custom stale fallback. Cache misses and eviction remain normal behavior.
+C09 has 14 passing repository/MockWebServer cache tests covering fresh catalogue/detail reuse, reopened disk storage, stale ETag/304 validation, changed bodies, no-validator requests, page/name/status/ID/Vary separation, no-store/no-cache, expired transport/service failures and cleared storage. Existing repository cancellation and contextual-error tests also pass. Cache misses and eviction remain normal behavior. Current provider headers and exact validation evidence are recorded in [C09](../openspec/changes/cache-character-http-responses/design.md#implementation-and-validation-record).
 
 References: [OkHttp Cache contract](https://github.com/lysine-dev/okhttp/blob/main/okhttp/src/commonJvmAndroid/kotlin/okhttp3/Cache.kt), [HTTP caching standard](https://httpwg.org/specs/rfc9111.html). UI-state retention on back navigation is separate from HTTP caching.

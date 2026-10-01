@@ -57,9 +57,7 @@ These statuses describe completed planning, not a working Android application. N
 
 ### C09 — HTTP response caching — Must
 
-Depends on C08, using the repository introduced in C04/C05. Configure a single bounded API cache in `data:characters`, separate from image caching. Recheck real endpoint headers; preserve server freshness/validation directives instead of hardcoding the observed 90-day lifetime.
-
-Use MockWebServer and a temporary cache directory to verify: an identical fresh request produces no second HTTP request; a stale entry with an ETag sends a validator and reuses the body on 304; a changed response replaces the stored body; page/name/status/ID changes retain distinct responses; `no-store` is not retained; and an expired entry does not acquire custom stale-on-error behavior. Fully consume/close responses so tests exercise committed cache entries. Record these outcomes through the repository/HTTP boundary, not by testing OkHttp internals. No Room, cache-only mode or JSON-file repository is added.
+**Accepted for publication and locally validated; archival pending.** See the [proposal](../openspec/changes/cache-character-http-responses/proposal.md), [scenarios](../openspec/changes/cache-character-http-responses/specs/character-http-cache/spec.md), [design/test boundaries](../openspec/changes/cache-character-http-responses/design.md) and [tasks](../openspec/changes/cache-character-http-responses/tasks.md). OpenSpec owns C09's detailed work. C08 and C09 acceptance are recorded; archival remains pending.
 
 ### C10 — Minimal state restoration — Should
 
