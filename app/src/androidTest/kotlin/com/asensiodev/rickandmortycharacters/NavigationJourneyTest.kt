@@ -2,8 +2,11 @@
 
 package com.asensiodev.rickandmortycharacters
 
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotFocused
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasText
@@ -20,6 +23,7 @@ import androidx.compose.ui.test.performTouchInput
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterStatus
 import com.asensiodev.rickandmortycharacters.domain.characters.repository.CharacterDetailsResult
 import com.asensiodev.rickandmortycharacters.domain.characters.repository.CharacterRequestFailure
 import dagger.hilt.android.testing.BindValue
@@ -81,8 +85,36 @@ class NavigationJourneyTest {
     }
 
     @Test
-    fun GIVEN_a_name_search_WHEN_returning_from_later_detail_THEN_it_retains_query_pages_and_scroll_without_the_keyboard() {
+    fun GIVEN_a_scrolled_search_WHEN_status_changes_THEN_it_keeps_the_name_and_resets_the_grid_and_counter() {
         compose.runOnIdle { fakeCharactersRepository.pageCount = 2 }
+        compose.onNodeWithContentDescription("Search characters").performClick().performTextInput("Rick")
+        compose.onNodeWithContentDescription("Search characters").performImeAction()
+        compose.waitUntil { compose.onAllNodesWithText("Rick 1").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Rick 19"))
+        compose.waitUntil { compose.onAllNodesWithText("Loaded 40 of 40 characters").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Rick 40"))
+
+        compose.onNode(hasText("Unknown") and SemanticsMatcher.keyIsDefined(SemanticsProperties.Selected)).performClick()
+        compose.waitUntil { compose.onAllNodesWithText("Rick 1").fetchSemanticsNodes().isNotEmpty() }
+
+        compose.onNodeWithText("Rick 1").assertIsDisplayed()
+        compose.onNodeWithText("Rick 40").assertDoesNotExist()
+        assertEquals(
+            "pages=${fakeCharactersRepository.requestedPages} statuses=${fakeCharactersRepository.requestedStatuses}",
+            1,
+            fakeCharactersRepository.requestedPages.last(),
+        )
+        compose.waitUntil { compose.onAllNodesWithText("Loaded 20 of 40 characters").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Loaded 20 of 40 characters").assertIsDisplayed()
+        assertEquals("Rick", fakeCharactersRepository.requestedNames.last())
+        assertEquals(1, fakeCharactersRepository.requestedPages.last())
+        assertEquals(CharacterStatus.Unknown, fakeCharactersRepository.requestedStatuses.last())
+    }
+
+    @Test
+    fun GIVEN_a_combined_search_WHEN_returning_from_later_detail_THEN_it_retains_query_filters_pages_and_scroll_without_the_keyboard() {
+        compose.runOnIdle { fakeCharactersRepository.pageCount = 2 }
+        compose.onNode(hasText("Dead") and SemanticsMatcher.keyIsDefined(SemanticsProperties.Selected)).performClick()
         compose.onNodeWithContentDescription("Search characters").performClick().performTextInput("Rick")
         compose.onNodeWithContentDescription("Search characters").performImeAction()
         compose.waitUntil { compose.onAllNodesWithText("Rick 1").fetchSemanticsNodes().isNotEmpty() }
@@ -99,9 +131,11 @@ class NavigationJourneyTest {
         compose.onNodeWithText("Rick 40").assertIsDisplayed()
         compose.onNodeWithText("Loaded 40 of 40 characters").assertIsDisplayed()
         compose.onNodeWithContentDescription("Search characters").assertIsNotFocused()
+        compose.onNode(hasText("Dead") and SemanticsMatcher.keyIsDefined(SemanticsProperties.Selected)).assertIsSelected()
         assertEquals(priorBounds, compose.onNodeWithText("Rick 40").fetchSemanticsNode().boundsInRoot)
         assertEquals(requests, fakeCharactersRepository.requestedNames)
         assertEquals(listOf("Rick", "Rick"), requests.filterNotNull())
+        assertEquals(listOf(CharacterStatus.Dead, CharacterStatus.Dead), fakeCharactersRepository.requestedStatuses.takeLast(2))
     }
 
     @Test

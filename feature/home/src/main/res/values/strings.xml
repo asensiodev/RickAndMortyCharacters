@@ -21,4 +21,5 @@
     <string name="suggest_morty" translatable="false">Morty</string>
     <string name="suggest_beth" translatable="false">Beth</string>
     <string name="suggest_summer" translatable="false">Summer</string>
+    <string name="status_all">All</string>
 </resources>

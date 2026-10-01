@@ -2,10 +2,8 @@ package com.asensiodev.rickandmortycharacters.feature.details
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterDetails
 import com.asensiodev.rickandmortycharacters.domain.characters.repository.CharacterDetailsResult
 import com.asensiodev.rickandmortycharacters.domain.characters.repository.CharactersRepository
-import com.asensiodev.rickandmortycharacters.feature.details.model.CharacterDetailsUiModel
 import com.asensiodev.rickandmortycharacters.feature.details.model.DetailsAction
 import com.asensiodev.rickandmortycharacters.feature.details.model.DetailsUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -39,14 +37,10 @@ internal class DetailsViewModel @Inject constructor(private val repository: Char
         mutableState.value = DetailsUiState.Loading
         viewModelScope.launch {
             mutableState.value = when (val result = repository.getDetails(id)) {
-                is CharacterDetailsResult.Success -> DetailsUiState.Content(result.character.toUi())
+                is CharacterDetailsResult.Success -> DetailsUiState.Content(result.character)
                 CharacterDetailsResult.NotFound -> DetailsUiState.NotFound
                 is CharacterDetailsResult.Failure -> DetailsUiState.Error
             }
         }
     }
 }
-
-private fun CharacterDetails.toUi(): CharacterDetailsUiModel = CharacterDetailsUiModel(
-    id, name, status, species, gender, type, origin, location, episodeCount, imageUrl,
-)

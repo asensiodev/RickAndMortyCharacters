@@ -1,5 +1,6 @@
 package com.asensiodev.rickandmortycharacters.feature.home.composables
 
+import android.graphics.Color
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,6 +48,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -54,6 +56,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -67,14 +70,13 @@ import coil3.intercept.Interceptor
 import coil3.request.SuccessResult
 import com.asensiodev.rickandmortycharacters.core.designsystem.theme.RickAndMortyTheme
 import com.asensiodev.rickandmortycharacters.core.designsystem.theme.Spacing
+import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterStatus
 import com.asensiodev.rickandmortycharacters.feature.home.R
 import com.asensiodev.rickandmortycharacters.feature.home.model.CharacterCardUiModel
-import com.asensiodev.rickandmortycharacters.feature.home.model.CharacterStatusUi
 import com.asensiodev.rickandmortycharacters.feature.home.model.HomeAppendState
 import com.asensiodev.rickandmortycharacters.feature.home.model.HomePagingState
 import com.asensiodev.rickandmortycharacters.feature.home.model.HomeSearchAction
 import com.asensiodev.rickandmortycharacters.feature.home.model.HomeUiState
-import kotlinx.collections.immutable.persistentListOf
 
 private const val PHONE_PREVIEW_WIDTH_DP = 412
 private const val PHONE_PREVIEW_HEIGHT_DP = 891
@@ -126,8 +128,13 @@ fun HomeContent(
             searchAction,
             Modifier.padding(start = Spacing.large, top = Spacing.large, end = Spacing.large),
         )
+        HomeStatusFilters(
+            searchState.selectedStatus,
+            { searchAction(HomeSearchAction.SelectStatus(it)) },
+            Modifier.padding(horizontal = Spacing.large, vertical = Spacing.small),
+        )
         HomeResultsPanel(
-            state,
+            if (scrolledGeneration == searchState.generation) state else HomeUiState.Loading,
             searchState,
             gridState,
             onRetry,
@@ -179,7 +186,7 @@ private fun HomeResultsPanel(
             .padding(Spacing.extraLarge)
         HomeResults(
             state, columns, bottomPadding, feedbackModifier, onRetry, gridState,
-            searchState.appliedName != null, onSearchAction,
+            searchState.appliedName != null || searchState.selectedStatus != null, onSearchAction,
             cardContent,
         )
         if (showCounter) {
@@ -204,7 +211,7 @@ private fun HomeResults(
     feedbackModifier: Modifier,
     onRetry: () -> Unit,
     gridState: LazyGridState,
-    hasNameConstraint: Boolean,
+    hasQueryConstraint: Boolean,
     onSearchAction: (HomeSearchAction) -> Unit,
     cardContent: @Composable (Int, CharacterCardUiModel) -> Unit,
 ) {
@@ -234,9 +241,9 @@ private fun HomeResults(
         }
 
         HomeUiState.Empty -> HomeFeedback(
-            title = stringResource(if (hasNameConstraint) R.string.catalogue_no_matches else R.string.catalogue_empty),
+            title = stringResource(if (hasQueryConstraint) R.string.catalogue_no_matches else R.string.catalogue_empty),
             description = stringResource(
-                if (hasNameConstraint) {
+                if (hasQueryConstraint) {
                     R.string.catalogue_no_matches_description
                 } else {
                     R.string.catalogue_empty_description
@@ -245,7 +252,7 @@ private fun HomeResults(
             icon = R.drawable.ic_travel_explore,
             modifier = feedbackModifier,
         ) {
-            if (hasNameConstraint) HomeSearchSuggestions(onSearchAction)
+            if (hasQueryConstraint) HomeSearchSuggestions(onSearchAction)
         }
     }
 }
@@ -310,7 +317,6 @@ private fun HomeGrid(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(
             start = Spacing.large,
-            top = Spacing.large,
             end = Spacing.large,
             bottom = bottomPadding,
         ),
@@ -364,6 +370,8 @@ private fun HomeFeedback(
 
 @Composable
 private fun HomeAppendFooter(state: HomeAppendState, onRetry: () -> Unit) {
+    val loading = state == HomeAppendState.Loading
+    val feedbackModifier = if (loading) Modifier.alpha(0f).clearAndSetSemantics {} else Modifier
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -371,8 +379,16 @@ private fun HomeAppendFooter(state: HomeAppendState, onRetry: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Spacing.medium),
     ) {
-        when (state) {
-            HomeAppendState.Loading -> {
+        Text(
+            stringResource(R.string.catalogue_append_error),
+            modifier = feedbackModifier,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.Center,
+        )
+        Box(contentAlignment = Alignment.Center) {
+            HomeRetryButton(onRetry, modifier = feedbackModifier, enabled = !loading)
+            if (loading) {
                 val description = stringResource(R.string.catalogue_append_loading)
                 CircularProgressIndicator(
                     modifier = Modifier
@@ -380,26 +396,15 @@ private fun HomeAppendFooter(state: HomeAppendState, onRetry: () -> Unit) {
                         .semantics { contentDescription = description },
                 )
             }
-
-            HomeAppendState.Error -> {
-                Text(
-                    stringResource(R.string.catalogue_append_error),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center,
-                )
-                HomeRetryButton(onRetry)
-            }
-
-            HomeAppendState.Idle -> Unit
         }
     }
 }
 
 @Composable
-private fun HomeRetryButton(onRetry: () -> Unit, modifier: Modifier = Modifier) {
+private fun HomeRetryButton(onRetry: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
     Button(
         onClick = onRetry,
+        enabled = enabled,
         modifier = modifier.sizeIn(
             minWidth = HomeLayoutTokens.retryMinWidth,
             minHeight = HomeLayoutTokens.retryMinHeight,
@@ -433,7 +438,7 @@ private fun HomeContentPreview(@PreviewParameter(HomePreviewStates::class) state
         ImageLoader.Builder(context).components {
             add(
                 Interceptor { chain ->
-                    SuccessResult(ColorImage(android.graphics.Color.DKGRAY), chain.request)
+                    SuccessResult(ColorImage(Color.DKGRAY), chain.request)
                 },
             )
         }.build()
@@ -444,19 +449,19 @@ private fun HomeContentPreview(@PreviewParameter(HomePreviewStates::class) state
 
 private class HomePreviewStates : PreviewParameterProvider<HomeUiState> {
     private val content = HomeUiState.Content(
-        persistentListOf(
+        listOf(
             CharacterCardUiModel(
                 1,
                 "Rick Sanchez",
                 "Human",
-                CharacterStatusUi.Alive,
+                CharacterStatus.Alive,
                 "preview://rick",
             ),
             CharacterCardUiModel(
                 196,
                 "Krombopulos Michael",
                 "Alien",
-                CharacterStatusUi.Dead,
+                CharacterStatus.Dead,
                 null,
             ),
         ),

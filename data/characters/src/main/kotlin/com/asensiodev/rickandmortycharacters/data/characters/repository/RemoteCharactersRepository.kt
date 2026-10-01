@@ -25,7 +25,7 @@ internal class RemoteCharactersRepository @Inject constructor(private val api: C
     override suspend fun getDetails(characterId: Int): CharacterDetailsResult = try {
         val response = api.getDetails(characterId)
         if (!response.isSuccessful) {
-            if (isMissingCharacter(response)) {
+            if (response.hasApiError("Character not found")) {
                 CharacterDetailsResult.NotFound
             } else {
                 CharacterDetailsResult.Failure(CharacterRequestFailure.Service)
@@ -40,11 +40,13 @@ internal class RemoteCharactersRepository @Inject constructor(private val api: C
         CharacterDetailsResult.Failure(CharacterRequestFailure.Network)
     }
 
-    override suspend fun getPage(page: Int, name: String?): CharactersPageResult = try {
+    override suspend fun getPage(page: Int, name: String?, status: CharacterStatus?): CharactersPageResult = try {
         val requestedName = name?.trim()?.takeIf { it.isNotEmpty() }
-        val response = api.getPage(page, requestedName)
+        val requestedStatus = status.toApiValue()
+        val hasConstraints = requestedName != null || status != null
+        val response = api.getPage(page, requestedName, requestedStatus)
         if (!response.isSuccessful) {
-            if ((page > 1 || requestedName != null) && isCatalogueEnd(response)) {
+            if ((page > 1 || hasConstraints) && response.hasApiError("There is nothing here")) {
                 if (page > 1) {
                     CharactersPageResult.EndOfCatalogue
                 } else {
@@ -90,11 +92,10 @@ internal class RemoteCharactersRepository @Inject constructor(private val api: C
     }
 }
 
-private fun isMissingCharacter(response: Response<*>): Boolean = response.errorBody()?.use { errorBody ->
-    if (response.code() != HTTP_NOT_FOUND) return@use false
+private fun Response<*>.hasApiError(expectedMessage: String): Boolean = errorBody()?.use { errorBody ->
+    if (code() != HTTP_NOT_FOUND) return@use false
     try {
-        CharactersJson.decodeFromString<CharacterErrorDto>(errorBody.string()).error ==
-            "Character not found"
+        CharactersJson.decodeFromString<CharacterErrorDto>(errorBody.string()).error == expectedMessage
     } catch (_: SerializationException) {
         false
     }
@@ -124,12 +125,9 @@ private fun CharacterDetailsDto.toResult(requestedId: Int): CharacterDetailsResu
     )
 }
 
-private fun isCatalogueEnd(response: Response<*>): Boolean = response.errorBody()?.use { errorBody ->
-    if (response.code() != HTTP_NOT_FOUND) return@use false
-    try {
-        CharactersJson.decodeFromString<CharacterErrorDto>(errorBody.string()).error ==
-            "There is nothing here"
-    } catch (_: SerializationException) {
-        false
-    }
-} ?: false
+private fun CharacterStatus?.toApiValue(): String? = when (this) {
+    CharacterStatus.Alive -> "alive"
+    CharacterStatus.Dead -> "dead"
+    CharacterStatus.Unknown -> "unknown"
+    null -> null
+}

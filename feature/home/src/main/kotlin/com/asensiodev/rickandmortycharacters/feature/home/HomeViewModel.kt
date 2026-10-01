@@ -11,7 +11,6 @@ import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterSt
 import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterSummary
 import com.asensiodev.rickandmortycharacters.domain.characters.repository.CharactersRepository
 import com.asensiodev.rickandmortycharacters.feature.home.model.CharacterCardUiModel
-import com.asensiodev.rickandmortycharacters.feature.home.model.CharacterStatusUi
 import com.asensiodev.rickandmortycharacters.feature.home.model.HomePagingState
 import com.asensiodev.rickandmortycharacters.feature.home.model.HomeSearchAction
 import com.asensiodev.rickandmortycharacters.feature.home.paging.CharactersPagingSource
@@ -45,6 +44,8 @@ internal class HomeViewModel @Inject constructor(repository: CharactersRepositor
 
     fun onSearchAction(action: HomeSearchAction) {
         when (action) {
+            is HomeSearchAction.SelectStatus -> selectStatus(action.status)
+
             is HomeSearchAction.Edit -> updateSearch(action.name)
 
             HomeSearchAction.Submit -> submitSearch()
@@ -77,14 +78,21 @@ internal class HomeViewModel @Inject constructor(repository: CharactersRepositor
         submitSearch()
     }
 
-    private fun applySearch() {
+    private fun selectStatus(status: CharacterStatus?) {
+        if (status == mutableState.value.selectedStatus) return
+        searchJob?.cancel()
+        applySearch(status)
+    }
+
+    private fun applySearch(status: CharacterStatus? = mutableState.value.selectedStatus) {
         mutableState.update { current ->
             val name = current.searchText.trim().takeIf { it.isNotEmpty() }
-            if (name == current.appliedName) {
+            if (name == current.appliedName && status == current.selectedStatus) {
                 current
             } else {
                 current.copy(
                     appliedName = name,
+                    selectedStatus = status,
                     generation = current.generation + 1,
                     totalCount = null,
                 )
@@ -93,9 +101,9 @@ internal class HomeViewModel @Inject constructor(repository: CharactersRepositor
     }
 
     val characters: Flow<PagingData<CharacterCardUiModel>> = state
-        .map { it.generation to it.appliedName }
+        .map { Triple(it.generation, it.appliedName, it.selectedStatus) }
         .distinctUntilChanged()
-        .flatMapLatest { (generation, name) ->
+        .flatMapLatest { (generation, name, status) ->
             Pager(
                 config = PagingConfig(
                     pageSize = CHARACTER_PAGE_SIZE,
@@ -104,7 +112,7 @@ internal class HomeViewModel @Inject constructor(repository: CharactersRepositor
                     enablePlaceholders = false,
                 ),
                 pagingSourceFactory = {
-                    CharactersPagingSource(repository, name, generation) { total ->
+                    CharactersPagingSource(repository, name, generation, status) { total ->
                         mutableState.update { current ->
                             if (current.generation == generation) current.copy(totalCount = total) else current
                         }
@@ -119,10 +127,6 @@ private fun CharacterSummary.toCard(): CharacterCardUiModel = CharacterCardUiMod
     id = id,
     name = name,
     species = species,
-    status = when (status) {
-        CharacterStatus.Alive -> CharacterStatusUi.Alive
-        CharacterStatus.Dead -> CharacterStatusUi.Dead
-        CharacterStatus.Unknown -> CharacterStatusUi.Unknown
-    },
+    status = status,
     imageUrl = imageUrl,
 )

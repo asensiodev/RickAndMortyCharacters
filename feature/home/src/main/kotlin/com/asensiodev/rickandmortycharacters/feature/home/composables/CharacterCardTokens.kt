@@ -3,7 +3,6 @@
 package com.asensiodev.rickandmortycharacters.feature.home.composables
 
 import androidx.compose.ui.unit.dp
-import com.asensiodev.rickandmortycharacters.core.designsystem.theme.StatusColors
 
 internal object CharacterCardTokens {
     const val PORTRAIT_ASPECT_RATIO = 1f
@@ -16,9 +15,4 @@ internal object CharacterCardTokens {
     val portraitFallbackSize = 48.dp
     val skeletonNameHeight = 40.dp
     val skeletonMetadataHeight = 18.dp
-
-    val aliveContainer = StatusColors.aliveContainer
-    val onAliveContainer = StatusColors.onAliveContainer
-    val deadContainer = StatusColors.deadContainer
-    val onDeadContainer = StatusColors.onDeadContainer
 }

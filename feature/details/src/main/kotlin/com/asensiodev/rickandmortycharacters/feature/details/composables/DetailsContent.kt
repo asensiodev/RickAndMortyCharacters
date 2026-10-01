@@ -37,9 +37,9 @@ import coil3.request.SuccessResult
 import com.asensiodev.rickandmortycharacters.core.designsystem.theme.RickAndMortyTheme
 import com.asensiodev.rickandmortycharacters.core.designsystem.theme.Spacing
 import com.asensiodev.rickandmortycharacters.core.designsystem.theme.StatusColors
+import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterDetails
 import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterStatus
 import com.asensiodev.rickandmortycharacters.feature.details.R
-import com.asensiodev.rickandmortycharacters.feature.details.model.CharacterDetailsUiModel
 import com.asensiodev.rickandmortycharacters.feature.details.model.DetailsUiState
 
 private const val DETAILS_PREVIEW_WIDTH_DP = 412
@@ -91,7 +91,7 @@ fun DetailsContent(
 }
 
 @Composable
-private fun CharacterDetailsContent(character: CharacterDetailsUiModel, imageLoader: ImageLoader) {
+private fun CharacterDetailsContent(character: CharacterDetails, imageLoader: ImageLoader) {
     val scrollState = rememberScrollState()
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(scrollState).padding(
@@ -110,7 +110,7 @@ private fun CharacterDetailsContent(character: CharacterDetailsUiModel, imageLoa
 }
 
 @Composable
-private fun DetailsIdentity(character: CharacterDetailsUiModel) {
+private fun DetailsIdentity(character: CharacterDetails) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Spacing.medium),
@@ -227,7 +227,7 @@ private fun DetailsContentPreview(@PreviewParameter(DetailsPreviewStates::class)
 private class DetailsPreviewStates : PreviewParameterProvider<DetailsUiState> {
     override val values = sequenceOf(
         DetailsUiState.Content(
-            CharacterDetailsUiModel(
+            CharacterDetails(
                 361, "Toxic Rick", CharacterStatus.Dead, "Humanoid", "Male", "Rick's toxic side",
                 "Detoxifier", "Earth (Replacement Dimension)", 1, "preview://portrait",
             ),

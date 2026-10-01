@@ -49,11 +49,11 @@ These statuses describe completed planning, not a working Android application. N
 
 ### C07 — Search by name — Must
 
-**Accepted, locally validated and archived.** See the [proposal](../openspec/changes/archive/2026-10-01-search-characters-by-name/proposal.md), [scenarios](../openspec/changes/archive/2026-10-01-search-characters-by-name/specs/character-catalogue/spec.md), [design/test boundaries](../openspec/changes/archive/2026-10-01-search-characters-by-name/design.md) and [tasks](../openspec/changes/archive/2026-10-01-search-characters-by-name/tasks.md). OpenSpec owns the detailed C07 work. It follows accepted C06; C08 is the next change to prepare.
+**Accepted, locally validated and archived.** See the [proposal](../openspec/changes/archive/2026-10-01-search-characters-by-name/proposal.md), [scenarios](../openspec/changes/archive/2026-10-01-search-characters-by-name/specs/character-catalogue/spec.md), [design/test boundaries](../openspec/changes/archive/2026-10-01-search-characters-by-name/design.md) and [tasks](../openspec/changes/archive/2026-10-01-search-characters-by-name/tasks.md). OpenSpec owns the detailed C07 work. It follows accepted C06; C08 is accepted and locally validated.
 
 ### C08 — Status filter chips — Must
 
-Depends on C07. Add single-choice All, Alive, Dead and Unknown chips, combining status with the name query. A status change resets pages, counter and scroll; clearing the name preserves status; All removes only status. Test selection semantics, query parameters and rejection of obsolete results. Cover filter-only/combined empty results on the same Home and reselection of the active chip without resetting content or scroll. Verify that suggested-name searches preserve the selected status and use the combined remote query. Do not mix results from different query identities.
+**Accepted and locally validated on API 37.** See the [proposal](../openspec/changes/filter-characters-by-status/proposal.md), [scenarios](../openspec/changes/filter-characters-by-status/specs/character-catalogue/spec.md), [design/test boundaries](../openspec/changes/filter-characters-by-status/design.md) and [tasks](../openspec/changes/filter-characters-by-status/tasks.md). OpenSpec owns C08's detailed work. It follows accepted C07; publication is authorized; archival remains a separate workflow step.
 
 ### C09 — HTTP response caching — Must
 

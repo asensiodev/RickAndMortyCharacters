@@ -15,7 +15,6 @@ import com.asensiodev.rickandmortycharacters.domain.characters.repository.Charac
 import com.asensiodev.rickandmortycharacters.domain.characters.repository.CharactersPageResult
 import com.asensiodev.rickandmortycharacters.domain.characters.repository.CharactersRepository
 import com.asensiodev.rickandmortycharacters.feature.home.model.CharacterCardUiModel
-import com.asensiodev.rickandmortycharacters.feature.home.model.CharacterStatusUi
 import com.asensiodev.rickandmortycharacters.feature.home.model.HomeSearchAction
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -52,6 +51,127 @@ class HomeViewModelTest {
     fun tearDown() {
         viewModelStore.clear()
     }
+
+    @Test
+    fun `GIVEN a pending filtered append WHEN status changes THEN late old items cannot enter the new generation`() =
+        runTest(mainDispatcher.dispatcher) {
+            val appendStarted = CompletableDeferred<Unit>()
+            val obsoleteAppend = CompletableDeferred<Unit>()
+            fakeCharactersRepository.statusResponse = { number, _, status ->
+                if (status == CharacterStatus.Alive && number == 2) {
+                    appendStarted.complete(Unit)
+                    withContext(NonCancellable) { obsoleteAppend.await() }
+                    CharactersPageResult.Success(page(2, 60, null))
+                } else {
+                    CharactersPageResult.Success(
+                        page(
+                            1,
+                            if (status == CharacterStatus.Alive) 60 else 20,
+                            if (status == CharacterStatus.Alive) 2 else null,
+                        ),
+                    )
+                }
+            }
+            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Alive))
+            backgroundScope.launch { homeViewModel.characters.asSnapshot { scrollTo(19) } }
+            repeat(10) {
+                advanceTimeBy(100)
+                runCurrent()
+            }
+            assertTrue(appendStarted.isCompleted)
+
+            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Dead))
+            repeat(10) {
+                advanceTimeBy(100)
+                runCurrent()
+            }
+            obsoleteAppend.complete(Unit)
+            val snapshot = homeViewModel.characters.asSnapshot()
+
+            assertEquals(20, snapshot.size)
+            assertTrue(snapshot.all { it.generation == 2L })
+            assertEquals(20, homeViewModel.state.value.totalCount)
+            assertEquals(CharacterStatus.Dead, homeViewModel.state.value.selectedStatus)
+        }
+
+    @Test
+    fun `GIVEN pending typing with an active filter WHEN that chip is selected again THEN debounce still applies the name`() =
+        runTest(mainDispatcher.dispatcher) {
+            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Alive))
+            homeViewModel.characters.asSnapshot()
+            homeViewModel.onSearchAction(HomeSearchAction.Edit("Rick"))
+            advanceTimeBy(200)
+
+            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Alive))
+            assertEquals(1L, homeViewModel.state.value.generation)
+            advanceTimeBy(101)
+            runCurrent()
+            homeViewModel.characters.asSnapshot()
+
+            assertEquals(listOf(null, "Rick"), fakeCharactersRepository.requestedNames)
+            assertEquals(listOf(CharacterStatus.Alive, CharacterStatus.Alive), fakeCharactersRepository.requestedStatuses)
+            assertEquals(2L, homeViewModel.state.value.generation)
+        }
+
+    @Test
+    fun `GIVEN combined constraints WHEN Clear suggestions and All are applied THEN each preserves the other constraint`() =
+        runTest(mainDispatcher.dispatcher) {
+            homeViewModel.onSearchAction(HomeSearchAction.Edit("Rick"))
+            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Unknown))
+            homeViewModel.characters.asSnapshot()
+
+            homeViewModel.onSearchAction(HomeSearchAction.Clear)
+            homeViewModel.characters.asSnapshot()
+            homeViewModel.onSearchAction(HomeSearchAction.Suggest("Beth"))
+            homeViewModel.characters.asSnapshot()
+            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(null))
+            assertEquals(null, homeViewModel.state.value.totalCount)
+            homeViewModel.characters.asSnapshot()
+
+            assertEquals(listOf("Rick", null, "Beth", "Beth"), fakeCharactersRepository.requestedNames)
+            assertEquals(
+                listOf(CharacterStatus.Unknown, CharacterStatus.Unknown, CharacterStatus.Unknown, null),
+                fakeCharactersRepository.requestedStatuses,
+            )
+            assertEquals("Beth", homeViewModel.state.value.searchText)
+            assertEquals(4L, homeViewModel.state.value.generation)
+        }
+
+    @Test
+    fun `GIVEN loaded filtered pages WHEN the selected chip is repeated THEN recollection preserves pages and total`() =
+        runTest(mainDispatcher.dispatcher) {
+            fakeCharactersRepository.addThreePages()
+            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Dead))
+            val first = homeViewModel.characters.asSnapshot { scrollTo(45) }
+
+            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Dead))
+            val second = homeViewModel.characters.asSnapshot()
+
+            assertEquals(first, second)
+            assertEquals(listOf(1, 2, 3), fakeCharactersRepository.requestedPages)
+            assertTrue(fakeCharactersRepository.requestedStatuses.all { it == CharacterStatus.Dead })
+            assertEquals(60, homeViewModel.state.value.totalCount)
+            assertEquals(1L, homeViewModel.state.value.generation)
+        }
+
+    @Test
+    fun `GIVEN a pending name edit WHEN a new status is selected THEN it immediately applies one combined query`() =
+        runTest(mainDispatcher.dispatcher) {
+            homeViewModel.onSearchAction(HomeSearchAction.Edit(" Rick "))
+            advanceTimeBy(200)
+
+            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Dead))
+            assertEquals("Rick", homeViewModel.state.value.appliedName)
+            val snapshot = homeViewModel.characters.asSnapshot()
+            advanceTimeBy(500)
+            runCurrent()
+
+            assertEquals(CharacterStatus.Dead, homeViewModel.state.value.selectedStatus)
+            assertEquals(listOf("Rick"), fakeCharactersRepository.requestedNames)
+            assertEquals(listOf(CharacterStatus.Dead), fakeCharactersRepository.requestedStatuses)
+            assertEquals(1L, homeViewModel.state.value.generation)
+            assertTrue(snapshot.all { it.generation == 1L })
+        }
 
     @Test
     fun `GIVEN a pending name request WHEN another name is applied THEN it cancels obsolete loading without a user error`() =
@@ -127,19 +247,22 @@ class HomeViewModelTest {
         }
 
     @Test
-    fun `GIVEN a searched catalogue WHEN appending fails and is retried THEN every page retains its name`() =
+    fun `GIVEN a combined query WHEN appending fails and is retried THEN every page retains its name and status`() =
         runTest(mainDispatcher.dispatcher) {
             fakeCharactersRepository.addThreePages()
             fakeCharactersRepository.failOnce += 2
             homeViewModel.onSearchAction(HomeSearchAction.Edit("Rick"))
             homeViewModel.onSearchAction(HomeSearchAction.Submit)
 
+            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Dead))
+
             val snapshot = homeViewModel.characters.asSnapshot(onError = { ErrorRecovery.RETRY }) { scrollTo(45) }
 
             assertEquals(60, snapshot.size)
             assertEquals(listOf(1, 2, 2, 3), fakeCharactersRepository.requestedPages)
             assertEquals(listOf("Rick", "Rick", "Rick", "Rick"), fakeCharactersRepository.requestedNames)
-            assertTrue(snapshot.all { it.generation == 1L })
+            assertTrue(fakeCharactersRepository.requestedStatuses.all { it == CharacterStatus.Dead })
+            assertTrue(snapshot.all { it.generation == 2L })
         }
 
     @Test
@@ -173,6 +296,44 @@ class HomeViewModelTest {
             repeat(10) { runCurrent() }
             homeViewModel.onSearchAction(HomeSearchAction.Edit("Rick"))
             homeViewModel.onSearchAction(HomeSearchAction.Submit)
+            repeat(10) { runCurrent() }
+            obsoleteResponse.complete(Unit)
+            val snapshot = homeViewModel.characters.asSnapshot()
+
+            assertEquals(1, homeViewModel.state.value.totalCount)
+            assertEquals(3L, homeViewModel.state.value.generation)
+            assertEquals(listOf(42), snapshot.map { it.id })
+            assertTrue(snapshot.all { it.generation == 3L })
+        }
+
+    @Test
+    fun `GIVEN a late filtered query WHEN status changes away and back THEN its old total cannot replace the current result`() =
+        runTest(mainDispatcher.dispatcher) {
+            val obsoleteResponse = CompletableDeferred<Unit>()
+            var firstAlive = true
+            fakeCharactersRepository.statusResponse = { _, name, status ->
+                if (status == CharacterStatus.Alive && firstAlive) {
+                    firstAlive = false
+                    withContext(NonCancellable) { obsoleteResponse.await() }
+                    CharactersPageResult.Success(CharacterPage(emptyList(), 999, null))
+                } else {
+                    CharactersPageResult.Success(
+                        CharacterPage(
+                            listOf(CharacterSummary(42, name ?: "All", "Human", CharacterStatus.Alive, null)),
+                            1,
+                            null,
+                        ),
+                    )
+                }
+            }
+            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Alive))
+            backgroundScope.launch { homeViewModel.characters.asSnapshot() }
+            repeat(10) { runCurrent() }
+            assertEquals(listOf(CharacterStatus.Alive), fakeCharactersRepository.requestedStatuses)
+
+            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Dead))
+            repeat(10) { runCurrent() }
+            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Alive))
             repeat(10) { runCurrent() }
             obsoleteResponse.complete(Unit)
             val snapshot = homeViewModel.characters.asSnapshot()
@@ -235,7 +396,7 @@ class HomeViewModelTest {
         val snapshot = homeViewModel.characters.asSnapshot()
 
         assertEquals(
-            listOf(CharacterCardUiModel(1, "Rick", "Human", CharacterStatusUi.Alive, null)),
+            listOf(CharacterCardUiModel(1, "Rick", "Human", CharacterStatus.Alive, null)),
             snapshot,
         )
         assertEquals(1, homeViewModel.state.value.totalCount)
@@ -344,9 +505,11 @@ private class FakeCharactersRepository : CharactersRepository {
     val pages = mutableMapOf(1 to page(1, 20, null))
     val requestedPages = mutableListOf<Int>()
     val requestedNames = mutableListOf<String?>()
+    val requestedStatuses = mutableListOf<CharacterStatus?>()
     val failOnce = mutableSetOf<Int>()
     var pending: CompletableDeferred<Unit>? = null
     var cancelled = false
+    var statusResponse: (suspend (Int, String?, CharacterStatus?) -> CharactersPageResult)? = null
     var response: (suspend (Int, String?) -> CharactersPageResult)? = null
 
     fun addThreePages() {
@@ -357,11 +520,13 @@ private class FakeCharactersRepository : CharactersRepository {
 
     override suspend fun getDetails(characterId: Int): CharacterDetailsResult = CharacterDetailsResult.NotFound
 
-    override suspend fun getPage(page: Int, name: String?): CharactersPageResult {
+    override suspend fun getPage(page: Int, name: String?, status: CharacterStatus?): CharactersPageResult {
         requestedPages += page
         requestedNames += name
+        requestedStatuses += status
         return try {
-            response?.let { return it(page, name) }
+            val controlled = statusResponse?.invoke(page, name, status) ?: response?.invoke(page, name)
+            if (controlled != null) return controlled
             pending?.await()
             if (failOnce.remove(page)) {
                 CharactersPageResult.Failure(CharacterRequestFailure.Service)

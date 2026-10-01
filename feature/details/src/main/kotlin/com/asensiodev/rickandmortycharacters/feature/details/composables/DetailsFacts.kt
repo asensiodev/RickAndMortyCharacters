@@ -20,11 +20,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import com.asensiodev.rickandmortycharacters.core.designsystem.theme.Spacing
+import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterDetails
 import com.asensiodev.rickandmortycharacters.feature.details.R
-import com.asensiodev.rickandmortycharacters.feature.details.model.CharacterDetailsUiModel
 
 @Composable
-internal fun DetailsFacts(character: CharacterDetailsUiModel, modifier: Modifier = Modifier) {
+internal fun DetailsFacts(character: CharacterDetails, modifier: Modifier = Modifier) {
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = DetailsTokens.factsShape,

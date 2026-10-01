@@ -24,7 +24,7 @@ internal fun HomeLoadedCounter(loadedCount: Int, totalCount: Int, modifier: Modi
     Surface(
         modifier = modifier,
         shape = CircleShape,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        color = MaterialTheme.colorScheme.secondaryContainer,
     ) {
         Row(
             modifier = Modifier.padding(horizontal = Spacing.large, vertical = Spacing.small),
@@ -38,7 +38,7 @@ internal fun HomeLoadedCounter(loadedCount: Int, totalCount: Int, modifier: Modi
             Text(
                 stringResource(R.string.catalogue_loaded_count, loadedCount, totalCount),
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
                 modifier = Modifier.weight(1f, fill = false),
             )
         }

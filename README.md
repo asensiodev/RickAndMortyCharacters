@@ -2,7 +2,7 @@
 
 An Android app for exploring Rick and Morty characters, searching by name, filtering by status and viewing character details.
 
-**Status:** Home browses remote pages with Paging 3, contextual append Retry and a real loaded/total counter. Character detail opens by ID; Back retains loaded data and scroll. Both screens handle applicable loading/error states; detail also handles missing characters. C01–C05 and C05A are accepted and archived. [C06 pagination](openspec/changes/archive/2026-10-01-complete-catalogue-pagination/design.md) is accepted, locally validated on API 37 and archived. [C07 name search](openspec/changes/archive/2026-10-01-search-characters-by-name/design.md) is accepted, locally validated and archived, with debounce, keyboard submission, clear and no-match shortcuts. Status filters and HTTP response caching remain subsequent increments.
+**Status:** Home browses remote pages with Paging 3, contextual append Retry and a real loaded/total counter. Character detail opens by ID; Back retains loaded data and scroll. Both screens handle applicable loading/error states; detail also handles missing characters. C01–C05 and C05A are accepted and archived. [C06 pagination](openspec/changes/archive/2026-10-01-complete-catalogue-pagination/design.md) is accepted, locally validated on API 37 and archived. [C07 name search](openspec/changes/archive/2026-10-01-search-characters-by-name/design.md) is accepted, locally validated and archived, with debounce, keyboard submission, clear and no-match shortcuts. [C08 status filters](openspec/changes/filter-characters-by-status/design.md#implementation-and-validation-record) implements combined name/status queries, is accepted and locally validated on API 37; archival pending. HTTP response caching remains C09.
 
 ## Planned experience
 
@@ -73,7 +73,7 @@ Components have standard Android Studio previews. Home includes previews for Loa
 
 Install the hook explicitly once per clone. The pre-commit runs `ktlintCheck detekt` against working-tree source, including unstaged Kotlin changes. It never formats, stages or stashes files. Installation is repeatable and refuses to replace custom hook configuration. Full tests/build/lint remain in `qualityCheck` and CI.
 
-C07 validates 54 JVM tests (24 repository + 22 ViewModel + 5 PagingSource + 3 architecture) and 35 instrumented tests on API 37 (19 Home + 7 Details + 9 production navigation journeys), with zero failures/errors/skips. The full local quality gate and release assembly pass; [C07 evidence](openspec/changes/archive/2026-10-01-search-characters-by-name/design.md#implementation-and-validation-record) records executed checks and native search/error recovery. C07 is accepted and archived. Run the screen/journey suites with a connected API 37 emulator/device:
+C08 validates 63 JVM tests (27 repository + 28 ViewModel + 5 PagingSource + 3 architecture) and 42 instrumented tests on API 37 (25 Home + 7 Details + 10 production navigation journeys), with zero failures/errors/skips. The full local quality gate and release assembly pass; [C08 evidence](openspec/changes/filter-characters-by-status/design.md#implementation-and-validation-record) records TDD, regressions and native combined-filter/error recovery. Human acceptance is complete. Run the screen/journey suites with a connected API 37 emulator/device:
 
 ```sh
 ./gradlew :feature:home:connectedDebugAndroidTest :feature:details:connectedDebugAndroidTest :app:connectedDebugAndroidTest

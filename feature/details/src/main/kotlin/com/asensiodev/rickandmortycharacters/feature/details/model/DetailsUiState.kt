@@ -1,9 +1,11 @@
 package com.asensiodev.rickandmortycharacters.feature.details.model
 
+import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterDetails
+
 sealed interface DetailsUiState {
     data object Loading : DetailsUiState
 
-    data class Content(val character: CharacterDetailsUiModel) : DetailsUiState
+    data class Content(val character: CharacterDetails) : DetailsUiState
 
     data object Error : DetailsUiState
 

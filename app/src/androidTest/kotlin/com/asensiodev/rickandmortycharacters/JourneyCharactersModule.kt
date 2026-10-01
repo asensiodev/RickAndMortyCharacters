@@ -28,6 +28,7 @@ class JourneyCharactersRepository : CharactersRepository {
     val requestedIds = mutableListOf<Int>()
     var pageRequests = 0
     val requestedPages = mutableListOf<Int>()
+    val requestedStatuses = mutableListOf<CharacterStatus?>()
     val requestedNames = mutableListOf<String?>()
     var pageCount = 1
     var detailResult: CharacterDetailsResult? = null
@@ -36,14 +37,15 @@ class JourneyCharactersRepository : CharactersRepository {
     @Volatile
     var cancelledId: Int? = null
 
-    override suspend fun getPage(page: Int, name: String?): CharactersPageResult {
+    override suspend fun getPage(page: Int, name: String?, status: CharacterStatus?): CharactersPageResult {
         pageRequests++
         requestedPages += page
         requestedNames += name
+        requestedStatuses += status
         return CharactersPageResult.Success(
             CharacterPage(
                 ((page - 1) * 20 + 1..page * 20).map {
-                    CharacterSummary(it, if (name == null) "Character $it" else "$name $it", "Human", CharacterStatus.Alive, null)
+                    CharacterSummary(it, if (name == null) "Character $it" else "$name $it", "Human", status ?: CharacterStatus.Alive, null)
                 },
                 pageCount * 20,
                 if (page < pageCount) page + 1 else null,

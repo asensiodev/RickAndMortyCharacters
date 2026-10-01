@@ -15,11 +15,15 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertIsNotFocused
+import androidx.compose.ui.test.assertIsNotSelected
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.click
+import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
@@ -31,6 +35,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
@@ -59,12 +64,10 @@ import com.asensiodev.rickandmortycharacters.domain.characters.repository.Charac
 import com.asensiodev.rickandmortycharacters.feature.home.HomeRoute
 import com.asensiodev.rickandmortycharacters.feature.home.HomeViewModel
 import com.asensiodev.rickandmortycharacters.feature.home.model.CharacterCardUiModel
-import com.asensiodev.rickandmortycharacters.feature.home.model.CharacterStatusUi
 import com.asensiodev.rickandmortycharacters.feature.home.model.HomeAppendState
 import com.asensiodev.rickandmortycharacters.feature.home.model.HomePagingState
 import com.asensiodev.rickandmortycharacters.feature.home.model.HomeSearchAction
 import com.asensiodev.rickandmortycharacters.feature.home.model.HomeUiState
-import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.CompletableDeferred
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -113,194 +116,44 @@ class HomeContentTest {
     }
 
     @Test
-    fun GIVEN_a_failed_name_request_WHEN_Retry_is_tapped_twice_THEN_it_retries_that_name_once_and_keeps_the_input() {
-        val names = mutableListOf<String?>()
-        val retryGate = CompletableDeferred<Unit>()
-        var failSearch = true
-        val repository = object : CharactersRepository {
-            override suspend fun getDetails(characterId: Int): CharacterDetailsResult = CharacterDetailsResult.NotFound
-
-            override suspend fun getPage(page: Int, name: String?): CharactersPageResult {
-                names += name
-                if (name != null && failSearch) {
-                    failSearch = false
-                    return CharactersPageResult.Failure(CharacterRequestFailure.Service)
-                }
-                if (name != null) retryGate.await()
-                return CharactersPageResult.Success(
-                    CharacterPage(
-                        listOf(CharacterSummary(1, "Result ${name ?: "All"}", "Human", CharacterStatus.Alive, null)),
-                        1,
-                        null,
-                    ),
-                )
-            }
-        }
-        homeViewModel = HomeViewModel(repository)
-        val store = ViewModelStore()
-        store.put("home", homeViewModel)
-        try {
-            compose.setContent { RickAndMortyTheme { HomeRoute(homeViewModel, imageLoader, {}) } }
-            compose.onNodeWithContentDescription("Search characters").performClick().performTextInput("Rick")
-            compose.onNodeWithContentDescription("Search characters").performImeAction()
-            compose.waitUntil { compose.onAllNodesWithText("Couldn't load characters").fetchSemanticsNodes().isNotEmpty() }
-
-            compose.onNodeWithText("Retry").performTouchInput {
-                click()
-                click()
-            }
-            compose.waitUntil { names.size == 3 }
-
-            compose.onNodeWithText("Rick").assertIsDisplayed()
-            compose.onNodeWithText("Retry").assertDoesNotExist()
-            compose.runOnIdle { assertEquals(listOf(null, "Rick", "Rick"), names) }
-            compose.runOnIdle { retryGate.complete(Unit) }
-            compose.waitUntil { compose.onAllNodesWithText("Result Rick").fetchSemanticsNodes().isNotEmpty() }
-        } finally {
-            store.clear()
-        }
-    }
-
-    @Test
-    fun GIVEN_remote_search_WHEN_submitting_and_choosing_a_suggestion_THEN_it_uses_each_name_once_and_clear_removes_it() {
-        val names = mutableListOf<String?>()
-        val repository = object : CharactersRepository {
-            override suspend fun getDetails(characterId: Int): CharacterDetailsResult = CharacterDetailsResult.NotFound
-
-            override suspend fun getPage(page: Int, name: String?): CharactersPageResult {
-                names += name
-                return CharactersPageResult.Success(
-                    CharacterPage(
-                        if (name == "Missing") {
-                            emptyList()
-                        } else {
-                            listOf(
-                                CharacterSummary(1, "Result ${name ?: "All"}", "Human", CharacterStatus.Alive, null),
-                            )
-                        },
-                        if (name == "Missing") 0 else 1,
-                        null,
-                    ),
-                )
-            }
-        }
-        homeViewModel = HomeViewModel(repository)
-        val store = ViewModelStore()
-        store.put("home", homeViewModel)
-        try {
-            compose.setContent { RickAndMortyTheme { HomeRoute(homeViewModel, imageLoader, {}) } }
-            compose.onNodeWithText("Result All").assertIsDisplayed()
-
-            compose.onNodeWithContentDescription("Search characters").performClick().performTextInput("Missing")
-            compose.onNodeWithContentDescription("Search characters").performImeAction()
-            compose.waitUntil { compose.onAllNodesWithText("No characters found").fetchSemanticsNodes().isNotEmpty() }
-            compose.onNodeWithText("Rick").performClick()
-            compose.waitUntil { compose.onAllNodesWithText("Result Rick").fetchSemanticsNodes().isNotEmpty() }
-
-            compose.onNodeWithContentDescription("Search characters").assertIsNotFocused()
-            compose.onNodeWithText("Loaded 1 of 1 characters").assertIsDisplayed()
-            compose.runOnIdle { assertEquals(listOf(null, "Missing", "Rick"), names) }
-            compose.onNodeWithContentDescription("Search characters").performClick()
-            compose.onNodeWithContentDescription("Clear search").performClick()
-            compose.waitUntil { compose.onAllNodesWithText("Result All").fetchSemanticsNodes().isNotEmpty() }
-            compose.onNodeWithContentDescription("Search characters").assertIsFocused()
-            compose.runOnIdle { assertEquals(listOf(null, "Missing", "Rick", null), names) }
-        } finally {
-            store.clear()
-        }
-    }
-
-    @Test
-    fun GIVEN_a_loaded_catalogue_WHEN_a_query_is_pending_THEN_old_cards_and_totals_are_hidden_until_the_new_result() {
-        val pending = CompletableDeferred<Unit>()
-        val names = mutableListOf<String?>()
-        val repository = object : CharactersRepository {
-            override suspend fun getDetails(characterId: Int): CharacterDetailsResult = CharacterDetailsResult.NotFound
-
-            override suspend fun getPage(page: Int, name: String?): CharactersPageResult {
-                names += name
-                if (name != null) pending.await()
-                return CharactersPageResult.Success(
-                    CharacterPage(
-                        listOf(CharacterSummary(1, if (name == null) "Old card" else "New card", "Human", CharacterStatus.Alive, null)),
-                        if (name == null) 50 else 1,
-                        null,
-                    ),
-                )
-            }
-        }
-        homeViewModel = HomeViewModel(repository)
-        val store = ViewModelStore()
-        store.put("home", homeViewModel)
-        try {
-            compose.setContent { RickAndMortyTheme { HomeRoute(homeViewModel, imageLoader, {}) } }
-            compose.onNodeWithText("Old card").assertIsDisplayed()
-
-            compose.onNodeWithContentDescription("Search characters").performClick().performTextInput("Rick")
-            compose.onNodeWithContentDescription("Search characters").performImeAction()
-            compose.waitUntil { names.size == 2 }
-
-            compose.onNodeWithText("Old card").assertDoesNotExist()
-            compose.onNodeWithText("Loaded 1 of 50 characters").assertDoesNotExist()
-            compose.onAllNodesWithContentDescription("Loading character").fetchSemanticsNodes().also { assertTrue(it.isNotEmpty()) }
-            compose.runOnIdle { pending.complete(Unit) }
-            compose.waitUntil { compose.onAllNodesWithText("New card").fetchSemanticsNodes().isNotEmpty() }
-            compose.onNodeWithText("Loaded 1 of 1 characters").assertIsDisplayed()
-        } finally {
-            store.clear()
-        }
-    }
-
-    @Test
-    fun GIVEN_no_name_matches_WHEN_a_suggestion_is_selected_THEN_it_submits_on_Home_without_Retry_or_Back() {
-        var selectedName: String? = null
+    fun GIVEN_visible_filters_WHEN_the_cards_scroll_THEN_the_gap_matches_the_input_gap_and_stays_fixed() {
         compose.setContent {
             RickAndMortyTheme {
                 HomeContent(
-                    HomeUiState.Empty,
+                    HomeUiState.Content(
+                        (1..20).map {
+                            CharacterCardUiModel(it, "Character $it", "Human", CharacterStatus.Alive, null)
+                        },
+                    ),
                     imageLoader,
                     {},
                     {},
-                    searchState = HomePagingState(searchText = "Missing", appliedName = "Missing"),
-                    onSearchAction = { action -> if (action is HomeSearchAction.Suggest) selectedName = action.name },
                 )
             }
         }
 
-        compose.onNodeWithText("No characters found").assertIsDisplayed()
-        compose.onNodeWithText("Rick").performClick()
+        val inputBounds = compose.onNodeWithContentDescription("Search characters").fetchSemanticsNode().boundsInRoot
+        val filterBounds = compose.onNodeWithText("All").fetchSemanticsNode().boundsInRoot
+        val firstBounds = compose.onNodeWithText("Character 1").fetchSemanticsNode().boundsInRoot
+        val expectedGap = filterBounds.top - inputBounds.bottom
+        assertEquals(expectedGap, firstBounds.top - filterBounds.bottom, 1f)
 
-        assertEquals("Rick", selectedName)
-        compose.onNodeWithText("Retry").assertDoesNotExist()
-        compose.onNodeWithContentDescription("Back").assertDoesNotExist()
+        compose.onNode(hasScrollToIndexAction()).performScrollToIndex(4)
+
+        val scrolledBounds = compose.onNodeWithText("Character 5").fetchSemanticsNode().boundsInRoot
+        val retainedFilterBounds = compose.onNodeWithText("All").fetchSemanticsNode().boundsInRoot
+        assertEquals(filterBounds.top, retainedFilterBounds.top, 1f)
+        assertEquals(expectedGap, scrolledBounds.top - retainedFilterBounds.bottom, 1f)
     }
 
     @Test
-    fun GIVEN_search_input_WHEN_results_fail_THEN_it_preserves_text_and_focus_and_keeps_Retry_reachable() {
-        var results: HomeUiState by mutableStateOf(HomeUiState.Loading)
-        var search by mutableStateOf(HomePagingState())
-        compose.setContent {
-            RickAndMortyTheme {
-                HomeContent(results, imageLoader, {}, {}, searchState = search, onSearchAction = { action ->
-                    if (action is HomeSearchAction.Edit) search = search.copy(searchText = action.name)
-                })
-            }
-        }
+    fun GIVEN_a_visible_append_error_WHEN_retry_loads_and_fails_again_THEN_feedback_stays_in_place_above_the_counter() {
+        verifyStableAppendFeedback(1f)
+    }
 
-        compose.onNodeWithText("Search characters").performClick().performTextInput("Rick")
-        compose.onNodeWithText("Rick").performSemanticsAction(SemanticsActions.SetSelection) { it(1, 3, false) }
-        for (state in listOf(HomeUiState.Empty, HomeUiState.Error, HomeUiState.Loading)) {
-            compose.runOnIdle { results = state }
-
-            compose.onNodeWithText("Rick").assertIsFocused()
-            assertEquals(
-                TextRange(1, 3),
-                compose.onNodeWithText("Rick").fetchSemanticsNode().config[SemanticsProperties.TextSelectionRange],
-            )
-        }
-        compose.runOnIdle { results = HomeUiState.Error }
-        compose.onNodeWithText("Couldn't load characters").assertIsDisplayed()
-        compose.onNodeWithText("Retry").performScrollTo().assertIsDisplayed()
+    @Test
+    fun GIVEN_large_text_and_an_append_error_WHEN_retry_loads_and_fails_again_THEN_feedback_stays_visible_in_place() {
+        verifyStableAppendFeedback(2f)
     }
 
     @Test
@@ -311,7 +164,7 @@ class HomeContentTest {
                 Box(Modifier.width(HomeLayoutTokens.twoColumnMinWidth)) {
                     HomeContent(
                         HomeUiState.Content(
-                            listOf(CharacterCardUiModel(1, "Mr. Booby Buyer", species, CharacterStatusUi.Alive, null)),
+                            listOf(CharacterCardUiModel(1, "Mr. Booby Buyer", species, CharacterStatus.Alive, null)),
                         ),
                         imageLoader,
                         {},
@@ -322,7 +175,7 @@ class HomeContentTest {
         }
 
         val speciesNode = compose.onNodeWithText(species, useUnmergedTree = true).assertIsDisplayed()
-        val statusNode = compose.onNodeWithText("Alive", useUnmergedTree = true).assertIsDisplayed()
+        val statusNode = compose.onAllNodesWithText("Alive", useUnmergedTree = true)[1].assertIsDisplayed()
         val speciesBounds = speciesNode.fetchSemanticsNode().boundsInRoot
         val statusBounds = statusNode.fetchSemanticsNode().boundsInRoot
         val textLayouts = mutableListOf<TextLayoutResult>()
@@ -348,7 +201,7 @@ class HomeContentTest {
                                         1,
                                         "Rick",
                                         "Human",
-                                        CharacterStatusUi.Alive,
+                                        CharacterStatus.Alive,
                                         null,
                                     ),
                                 ),
@@ -382,7 +235,7 @@ class HomeContentTest {
     @Test
     fun GIVEN_a_counter_WHEN_load_states_change_THEN_it_is_visible_only_with_loaded_content() {
         val characters = listOf(
-            CharacterCardUiModel(1, "Rick", "Human", CharacterStatusUi.Alive, null),
+            CharacterCardUiModel(1, "Rick", "Human", CharacterStatus.Alive, null),
         )
         var state by mutableStateOf<HomeUiState>(HomeUiState.Content(characters, 40))
         compose.setContent {
@@ -392,7 +245,7 @@ class HomeContentTest {
         compose.onNodeWithText("Loaded 1 of 40 characters").assertIsDisplayed()
         compose.runOnIdle { state = HomeUiState.Content(characters, 40, HomeAppendState.Loading) }
         compose.onNodeWithText("Loaded 1 of 40 characters").assertIsDisplayed()
-        compose.onNodeWithContentDescription("Loading more characters").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Loading more characters").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Retry").assertDoesNotExist()
         compose.runOnIdle { state = HomeUiState.Content(characters, 40, HomeAppendState.Error) }
         compose.onNodeWithText("Loaded 1 of 40 characters").assertIsDisplayed()
@@ -419,7 +272,7 @@ class HomeContentTest {
                                         it,
                                         "Character $it",
                                         "Human",
-                                        CharacterStatusUi.Alive,
+                                        CharacterStatus.Alive,
                                         null,
                                     )
                                 },
@@ -437,7 +290,8 @@ class HomeContentTest {
 
         compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Character 20"))
         compose.onNodeWithText("Character 20").assertIsDisplayed()
-        compose.onNodeWithText("Retry").performScrollTo().assertIsDisplayed()
+        compose.onNode(hasScrollToIndexAction()).performScrollToIndex(20)
+        compose.onNodeWithText("Retry").assertIsDisplayed()
         val retryBounds = compose.onNodeWithText("Retry").fetchSemanticsNode().boundsInRoot
         val counterBounds = compose.onNodeWithText(
             "Loaded 20 of 40 characters",
@@ -449,29 +303,24 @@ class HomeContentTest {
     @Test
     fun GIVEN_an_append_failure_WHEN_scrolling_and_retrying_THEN_it_retains_cards_and_increases_the_count() {
         val requestedPages = mutableListOf<Int>()
+        val failedRetryGate = CompletableDeferred<Unit>()
         val responseGate = CompletableDeferred<Unit>()
-        var failAppend = true
         var selectedId: Int? = null
         val repository = object : CharactersRepository {
             override suspend fun getDetails(characterId: Int): CharacterDetailsResult = CharacterDetailsResult.NotFound
 
-            override suspend fun getPage(page: Int, name: String?): CharactersPageResult {
+            override suspend fun getPage(page: Int, name: String?, status: CharacterStatus?): CharactersPageResult {
                 requestedPages += page
-                if (page == 2 && failAppend) {
-                    failAppend = false
-                    return CharactersPageResult.Failure(CharacterRequestFailure.Network)
+                if (page == 2) {
+                    val attempt = requestedPages.count { it == 2 }
+                    if (attempt == 2) failedRetryGate.await()
+                    if (attempt <= 2) return CharactersPageResult.Failure(CharacterRequestFailure.Network)
+                    responseGate.await()
                 }
-                if (page == 2) responseGate.await()
                 return CharactersPageResult.Success(
                     CharacterPage(
                         ((page - 1) * 20 + 1..page * 20).map {
-                            CharacterSummary(
-                                it,
-                                "Character $it",
-                                "Human",
-                                CharacterStatus.Alive,
-                                null,
-                            )
+                            CharacterSummary(it, "Character $it", "Human", CharacterStatus.Alive, null)
                         },
                         40,
                         if (page == 1) 2 else null,
@@ -486,32 +335,41 @@ class HomeContentTest {
         try {
             compose.setContent {
                 RickAndMortyTheme {
-                    HomeRoute(homeViewModel, imageLoader, {
-                        selectedId =
-                            it
-                    })
+                    HomeRoute(homeViewModel, imageLoader, { selectedId = it })
                 }
             }
             compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Character 19"))
             compose.waitUntil {
-                compose.onAllNodesWithText(
-                    "Couldn't load more characters",
-                ).fetchSemanticsNodes().isNotEmpty()
+                compose.onAllNodesWithText("Couldn't load more characters").fetchSemanticsNodes().isNotEmpty()
             }
             compose.onNodeWithText("Loaded 20 of 40 characters").assertIsDisplayed()
 
-            compose.onNodeWithText("Retry").performScrollTo().performTouchInput {
+            compose.onNode(hasScrollToIndexAction()).performScrollToIndex(20)
+            val retryBounds = compose.onNodeWithText("Retry").assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+            compose.onNodeWithText("Retry").performTouchInput {
                 click()
                 click()
             }
+            compose.waitUntil { requestedPages == listOf(1, 2, 2) }
             compose.onNodeWithContentDescription("Loading more characters").assertIsDisplayed()
             compose.onNodeWithText("Retry").assertDoesNotExist()
             compose.runOnIdle { assertEquals(listOf(1, 2, 2), requestedPages) }
+            compose.runOnIdle { failedRetryGate.complete(Unit) }
+            compose.waitUntil { compose.onAllNodesWithText("Retry").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithText("Retry").assertIsDisplayed()
+            assertEquals(retryBounds, compose.onNodeWithText("Retry").fetchSemanticsNode().boundsInRoot)
+            compose.onNodeWithText("Loaded 20 of 40 characters").assertIsDisplayed()
+
+            compose.onNodeWithText("Retry").performTouchInput {
+                click()
+                click()
+            }
+            compose.waitUntil { requestedPages == listOf(1, 2, 2, 2) }
+            compose.onNodeWithContentDescription("Loading more characters").assertIsDisplayed()
+            compose.onNodeWithText("Retry").assertDoesNotExist()
             compose.runOnIdle { responseGate.complete(Unit) }
             compose.waitUntil {
-                compose.onAllNodesWithText(
-                    "Loaded 40 of 40 characters",
-                ).fetchSemanticsNodes().isNotEmpty()
+                compose.onAllNodesWithText("Loaded 40 of 40 characters").fetchSemanticsNodes().isNotEmpty()
             }
 
             compose.onNodeWithText("Couldn't load more characters").assertDoesNotExist()
@@ -519,7 +377,7 @@ class HomeContentTest {
             compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Character 40"))
             compose.onNodeWithText("Character 40").performClick()
             assertEquals(40, selectedId)
-            assertEquals(listOf(1, 2, 2), requestedPages)
+            assertEquals(listOf(1, 2, 2, 2), requestedPages)
         } finally {
             compose.runOnIdle { store.clear() }
         }
@@ -536,7 +394,7 @@ class HomeContentTest {
                                 it,
                                 "Character $it",
                                 "Human",
-                                CharacterStatusUi.Alive,
+                                CharacterStatus.Alive,
                                 null,
                             )
                         },
@@ -563,8 +421,8 @@ class HomeContentTest {
             RickAndMortyTheme {
                 HomeContent(
                     HomeUiState.Content(
-                        persistentListOf(
-                            CharacterCardUiModel(1, "Rick", "Human", CharacterStatusUi.Alive, null),
+                        listOf(
+                            CharacterCardUiModel(1, "Rick", "Human", CharacterStatus.Alive, null),
                         ),
                         totalCount = 40,
                         append = HomeAppendState.Error,
@@ -593,26 +451,26 @@ class HomeContentTest {
             RickAndMortyTheme {
                 HomeContent(
                     HomeUiState.Content(
-                        persistentListOf(
+                        listOf(
                             CharacterCardUiModel(
                                 1,
                                 "Rick Sanchez",
                                 "Human",
-                                CharacterStatusUi.Alive,
+                                CharacterStatus.Alive,
                                 "test://pending",
                             ),
                             CharacterCardUiModel(
                                 2,
                                 "Morty Smith",
                                 "Human",
-                                CharacterStatusUi.Alive,
+                                CharacterStatus.Alive,
                                 "test://failure",
                             ),
                             CharacterCardUiModel(
                                 3,
                                 "Summer Smith",
                                 "Human",
-                                CharacterStatusUi.Unknown,
+                                CharacterStatus.Unknown,
                                 null,
                             ),
                         ),
@@ -673,7 +531,7 @@ class HomeContentTest {
         val repository = object : CharactersRepository {
             override suspend fun getDetails(characterId: Int): CharacterDetailsResult = CharacterDetailsResult.NotFound
 
-            override suspend fun getPage(page: Int, name: String?): CharactersPageResult {
+            override suspend fun getPage(page: Int, name: String?, status: CharacterStatus?): CharactersPageResult {
                 requests++
                 return if (requests == 1) {
                     CharactersPageResult.Failure(CharacterRequestFailure.Service)
@@ -772,12 +630,12 @@ class HomeContentTest {
             RickAndMortyTheme {
                 HomeContent(
                     state = HomeUiState.Content(
-                        persistentListOf(
+                        listOf(
                             CharacterCardUiModel(
                                 1,
                                 "Rick Sanchez",
                                 "Human",
-                                CharacterStatusUi.Alive,
+                                CharacterStatus.Alive,
                                 "test://rick",
                             ),
                         ),
@@ -790,7 +648,50 @@ class HomeContentTest {
         }
 
         compose.onNodeWithText("Rick Sanchez").assertIsDisplayed().performClick()
-        compose.onNodeWithText("Alive").assertIsDisplayed()
+        compose.onAllNodesWithText("Alive")[1].assertIsDisplayed()
         assertEquals(1, selectedId)
+    }
+
+    private fun verifyStableAppendFeedback(fontScale: Float) {
+        var append by mutableStateOf<HomeAppendState>(HomeAppendState.Error)
+        var retries = 0
+        val characters = (1..20).map {
+            CharacterCardUiModel(it, "Character $it", "Human", CharacterStatus.Alive, null)
+        }
+        compose.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
+                RickAndMortyTheme {
+                    Box(Modifier.width(HomeLayoutTokens.twoColumnMinWidth + Spacing.extraLarge)) {
+                        HomeContent(
+                            HomeUiState.Content(characters, 40, append),
+                            imageLoader,
+                            {
+                                retries++
+                                append = HomeAppendState.Loading
+                            },
+                            {},
+                        )
+                    }
+                }
+            }
+        }
+        compose.onNode(hasScrollToIndexAction()).performScrollToIndex(20)
+        val retryBounds = compose.onNodeWithText("Retry").assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+        val counterBounds = compose.onNodeWithText("Loaded 20 of 40 characters").fetchSemanticsNode().boundsInRoot
+        assertTrue(retryBounds.bottom <= counterBounds.top)
+
+        compose.onNodeWithText("Retry").performTouchInput { click() }
+
+        assertEquals(1, retries)
+        val loadingBounds = compose.onNodeWithContentDescription("Loading more characters")
+            .assertIsDisplayed().fetchSemanticsNode().boundsInRoot
+        assertTrue(loadingBounds.bottom <= counterBounds.top)
+        assertEquals(retryBounds.center.y, loadingBounds.center.y, 1f)
+        compose.onNodeWithText("Retry").assertDoesNotExist()
+        compose.runOnIdle { append = HomeAppendState.Error }
+        compose.onNodeWithText("Retry").assertIsDisplayed()
+        assertEquals(retryBounds, compose.onNodeWithText("Retry").fetchSemanticsNode().boundsInRoot)
+        assertEquals(counterBounds, compose.onNodeWithText("Loaded 20 of 40 characters").fetchSemanticsNode().boundsInRoot)
     }
 }

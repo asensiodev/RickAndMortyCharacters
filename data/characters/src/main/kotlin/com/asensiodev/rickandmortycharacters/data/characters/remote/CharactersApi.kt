@@ -15,7 +15,11 @@ internal val CharactersJson = Json { ignoreUnknownKeys = true }
 
 internal interface CharactersApi {
     @GET("character")
-    suspend fun getPage(@Query("page") page: Int, @Query("name") name: String?): Response<CharacterPageDto>
+    suspend fun getPage(
+        @Query("page") page: Int,
+        @Query("name") name: String?,
+        @Query("status") status: String?,
+    ): Response<CharacterPageDto>
 
     @GET("character/{id}")
     suspend fun getDetails(@Path("id") characterId: Int): Response<CharacterDetailsDto>

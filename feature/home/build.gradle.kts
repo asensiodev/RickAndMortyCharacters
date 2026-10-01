@@ -38,7 +38,6 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.kotlinx.coroutines.android)
-    implementation(libs.kotlinx.collections.immutable)
     testImplementation(projects.core.testing)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)

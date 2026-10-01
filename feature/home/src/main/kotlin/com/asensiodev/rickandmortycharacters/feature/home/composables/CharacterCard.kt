@@ -44,9 +44,10 @@ import coil3.request.SuccessResult
 import com.asensiodev.rickandmortycharacters.core.designsystem.composables.LoadingPlaceholder
 import com.asensiodev.rickandmortycharacters.core.designsystem.theme.RickAndMortyTheme
 import com.asensiodev.rickandmortycharacters.core.designsystem.theme.Spacing
+import com.asensiodev.rickandmortycharacters.core.designsystem.theme.StatusColors
+import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterStatus
 import com.asensiodev.rickandmortycharacters.feature.home.R
 import com.asensiodev.rickandmortycharacters.feature.home.model.CharacterCardUiModel
-import com.asensiodev.rickandmortycharacters.feature.home.model.CharacterStatusUi
 
 private const val CARD_PREVIEW_WIDTH_DP = 180
 
@@ -89,7 +90,7 @@ fun CharacterCard(
                 ) {
                     Text(
                         text = character.species,
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.weight(1f),
                         maxLines = CharacterCardTokens.METADATA_MAX_LINES,
@@ -103,24 +104,24 @@ fun CharacterCard(
 }
 
 @Composable
-private fun StatusBadge(status: CharacterStatusUi) {
+private fun StatusBadge(status: CharacterStatus) {
     val (background, foreground) = when (status) {
-        CharacterStatusUi.Alive ->
-            CharacterCardTokens.aliveContainer to
-                CharacterCardTokens.onAliveContainer
+        CharacterStatus.Alive ->
+            StatusColors.aliveContainer to
+                StatusColors.onAliveContainer
 
-        CharacterStatusUi.Dead ->
-            CharacterCardTokens.deadContainer to
-                CharacterCardTokens.onDeadContainer
+        CharacterStatus.Dead ->
+            StatusColors.deadContainer to
+                StatusColors.onDeadContainer
 
-        CharacterStatusUi.Unknown ->
+        CharacterStatus.Unknown ->
             MaterialTheme.colorScheme.surfaceContainerHighest to
                 MaterialTheme.colorScheme.onSurfaceVariant
     }
     val label = when (status) {
-        CharacterStatusUi.Alive -> R.string.status_alive
-        CharacterStatusUi.Dead -> R.string.status_dead
-        CharacterStatusUi.Unknown -> R.string.status_unknown
+        CharacterStatus.Alive -> R.string.status_alive
+        CharacterStatus.Dead -> R.string.status_dead
+        CharacterStatus.Unknown -> R.string.status_unknown
     }
     Row(
         modifier = Modifier.background(background, MaterialTheme.shapes.small)
@@ -132,7 +133,7 @@ private fun StatusBadge(status: CharacterStatusUi) {
         Text(
             text = stringResource(label),
             color = foreground,
-            style = MaterialTheme.typography.labelSmall,
+            style = MaterialTheme.typography.labelMedium,
             maxLines = CharacterCardTokens.METADATA_MAX_LINES,
         )
     }
@@ -202,7 +203,7 @@ private fun CharacterCardPreview() {
                 196,
                 "Krombopulos Michael",
                 "Mythological Creature",
-                CharacterStatusUi.Dead,
+                CharacterStatus.Dead,
                 "preview://portrait",
             ),
             loader,
@@ -225,7 +226,7 @@ private fun MissingPortraitPreview() {
                 1,
                 "Missing portrait example",
                 "Human",
-                CharacterStatusUi.Unknown,
+                CharacterStatus.Unknown,
                 null,
             ),
             loader,

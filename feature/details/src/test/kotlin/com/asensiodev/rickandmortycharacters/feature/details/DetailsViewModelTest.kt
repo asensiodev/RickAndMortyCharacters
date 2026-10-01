@@ -181,7 +181,7 @@ private class FakeCharactersRepository : CharactersRepository {
     var pending: CompletableDeferred<Unit>? = null
     var cancelled = false
 
-    override suspend fun getPage(page: Int, name: String?): CharactersPageResult =
+    override suspend fun getPage(page: Int, name: String?, status: CharacterStatus?): CharactersPageResult =
         CharactersPageResult.Failure(CharacterRequestFailure.Service)
 
     override suspend fun getDetails(characterId: Int): CharacterDetailsResult {

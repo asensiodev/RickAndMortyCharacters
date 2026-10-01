@@ -13,6 +13,8 @@ internal object HomeLayoutTokens {
     val retryMinHeight = 48.dp
     val retryMinWidth = 140.dp
     val twoColumnMinWidth = 360.dp
+    val filterCheckSize = 16.dp
+    val filterMinHeight = 40.dp
     const val EXPANDED_TEXT_FONT_SCALE = 1.3f
     const val SKELETON_COUNT = 6
     const val ORDINARY_COLUMNS = 2

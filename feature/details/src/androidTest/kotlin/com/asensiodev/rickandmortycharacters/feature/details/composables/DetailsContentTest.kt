@@ -19,8 +19,8 @@ import coil3.intercept.Interceptor
 import coil3.request.ErrorResult
 import coil3.request.SuccessResult
 import com.asensiodev.rickandmortycharacters.core.designsystem.theme.RickAndMortyTheme
+import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterDetails
 import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterStatus
-import com.asensiodev.rickandmortycharacters.feature.details.model.CharacterDetailsUiModel
 import com.asensiodev.rickandmortycharacters.feature.details.model.DetailsUiState
 import kotlinx.coroutines.CompletableDeferred
 import org.junit.After
@@ -234,7 +234,7 @@ class DetailsContentTest {
         compose.onNodeWithContentDescription("Back").assertIsDisplayed()
     }
 
-    private fun toxicRick(): CharacterDetailsUiModel = CharacterDetailsUiModel(
+    private fun toxicRick(): CharacterDetails = CharacterDetails(
         361, "Toxic Rick", CharacterStatus.Dead, "Humanoid", "Male", "Rick's toxic side",
         "Detoxifier", "Earth (Replacement Dimension)", 1, "test://portrait",
     )

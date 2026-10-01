@@ -105,7 +105,7 @@ private class PagingRepository(var result: CharactersPageResult) : CharactersRep
     val requestedPages = mutableListOf<Int>()
     var cancelled = false
 
-    override suspend fun getPage(page: Int, name: String?): CharactersPageResult {
+    override suspend fun getPage(page: Int, name: String?, status: CharacterStatus?): CharactersPageResult {
         if (cancelled) throw CancellationException()
         requestedPages += page
         return result

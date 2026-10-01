@@ -44,6 +44,54 @@ class RemoteCharactersRepositoryTest {
     }
 
     @Test
+    fun `GIVEN supported status filters WHEN pages are requested THEN each retains its constraints`() = runTest {
+        for ((status, expected) in listOf(
+            CharacterStatus.Alive to "alive",
+            CharacterStatus.Dead to "dead",
+            CharacterStatus.Unknown to "unknown",
+            null to null,
+        )) {
+            for (page in 1..2) {
+                server.enqueue(MockResponse.Builder().body("""{"info":{"count":0,"next":null},"results":[]}""").build())
+
+                charactersRepository.getPage(page, " Rick ", status)
+
+                val request = server.takeRequest()
+                assertEquals(expected, request.url.queryParameter("status"))
+                assertEquals("Rick", request.url.queryParameter("name"))
+                assertEquals(page.toString(), request.url.queryParameter("page"))
+            }
+        }
+    }
+
+    @Test
+    fun `GIVEN a recognized filtered no match WHEN its first page is requested THEN status alone is sufficient for emptiness`() = runTest {
+        for (name in listOf(null, "Rick")) {
+            server.enqueue(MockResponse.Builder().code(404).body("""{"error":"There is nothing here"}""").build())
+
+            val result = charactersRepository.getPage(1, name, CharacterStatus.Unknown)
+
+            assertEquals(CharactersPageResult.Success(CharacterPage(emptyList(), 0, null)), result)
+        }
+        server.enqueue(MockResponse.Builder().code(404).body("{} ").build())
+        assertEquals(
+            CharactersPageResult.Failure(CharacterRequestFailure.Service),
+            charactersRepository.getPage(1, null, CharacterStatus.Unknown),
+        )
+    }
+
+    @Test
+    fun `GIVEN a status constraint WHEN a page is requested THEN it sends the API status value`() = runTest {
+        server.enqueue(MockResponse.Builder().body("""{"info":{"count":0,"next":null},"results":[]}""").build())
+
+        charactersRepository.getPage(1, "Rick", CharacterStatus.Dead)
+
+        val request = server.takeRequest()
+        assertEquals("dead", request.url.queryParameter("status"))
+        assertEquals("Rick", request.url.queryParameter("name"))
+    }
+
+    @Test
     fun `GIVEN a spaced name WHEN each page is requested THEN it retains the trimmed encoded name`() = runTest {
         val body = requireNotNull(javaClass.getResource("/characters-page.json")).readText()
         for (page in 1..2) {
