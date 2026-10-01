@@ -44,16 +44,16 @@ internal class HomeViewModel @Inject constructor(repository: CharactersRepositor
 
     fun onSearchAction(action: HomeSearchAction) {
         when (action) {
-            is HomeSearchAction.SelectStatus -> selectStatus(action.status)
+            is HomeSearchAction.SelectStatus -> selectStatus(status = action.status)
 
-            is HomeSearchAction.Edit -> updateSearch(action.name)
+            is HomeSearchAction.Edit -> updateSearch(value = action.name)
 
             HomeSearchAction.Submit -> submitSearch()
 
             HomeSearchAction.Clear -> clearSearch()
 
             is HomeSearchAction.Suggest -> {
-                updateSearch(action.name)
+                updateSearch(value = action.name)
                 submitSearch()
             }
         }
@@ -74,14 +74,14 @@ internal class HomeViewModel @Inject constructor(repository: CharactersRepositor
     }
 
     private fun clearSearch() {
-        updateSearch("")
+        updateSearch(value = "")
         submitSearch()
     }
 
     private fun selectStatus(status: CharacterStatus?) {
         if (status == mutableState.value.selectedStatus) return
         searchJob?.cancel()
-        applySearch(status)
+        applySearch(status = status)
     }
 
     private fun applySearch(status: CharacterStatus? = mutableState.value.selectedStatus) {
@@ -112,7 +112,12 @@ internal class HomeViewModel @Inject constructor(repository: CharactersRepositor
                     enablePlaceholders = false,
                 ),
                 pagingSourceFactory = {
-                    CharactersPagingSource(repository, name, generation, status) { total ->
+                    CharactersPagingSource(
+                        repository = repository,
+                        name = name,
+                        generation = generation,
+                        status = status,
+                    ) { total ->
                         mutableState.update { current ->
                             if (current.generation == generation) current.copy(totalCount = total) else current
                         }

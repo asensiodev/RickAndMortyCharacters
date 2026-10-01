@@ -58,19 +58,19 @@ fun DetailsContent(
             .safeDrawingPadding(),
     ) {
         when (state) {
-            is DetailsUiState.Content -> CharacterDetailsContent(state.character, imageLoader)
+            is DetailsUiState.Content -> CharacterDetailsContent(character = state.character, imageLoader = imageLoader)
 
             DetailsUiState.Loading -> DetailsSkeleton()
 
             DetailsUiState.Error -> DetailsFeedback(
-                stringResource(R.string.detail_error),
-                stringResource(R.string.detail_error_description),
-                onRetry,
+                title = stringResource(R.string.detail_error),
+                description = stringResource(R.string.detail_error_description),
+                onRetry = onRetry,
             )
 
             DetailsUiState.NotFound -> DetailsFeedback(
-                stringResource(R.string.detail_not_found),
-                stringResource(R.string.detail_not_found_description),
+                title = stringResource(R.string.detail_not_found),
+                description = stringResource(R.string.detail_not_found_description),
             )
         }
         Surface(
@@ -103,9 +103,9 @@ private fun CharacterDetailsContent(character: CharacterDetails, imageLoader: Im
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(Spacing.extraLarge),
     ) {
-        DetailsPortrait(character.imageUrl, imageLoader, scrollState)
-        DetailsIdentity(character)
-        DetailsFacts(character)
+        DetailsPortrait(imageUrl = character.imageUrl, imageLoader = imageLoader, scrollState = scrollState)
+        DetailsIdentity(character = character)
+        DetailsFacts(character = character)
     }
 }
 
@@ -145,7 +145,7 @@ private fun DetailsIdentity(character: CharacterDetails) {
             ),
             verticalArrangement = Arrangement.spacedBy(Spacing.small),
         ) {
-            DetailsStatus(character.status)
+            DetailsStatus(status = character.status)
             Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainer) {
                 Row(
                     Modifier.padding(horizontal = Spacing.medium, vertical = Spacing.extraSmall),
@@ -158,7 +158,7 @@ private fun DetailsIdentity(character: CharacterDetails) {
                         modifier = Modifier.size(DetailsTokens.smallIconSize),
                     )
                     Text(
-                        displayFact(character.species),
+                        displayFact(value = character.species),
                         style = MaterialTheme.typography.labelMedium,
                     )
                 }
@@ -196,7 +196,11 @@ private fun DetailsStatus(status: CharacterStatus) {
                     modifier = Modifier.size(DetailsTokens.smallIconSize),
                 )
             }
-            Box(Modifier.size(DetailsTokens.statusDotSize).background(foreground, CircleShape))
+            Box(
+                modifier = Modifier.size(
+                    DetailsTokens.statusDotSize,
+                ).background(color = foreground, shape = CircleShape),
+            )
             Text(stringResource(label), style = MaterialTheme.typography.labelMedium)
         }
     }
@@ -215,21 +219,29 @@ private fun DetailsContentPreview(@PreviewParameter(DetailsPreviewStates::class)
         ImageLoader.Builder(context).components {
             add(
                 Interceptor { chain ->
-                    SuccessResult(ColorImage(android.graphics.Color.DKGRAY), chain.request)
+                    SuccessResult(image = ColorImage(android.graphics.Color.DKGRAY), request = chain.request)
                 },
             )
         }.build()
     }
     DisposableEffect(loader) { onDispose { loader.shutdown() } }
-    RickAndMortyTheme { DetailsContent(state, loader, {}, {}) }
+    RickAndMortyTheme { DetailsContent(state = state, imageLoader = loader, onRetry = {}, onBack = {}) }
 }
 
 private class DetailsPreviewStates : PreviewParameterProvider<DetailsUiState> {
     override val values = sequenceOf(
         DetailsUiState.Content(
-            CharacterDetails(
-                361, "Toxic Rick", CharacterStatus.Dead, "Humanoid", "Male", "Rick's toxic side",
-                "Detoxifier", "Earth (Replacement Dimension)", 1, "preview://portrait",
+            character = CharacterDetails(
+                id = 361,
+                name = "Toxic Rick",
+                status = CharacterStatus.Dead,
+                species = "Humanoid",
+                gender = "Male",
+                type = "Rick's toxic side",
+                origin = "Detoxifier",
+                location = "Earth (Replacement Dimension)",
+                episodeCount = 1,
+                imageUrl = "preview://portrait",
             ),
         ),
         DetailsUiState.Loading,

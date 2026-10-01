@@ -12,7 +12,13 @@ import com.asensiodev.rickandmortycharacters.feature.details.model.DetailsAction
 
 @Composable
 fun DetailsRoute(characterId: Int, imageLoader: ImageLoader, onBack: () -> Unit, modifier: Modifier = Modifier) {
-    DetailsRoute(hiltViewModel<DetailsViewModel>(), characterId, imageLoader, onBack, modifier)
+    DetailsRoute(
+        viewModel = hiltViewModel<DetailsViewModel>(),
+        characterId = characterId,
+        imageLoader = imageLoader,
+        onBack = onBack,
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -23,7 +29,11 @@ internal fun DetailsRoute(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    LaunchedEffect(viewModel, characterId) { viewModel.process(DetailsAction.Load(characterId)) }
+    LaunchedEffect(key1 = viewModel, key2 = characterId) {
+        viewModel.process(action = DetailsAction.Load(characterId = characterId))
+    }
     val state by viewModel.state.collectAsStateWithLifecycle()
-    DetailsContent(state, imageLoader, { viewModel.process(DetailsAction.Retry) }, onBack, modifier)
+    DetailsContent(state = state, imageLoader = imageLoader, onRetry = {
+        viewModel.process(action = DetailsAction.Retry)
+    }, onBack = onBack, modifier = modifier)
 }

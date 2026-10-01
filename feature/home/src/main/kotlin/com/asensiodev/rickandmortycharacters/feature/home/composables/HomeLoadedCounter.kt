@@ -32,8 +32,8 @@ internal fun HomeLoadedCounter(loadedCount: Int, totalCount: Int, modifier: Modi
             horizontalArrangement = Arrangement.spacedBy(Spacing.small),
         ) {
             Box(
-                Modifier.size(HomeLayoutTokens.counterDotSize)
-                    .background(MaterialTheme.colorScheme.primary, CircleShape),
+                modifier = Modifier.size(HomeLayoutTokens.counterDotSize)
+                    .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape),
             )
             Text(
                 stringResource(R.string.catalogue_loaded_count, loadedCount, totalCount),
@@ -48,5 +48,5 @@ internal fun HomeLoadedCounter(loadedCount: Int, totalCount: Int, modifier: Modi
 @Preview
 @Composable
 private fun HomeLoadedCounterPreview() {
-    RickAndMortyTheme { HomeLoadedCounter(20, 826) }
+    RickAndMortyTheme { HomeLoadedCounter(loadedCount = 20, totalCount = 826) }
 }

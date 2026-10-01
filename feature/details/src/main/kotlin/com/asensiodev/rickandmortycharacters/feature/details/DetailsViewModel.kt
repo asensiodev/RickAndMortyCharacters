@@ -24,20 +24,20 @@ internal class DetailsViewModel @Inject constructor(private val repository: Char
         when (action) {
             is DetailsAction.Load -> if (characterId == null) {
                 characterId = action.characterId
-                requestDetails(action.characterId)
+                requestDetails(id = action.characterId)
             }
 
             DetailsAction.Retry -> {
                 val id = characterId ?: return
-                if (mutableState.value == DetailsUiState.Error) requestDetails(id)
+                if (mutableState.value == DetailsUiState.Error) requestDetails(id = id)
             }
         }
     }
     private fun requestDetails(id: Int) {
         mutableState.value = DetailsUiState.Loading
         viewModelScope.launch {
-            mutableState.value = when (val result = repository.getDetails(id)) {
-                is CharacterDetailsResult.Success -> DetailsUiState.Content(result.character)
+            mutableState.value = when (val result = repository.getDetails(characterId = id)) {
+                is CharacterDetailsResult.Success -> DetailsUiState.Content(character = result.character)
                 CharacterDetailsResult.NotFound -> DetailsUiState.NotFound
                 is CharacterDetailsResult.Failure -> DetailsUiState.Error
             }

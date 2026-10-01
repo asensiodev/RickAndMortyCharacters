@@ -44,15 +44,15 @@ internal fun DetailsSkeleton() {
         verticalArrangement = Arrangement.spacedBy(Spacing.extraLarge),
     ) {
         LoadingPlaceholder(
-            Modifier.widthIn(max = DetailsTokens.portraitMaxWidth).fillMaxWidth()
+            modifier = Modifier.widthIn(max = DetailsTokens.portraitMaxWidth).fillMaxWidth()
                 .aspectRatio(DetailsTokens.PORTRAIT_ASPECT_RATIO).clip(MaterialTheme.shapes.large),
         )
         LoadingPlaceholder(
-            Modifier.width(DetailsTokens.identitySkeletonWidth)
+            modifier = Modifier.width(DetailsTokens.identitySkeletonWidth)
                 .height(DetailsTokens.identitySkeletonHeight).clip(MaterialTheme.shapes.small),
         )
         LoadingPlaceholder(
-            Modifier.width(DetailsTokens.identitySkeletonWidth)
+            modifier = Modifier.width(DetailsTokens.identitySkeletonWidth)
                 .height(DetailsTokens.factSkeletonHeight).clip(MaterialTheme.shapes.small),
         )
         Surface(
@@ -67,12 +67,12 @@ internal fun DetailsSkeleton() {
                 repeat(DetailsTokens.SKELETON_FACT_COUNT) {
                     Row(horizontalArrangement = Arrangement.spacedBy(Spacing.extraLarge)) {
                         LoadingPlaceholder(
-                            Modifier.weight(DetailsTokens.FACT_VALUE_WEIGHT)
+                            modifier = Modifier.weight(DetailsTokens.FACT_VALUE_WEIGHT)
                                 .height(DetailsTokens.factSkeletonHeight)
                                 .clip(MaterialTheme.shapes.small),
                         )
                         LoadingPlaceholder(
-                            Modifier.weight(DetailsTokens.FACT_VALUE_WEIGHT)
+                            modifier = Modifier.weight(DetailsTokens.FACT_VALUE_WEIGHT)
                                 .height(DetailsTokens.factSkeletonHeight)
                                 .clip(MaterialTheme.shapes.small),
                         )

@@ -100,13 +100,13 @@ fun HomeContent(
     var scrolledGeneration by rememberSaveable { mutableLongStateOf(searchState.generation) }
     LaunchedEffect(searchState.generation) {
         if (scrolledGeneration != searchState.generation) {
-            gridState.scrollToItem(0)
+            gridState.scrollToItem(index = 0)
             scrolledGeneration = searchState.generation
         }
     }
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
-    LaunchedEffect(gridState, keyboard) {
+    LaunchedEffect(key1 = gridState, key2 = keyboard) {
         gridState.interactionSource.interactions.collect { interaction ->
             if (interaction is DragInteraction.Start) keyboard?.hide()
         }
@@ -130,25 +130,25 @@ fun HomeContent(
             .safeDrawingPadding(),
     ) {
         HomeSearchField(
-            searchState.searchText,
-            searchAction,
-            Modifier.padding(start = Spacing.large, top = Spacing.large, end = Spacing.large),
+            text = searchState.searchText,
+            onAction = searchAction,
+            modifier = Modifier.padding(start = Spacing.large, top = Spacing.large, end = Spacing.large),
         )
         HomeStatusFilters(
-            searchState.selectedStatus,
-            { searchAction(HomeSearchAction.SelectStatus(it)) },
-            Modifier.padding(horizontal = Spacing.large, vertical = Spacing.small),
+            selectedStatus = searchState.selectedStatus,
+            onSelect = { searchAction(HomeSearchAction.SelectStatus(status = it)) },
+            modifier = Modifier.padding(horizontal = Spacing.large, vertical = Spacing.small),
         )
         HomeResultsPanel(
-            if (scrolledGeneration == searchState.generation) state else HomeUiState.Loading,
-            searchState,
-            gridState,
-            onRetry,
-            searchAction,
+            state = if (scrolledGeneration == searchState.generation) state else HomeUiState.Loading,
+            searchState = searchState,
+            gridState = gridState,
+            onRetry = onRetry,
+            onSearchAction = searchAction,
             modifier = Modifier.weight(1f).fillMaxWidth(),
         ) { index, character ->
             if (cardContent == null) {
-                CharacterCard(character, imageLoader, selectCharacter)
+                CharacterCard(character = character, imageLoader = imageLoader, onClick = selectCharacter)
             } else {
                 cardContent(index, character)
             }
@@ -191,9 +191,15 @@ private fun HomeResultsPanel(
             .heightIn(min = maxHeight)
             .padding(Spacing.extraLarge)
         HomeResults(
-            state, columns, bottomPadding, feedbackModifier, onRetry, gridState,
-            searchState.appliedName != null || searchState.selectedStatus != null, onSearchAction,
-            cardContent,
+            state = state,
+            columns = columns,
+            bottomPadding = bottomPadding,
+            feedbackModifier = feedbackModifier,
+            onRetry = onRetry,
+            gridState = gridState,
+            hasQueryConstraint = searchState.appliedName != null || searchState.selectedStatus != null,
+            onSearchAction = onSearchAction,
+            cardContent = cardContent,
         )
         if (showCounter) {
             HomeLoadedCounter(
@@ -223,15 +229,15 @@ private fun HomeResults(
 ) {
     when (state) {
         is HomeUiState.Content -> HomeCharacterGrid(
-            state,
-            columns,
-            bottomPadding,
-            onRetry,
-            gridState,
-            cardContent,
+            state = state,
+            columns = columns,
+            bottomPadding = bottomPadding,
+            onRetry = onRetry,
+            gridState = gridState,
+            cardContent = cardContent,
         )
 
-        HomeUiState.Loading -> HomeGrid(columns, gridState) {
+        HomeUiState.Loading -> HomeGrid(columns = columns, gridState = gridState) {
             items(HomeLayoutTokens.SKELETON_COUNT, contentType = { "skeleton" }) {
                 CharacterCardSkeleton()
             }
@@ -243,7 +249,7 @@ private fun HomeResults(
             icon = R.drawable.ic_error,
             modifier = feedbackModifier,
         ) {
-            HomeRetryButton(onRetry)
+            HomeRetryButton(onRetry = onRetry)
         }
 
         HomeUiState.Empty -> HomeFeedback(
@@ -258,7 +264,7 @@ private fun HomeResults(
             icon = R.drawable.ic_travel_explore,
             modifier = feedbackModifier,
         ) {
-            if (hasQueryConstraint) HomeSearchSuggestions(onSearchAction)
+            if (hasQueryConstraint) HomeSearchSuggestions(onAction = onSearchAction)
         }
     }
 }
@@ -273,7 +279,7 @@ private fun HomeSearchSuggestions(onAction: (HomeSearchAction) -> Unit) {
         listOf(R.string.suggest_rick, R.string.suggest_morty, R.string.suggest_beth, R.string.suggest_summer)
             .forEach { resource ->
                 val name = stringResource(resource)
-                OutlinedButton(onClick = { onAction(HomeSearchAction.Suggest(name)) }) { Text(name) }
+                OutlinedButton(onClick = { onAction(HomeSearchAction.Suggest(name = name)) }) { Text(text = name) }
             }
     }
 }
@@ -287,7 +293,7 @@ private fun HomeCharacterGrid(
     gridState: LazyGridState,
     cardContent: @Composable (Int, CharacterCardUiModel) -> Unit,
 ) {
-    HomeGrid(columns, gridState, bottomPadding = bottomPadding) {
+    HomeGrid(columns = columns, gridState = gridState, bottomPadding = bottomPadding) {
         itemsIndexed(
             state.characters,
             key = { _, character ->
@@ -303,7 +309,7 @@ private fun HomeCharacterGrid(
                 span = { GridItemSpan(maxLineSpan) },
                 contentType = "pagination",
             ) {
-                HomeAppendFooter(state.append, onRetry)
+                HomeAppendFooter(state = state.append, onRetry = onRetry)
             }
         }
     }
@@ -393,7 +399,7 @@ private fun HomeAppendFooter(state: HomeAppendState, onRetry: () -> Unit) {
             textAlign = TextAlign.Center,
         )
         Box(contentAlignment = Alignment.Center) {
-            HomeRetryButton(onRetry, modifier = feedbackModifier, enabled = !loading)
+            HomeRetryButton(onRetry = onRetry, modifier = feedbackModifier, enabled = !loading)
             if (loading) {
                 val description = stringResource(R.string.catalogue_append_loading)
                 CircularProgressIndicator(
@@ -420,7 +426,7 @@ private fun HomeRetryButton(onRetry: () -> Unit, modifier: Modifier = Modifier, 
             contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
         ),
     ) {
-        Text(stringResource(R.string.retry))
+        Text(text = stringResource(R.string.retry))
     }
 }
 
@@ -444,31 +450,31 @@ private fun HomeContentPreview(@PreviewParameter(HomePreviewStates::class) state
         ImageLoader.Builder(context).components {
             add(
                 Interceptor { chain ->
-                    SuccessResult(ColorImage(Color.DKGRAY), chain.request)
+                    SuccessResult(image = ColorImage(Color.DKGRAY), request = chain.request)
                 },
             )
         }.build()
     }
     DisposableEffect(loader) { onDispose { loader.shutdown() } }
-    RickAndMortyTheme { HomeContent(state, loader, {}, {}) }
+    RickAndMortyTheme { HomeContent(state = state, imageLoader = loader, onRetry = {}, onCharacterSelected = {}) }
 }
 
 private class HomePreviewStates : PreviewParameterProvider<HomeUiState> {
     private val content = HomeUiState.Content(
-        listOf(
+        characters = listOf(
             CharacterCardUiModel(
-                1,
-                "Rick Sanchez",
-                "Human",
-                CharacterStatus.Alive,
-                "preview://rick",
+                id = 1,
+                name = "Rick Sanchez",
+                species = "Human",
+                status = CharacterStatus.Alive,
+                imageUrl = "preview://rick",
             ),
             CharacterCardUiModel(
-                196,
-                "Krombopulos Michael",
-                "Alien",
-                CharacterStatus.Dead,
-                null,
+                id = 196,
+                name = "Krombopulos Michael",
+                species = "Alien",
+                status = CharacterStatus.Dead,
+                imageUrl = null,
             ),
         ),
         totalCount = 57,

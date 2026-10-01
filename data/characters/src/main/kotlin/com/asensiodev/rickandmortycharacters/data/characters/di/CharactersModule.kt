@@ -31,9 +31,11 @@ abstract class CharactersBindings {
 internal object CharactersNetworkModule {
     @Provides
     @Singleton
-    fun client(@ApplicationContext context: Context): OkHttpClient = createCharactersHttpClient(context.cacheDir)
+    fun client(@ApplicationContext context: Context): OkHttpClient =
+        createCharactersHttpClient(cacheDirectory = context.cacheDir)
 
     @Provides
     @Singleton
-    fun api(client: OkHttpClient): CharactersApi = createCharactersApi(API_BASE_URL.toHttpUrl(), client)
+    fun api(client: OkHttpClient): CharactersApi =
+        createCharactersApi(baseUrl = API_BASE_URL.toHttpUrl(), client = client)
 }

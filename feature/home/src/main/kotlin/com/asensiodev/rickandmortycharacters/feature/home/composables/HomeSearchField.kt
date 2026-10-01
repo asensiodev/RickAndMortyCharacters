@@ -41,10 +41,10 @@ internal fun HomeSearchField(text: String, onAction: (HomeSearchAction) -> Unit,
         value = input,
         onValueChange = {
             input = it
-            if (it.text != text) onAction(HomeSearchAction.Edit(it.text))
+            if (it.text != text) onAction(HomeSearchAction.Edit(name = it.text))
         },
         modifier = modifier.fillMaxWidth().semantics { contentDescription = description },
-        placeholder = { Text(stringResource(R.string.search_characters)) },
+        placeholder = { Text(text = stringResource(R.string.search_characters)) },
         leadingIcon = {
             Icon(painterResource(R.drawable.ic_search), null, Modifier.size(HomeLayoutTokens.searchIconSize))
         },

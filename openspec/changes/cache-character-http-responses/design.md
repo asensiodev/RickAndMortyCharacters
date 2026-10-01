@@ -32,7 +32,7 @@ Follow the repository's uppercase GIVEN / WHEN / THEN naming, field layout and b
 
 Run affected data JVM tests first, then `qualityCheck` and `:app:assembleRelease` through the repository's managed Gradle workflow. Run affected API 37 journeys and native composition smoke checks. Record exact commands, outcomes, live header observations and limitations here during implementation. No Gradle check, live API probe or manual device check has been executed for this draft.
 
-Human acceptance precedes archival and C10 implementation. Commit and push require their separate explicit authorizations.
+Human acceptance precedes archival. Commit and push require their separate explicit authorizations.
 
 ## Planning evidence
 

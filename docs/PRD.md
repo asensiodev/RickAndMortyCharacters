@@ -22,7 +22,6 @@ MoSCoW distinguishes required capabilities, preferred improvements, optional enh
 | **Must** | Verifiable quality | Critical behavior covered by tests, mandatory Konsist architecture checks, automated checks and reproducible development instructions |
 | **Should** | Connectivity awareness | An app-level snackbar reports observed internet unavailability without removing content or blocking requests |
 | **Should** | Light/dark themes | Consistent visual variants following system appearance |
-| **Should** | State restoration | Restore minimal query, filter and destination state after recreation; refetch remote data as needed |
 | **Could** | Shared character image transition | Animate the character image between its grid card and the detail screen |
 | **Could** | Accessibility demonstration | A documented TalkBack and large-text journey on the catalogue screen |
 | **Won't in this iteration** | Offline catalogue and accounts | No guaranteed offline journey, synchronized catalogue database or authentication |
@@ -38,7 +37,7 @@ Basic accessibility is part of component design. The optional screen-level demon
 
 **Detail:** image, name, status, species, gender, optional type, origin and location names, and episode count. Missing optional information must not break the layout. Navigate by ID. Counting existing episode references does not require fetching each episode.
 
-**Navigation and restoration:** Home and Character detail are the only destinations; search/filter/loading/empty/error/retry changes happen in place. Only detail has an app Back action. Normal back navigation preserves query, filter and scroll while the browsing destination remains alive, without reopening the search keyboard. After process death, only the agreed minimal state is restored; catalogue data may need another request. The precise scroll-restoration behavior belongs in its change.
+**Navigation:** Home and Character detail are the only destinations; search/filter/loading/empty/error/retry changes happen in place. Only detail has an app Back action. Normal back navigation preserves query, filter and scroll while the browsing destination remains alive, without reopening the search keyboard.
 
 **Errors:** initial home/detail request failures show a persistent contextual message and Retry. Retry repeats the failed operation for the current query or character ID. A failed image does not disable a character card; a failed additional page retains loaded cards with an inline retry. Empty results and a confirmed missing character have their own in-place states. Keep the relevant controls available during failures; show retry progress in the affected area and prevent duplicate submissions. A confirmed out-of-range append response ends pagination without removing loaded cards.
 

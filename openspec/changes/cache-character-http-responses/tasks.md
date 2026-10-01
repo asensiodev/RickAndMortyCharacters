@@ -21,4 +21,4 @@
 - [x] 4.1 Run affected data JVM checks, the documented quality gate and release assembly; record actual RED/GREEN and regression commands/results.
 - [x] 4.2 Verify affected API 37 journeys and native production composition; distinguish UI smoke checks from HTTP-cache evidence.
 - [x] 4.3 Update documentation to match verified behavior and record cache/offline limitations.
-- [x] 4.4 Obtain human acceptance before archival and C10 implementation; commit/push only with their separate explicit authorizations.
+- [x] 4.4 Obtain human acceptance before archival; commit/push only with their separate explicit authorizations.

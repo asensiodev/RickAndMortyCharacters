@@ -44,7 +44,7 @@ class DetailsContentTest {
                     when (chain.request.data) {
                         "test://pending" -> {
                             portraitGate.await()
-                            SuccessResult(ColorImage(android.graphics.Color.DKGRAY), chain.request)
+                            SuccessResult(image = ColorImage(android.graphics.Color.DKGRAY), request = chain.request)
                         }
 
                         "test://failure" -> ErrorResult(
@@ -54,8 +54,8 @@ class DetailsContentTest {
                         )
 
                         else -> SuccessResult(
-                            ColorImage(android.graphics.Color.DKGRAY),
-                            chain.request,
+                            image = ColorImage(android.graphics.Color.DKGRAY),
+                            request = chain.request,
                         )
                     }
                 },
@@ -74,10 +74,10 @@ class DetailsContentTest {
         compose.setContent {
             RickAndMortyTheme {
                 DetailsContent(
-                    DetailsUiState.Content(toxicRick()),
-                    imageLoader,
-                    {},
-                    { backRequests++ },
+                    state = DetailsUiState.Content(character = toxicRick()),
+                    imageLoader = imageLoader,
+                    onRetry = {},
+                    onBack = { backRequests++ },
                 )
             }
         }
@@ -104,7 +104,9 @@ class DetailsContentTest {
         var backRequests = 0
         compose.setContent {
             RickAndMortyTheme {
-                DetailsContent(DetailsUiState.Error, imageLoader, { retries++ }, { backRequests++ })
+                DetailsContent(state = DetailsUiState.Error, imageLoader = imageLoader, onRetry = {
+                    retries++
+                }, onBack = { backRequests++ })
             }
         }
 
@@ -120,7 +122,7 @@ class DetailsContentTest {
         var backRequests = 0
         compose.setContent {
             RickAndMortyTheme {
-                DetailsContent(DetailsUiState.NotFound, imageLoader, {}, { backRequests++ })
+                DetailsContent(state = DetailsUiState.NotFound, imageLoader = imageLoader, onRetry = {}, onBack = { backRequests++ })
             }
         }
 
@@ -135,7 +137,7 @@ class DetailsContentTest {
         var backRequests = 0
         compose.setContent {
             RickAndMortyTheme {
-                DetailsContent(DetailsUiState.Loading, imageLoader, {}, { backRequests++ })
+                DetailsContent(state = DetailsUiState.Loading, imageLoader = imageLoader, onRetry = {}, onBack = { backRequests++ })
             }
         }
 
@@ -151,10 +153,10 @@ class DetailsContentTest {
         compose.setContent {
             RickAndMortyTheme {
                 DetailsContent(
-                    DetailsUiState.Content(toxicRick().copy(imageUrl = "test://pending")),
-                    imageLoader,
-                    {},
-                    {},
+                    state = DetailsUiState.Content(character = toxicRick().copy(imageUrl = "test://pending")),
+                    imageLoader = imageLoader,
+                    onRetry = {},
+                    onBack = {},
                 )
             }
         }
@@ -183,10 +185,10 @@ class DetailsContentTest {
         compose.setContent {
             RickAndMortyTheme {
                 DetailsContent(
-                    DetailsUiState.Content(toxicRick().copy(imageUrl = "test://failure")),
-                    imageLoader,
-                    {},
-                    {},
+                    state = DetailsUiState.Content(character = toxicRick().copy(imageUrl = "test://failure")),
+                    imageLoader = imageLoader,
+                    onRetry = {},
+                    onBack = {},
                 )
             }
         }
@@ -220,7 +222,7 @@ class DetailsContentTest {
         )
         compose.setContent {
             RickAndMortyTheme {
-                DetailsContent(DetailsUiState.Content(character), imageLoader, {}, {})
+                DetailsContent(state = DetailsUiState.Content(character = character), imageLoader = imageLoader, onRetry = {}, onBack = {})
             }
         }
 
@@ -235,7 +237,7 @@ class DetailsContentTest {
     }
 
     private fun toxicRick(): CharacterDetails = CharacterDetails(
-        361, "Toxic Rick", CharacterStatus.Dead, "Humanoid", "Male", "Rick's toxic side",
-        "Detoxifier", "Earth (Replacement Dimension)", 1, "test://portrait",
+        id = 361, name = "Toxic Rick", status = CharacterStatus.Dead, species = "Humanoid", gender = "Male", type = "Rick's toxic side",
+        origin = "Detoxifier", location = "Earth (Replacement Dimension)", episodeCount = 1, imageUrl = "test://portrait",
     )
 }

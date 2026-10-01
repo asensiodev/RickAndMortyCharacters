@@ -87,7 +87,7 @@ class HomeSearchTest {
     val compose = createComposeRule()
     private val imageLoader by lazy {
         ImageLoader.Builder(InstrumentationRegistry.getInstrumentation().targetContext).components {
-            add(Interceptor { chain -> SuccessResult(ColorImage(android.graphics.Color.DKGRAY), chain.request) })
+            add(Interceptor { chain -> SuccessResult(image = ColorImage(android.graphics.Color.DKGRAY), request = chain.request) })
         }.build()
     }
 
@@ -109,15 +109,17 @@ class HomeSearchTest {
             }
         }
         val search = HomePagingState(searchText = "Rick", appliedName = "Rick", selectedStatus = CharacterStatus.Alive)
-        val characters = (1..30).map { CharacterCardUiModel(it, "Character $it", "Human", CharacterStatus.Alive, null) }
+        val characters = (1..30).map {
+            CharacterCardUiModel(id = it, name = "Character $it", species = "Human", status = CharacterStatus.Alive, imageUrl = null)
+        }
         compose.setContent {
             CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboard) {
                 RickAndMortyTheme {
                     HomeContent(
-                        HomeUiState.Content(characters, 30),
-                        imageLoader,
-                        {},
-                        {},
+                        state = HomeUiState.Content(characters = characters, totalCount = 30),
+                        imageLoader = imageLoader,
+                        onRetry = {},
+                        onCharacterSelected = {},
                         searchState = search,
                         onSearchAction = actions::add,
                     )
@@ -137,7 +139,9 @@ class HomeSearchTest {
         val input = compose.onNodeWithContentDescription("Search characters").fetchSemanticsNode().config
         assertEquals("Rick", input[SemanticsProperties.EditableText].text)
         assertEquals(TextRange(1, 3), input[SemanticsProperties.TextSelectionRange])
-        compose.onNode(hasText("Alive") and SemanticsMatcher.expectValue(SemanticsProperties.Selected, true)).assertIsSelected()
+        compose.onNode(
+            hasText("Alive") and SemanticsMatcher.expectValue(key = SemanticsProperties.Selected, expectedValue = true),
+        ).assertIsSelected()
     }
 
     @Test
@@ -150,10 +154,24 @@ class HomeSearchTest {
             }
         }
         var search by mutableStateOf(HomePagingState(searchText = "Rick", appliedName = "Rick"))
-        val characters = (1..30).map { CharacterCardUiModel(it, "Character $it", "Human", CharacterStatus.Alive, null) }
+        val characters = (1..30).map {
+            CharacterCardUiModel(id = it, name = "Character $it", species = "Human", status = CharacterStatus.Alive, imageUrl = null)
+        }
         compose.setContent {
             CompositionLocalProvider(LocalSoftwareKeyboardController provides keyboard) {
-                RickAndMortyTheme { HomeContent(HomeUiState.Content(characters, 30), imageLoader, {}, {}, searchState = search) }
+                RickAndMortyTheme {
+                    HomeContent(
+                        state = HomeUiState.Content(
+                            characters = characters,
+                            totalCount = 30,
+                        ),
+                        imageLoader = imageLoader,
+                        onRetry = {
+                        },
+                        onCharacterSelected = {},
+                        searchState = search,
+                    )
+                }
             }
         }
         compose.onNodeWithContentDescription("Search characters").performClick()
@@ -170,8 +188,8 @@ class HomeSearchTest {
     fun GIVEN_an_ordinary_screen_WHEN_status_filters_are_rendered_THEN_all_filters_fit_and_Unknown_is_fully_visible_on_one_line() {
         compose.setContent {
             RickAndMortyTheme {
-                Box(Modifier.width(400.dp)) {
-                    HomeContent(HomeUiState.Empty, imageLoader, {}, {})
+                Box(modifier = Modifier.width(400.dp)) {
+                    HomeContent(state = HomeUiState.Empty, imageLoader = imageLoader, onRetry = {}, onCharacterSelected = {})
                 }
             }
         }
@@ -202,12 +220,12 @@ class HomeSearchTest {
             val density = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(density.density, 2f)) {
                 RickAndMortyTheme {
-                    Box(Modifier.width(HomeLayoutTokens.twoColumnMinWidth)) {
+                    Box(modifier = Modifier.width(HomeLayoutTokens.twoColumnMinWidth)) {
                         HomeContent(
-                            HomeUiState.Empty,
-                            imageLoader,
-                            {},
-                            {},
+                            state = HomeUiState.Empty,
+                            imageLoader = imageLoader,
+                            onRetry = {},
+                            onCharacterSelected = {},
                             searchState = HomePagingState(selectedStatus = selectedStatus),
                             onSearchAction = { action ->
                                 if (action is HomeSearchAction.SelectStatus) selectedStatus = action.status
@@ -243,10 +261,10 @@ class HomeSearchTest {
         compose.setContent {
             RickAndMortyTheme {
                 HomeContent(
-                    HomeUiState.Loading,
-                    imageLoader,
-                    {},
-                    {},
+                    state = HomeUiState.Loading,
+                    imageLoader = imageLoader,
+                    onRetry = {},
+                    onCharacterSelected = {},
                     searchState = HomePagingState(selectedStatus = selectedStatus),
                     onSearchAction = { action ->
                         if (action is HomeSearchAction.SelectStatus) selectedStatus = action.status
@@ -282,23 +300,33 @@ class HomeSearchTest {
                 statuses += status
                 if (name != null && failSearch) {
                     failSearch = false
-                    return CharactersPageResult.Failure(CharacterRequestFailure.Service)
+                    return CharactersPageResult.Failure(reason = CharacterRequestFailure.Service)
                 }
                 if (name != null) retryGate.await()
                 return CharactersPageResult.Success(
-                    CharacterPage(
-                        listOf(CharacterSummary(1, "Result ${name ?: "All"}", "Human", CharacterStatus.Alive, null)),
-                        1,
-                        null,
+                    page = CharacterPage(
+                        characters = listOf(
+                            CharacterSummary(
+                                id = 1,
+                                name = "Result ${name ?: "All"}",
+                                species = "Human",
+                                status = CharacterStatus.Alive,
+                                imageUrl = null,
+                            ),
+                        ),
+                        totalCount = 1,
+                        nextPage = null,
                     ),
                 )
             }
         }
-        homeViewModel = HomeViewModel(repository)
+        homeViewModel = HomeViewModel(repository = repository)
         val store = ViewModelStore()
         store.put("home", homeViewModel)
         try {
-            compose.setContent { RickAndMortyTheme { HomeRoute(homeViewModel, imageLoader, {}) } }
+            compose.setContent {
+                RickAndMortyTheme { HomeRoute(viewModel = homeViewModel, imageLoader = imageLoader, onCharacterSelected = {}) }
+            }
             compose.onNodeWithContentDescription("Search characters").performClick().performTextInput("Rick")
             compose.onNodeWithText("Dead").performClick()
             compose.onNodeWithContentDescription("Search characters").performImeAction()
@@ -333,25 +361,33 @@ class HomeSearchTest {
             override suspend fun getPage(page: Int, name: String?, status: CharacterStatus?): CharactersPageResult {
                 names += name
                 return CharactersPageResult.Success(
-                    CharacterPage(
-                        if (name == "Missing") {
+                    page = CharacterPage(
+                        characters = if (name == "Missing") {
                             emptyList()
                         } else {
                             listOf(
-                                CharacterSummary(1, "Result ${name ?: "All"}", "Human", CharacterStatus.Alive, null),
+                                CharacterSummary(
+                                    id = 1,
+                                    name = "Result ${name ?: "All"}",
+                                    species = "Human",
+                                    status = CharacterStatus.Alive,
+                                    imageUrl = null,
+                                ),
                             )
                         },
-                        if (name == "Missing") 0 else 1,
-                        null,
+                        totalCount = if (name == "Missing") 0 else 1,
+                        nextPage = null,
                     ),
                 )
             }
         }
-        homeViewModel = HomeViewModel(repository)
+        homeViewModel = HomeViewModel(repository = repository)
         val store = ViewModelStore()
         store.put("home", homeViewModel)
         try {
-            compose.setContent { RickAndMortyTheme { HomeRoute(homeViewModel, imageLoader, {}) } }
+            compose.setContent {
+                RickAndMortyTheme { HomeRoute(viewModel = homeViewModel, imageLoader = imageLoader, onCharacterSelected = {}) }
+            }
             compose.onNodeWithText("Result All").assertIsDisplayed()
 
             compose.onNodeWithContentDescription("Search characters").performClick().performTextInput("Missing")
@@ -384,19 +420,35 @@ class HomeSearchTest {
                 names += name
                 if (name != null) pending.await()
                 return CharactersPageResult.Success(
-                    CharacterPage(
-                        listOf(CharacterSummary(1, if (name == null) "Old card" else "New card", "Human", CharacterStatus.Alive, null)),
-                        if (name == null) 50 else 1,
-                        null,
+                    page = CharacterPage(
+                        characters = listOf(
+                            CharacterSummary(
+                                id = 1,
+                                name = if (name ==
+                                    null
+                                ) {
+                                    "Old card"
+                                } else {
+                                    "New card"
+                                },
+                                species = "Human",
+                                status = CharacterStatus.Alive,
+                                imageUrl = null,
+                            ),
+                        ),
+                        totalCount = if (name == null) 50 else 1,
+                        nextPage = null,
                     ),
                 )
             }
         }
-        homeViewModel = HomeViewModel(repository)
+        homeViewModel = HomeViewModel(repository = repository)
         val store = ViewModelStore()
         store.put("home", homeViewModel)
         try {
-            compose.setContent { RickAndMortyTheme { HomeRoute(homeViewModel, imageLoader, {}) } }
+            compose.setContent {
+                RickAndMortyTheme { HomeRoute(viewModel = homeViewModel, imageLoader = imageLoader, onCharacterSelected = {}) }
+            }
             compose.onNodeWithText("Old card").assertIsDisplayed()
 
             compose.onNodeWithContentDescription("Search characters").performClick().performTextInput("Rick")
@@ -420,10 +472,10 @@ class HomeSearchTest {
         compose.setContent {
             RickAndMortyTheme {
                 HomeContent(
-                    HomeUiState.Empty,
-                    imageLoader,
-                    {},
-                    {},
+                    state = HomeUiState.Empty,
+                    imageLoader = imageLoader,
+                    onRetry = {},
+                    onCharacterSelected = {},
                     searchState = HomePagingState(searchText = "Missing", appliedName = "Missing"),
                     onSearchAction = { action -> if (action is HomeSearchAction.Suggest) selectedName = action.name },
                 )
@@ -444,7 +496,8 @@ class HomeSearchTest {
         var search by mutableStateOf(HomePagingState())
         compose.setContent {
             RickAndMortyTheme {
-                HomeContent(results, imageLoader, {}, {}, searchState = search, onSearchAction = { action ->
+                HomeContent(state = results, imageLoader = imageLoader, onRetry = {
+                }, onCharacterSelected = {}, searchState = search, onSearchAction = { action ->
                     when (action) {
                         is HomeSearchAction.Edit -> search = search.copy(searchText = action.name)
                         is HomeSearchAction.SelectStatus -> search = search.copy(selectedStatus = action.status)

@@ -18,9 +18,9 @@ import org.junit.Before
 import org.junit.Test
 
 class CharactersPagingSourceTest {
-    private val character = CharacterSummary(1, "Rick", "Human", CharacterStatus.Alive, null)
+    private val character = CharacterSummary(id = 1, name = "Rick", species = "Human", status = CharacterStatus.Alive, imageUrl = null)
     private val fakeCharactersRepository = PagingRepository(
-        CharactersPageResult.Success(CharacterPage(listOf(character), 57, 2)),
+        result = CharactersPageResult.Success(page = CharacterPage(characters = listOf(character), totalCount = 57, nextPage = 2)),
     )
     private var totalCount: Int? = null
 
@@ -29,20 +29,22 @@ class CharactersPagingSourceTest {
     @Before
     fun setUp() {
         charactersPagingSource =
-            CharactersPagingSource(fakeCharactersRepository) { totalCount = it }
+            CharactersPagingSource(repository = fakeCharactersRepository) { totalCount = it }
     }
 
     @Test
     fun `GIVEN a confirmed append end WHEN loading it THEN pagination stops without replacing the total`() = runTest {
         charactersPagingSource.load(
-            PagingSource.LoadParams.Refresh(null, 20, false),
+            params = PagingSource.LoadParams.Refresh(key = null, loadSize = 20, placeholdersEnabled = false),
         )
         fakeCharactersRepository.result = CharactersPageResult.EndOfCatalogue
 
-        val result = charactersPagingSource.load(PagingSource.LoadParams.Append(2, 20, false))
+        val result = charactersPagingSource.load(
+            params = PagingSource.LoadParams.Append(key = 2, loadSize = 20, placeholdersEnabled = false),
+        )
 
         assertEquals(
-            PagingSource.LoadResult.Page<Int, CharacterSummary>(emptyList(), null, null),
+            PagingSource.LoadResult.Page<Int, CharacterSummary>(data = emptyList(), prevKey = null, nextKey = null),
             result,
         )
         assertEquals(57, totalCount)
@@ -50,11 +52,13 @@ class CharactersPagingSourceTest {
 
     @Test
     fun `GIVEN an append failure WHEN loading the next page THEN it returns an error and preserves the total`() = runTest {
-        charactersPagingSource.load(PagingSource.LoadParams.Refresh(null, 20, false))
+        charactersPagingSource.load(params = PagingSource.LoadParams.Refresh(key = null, loadSize = 20, placeholdersEnabled = false))
         fakeCharactersRepository.result =
-            CharactersPageResult.Failure(CharacterRequestFailure.Network)
+            CharactersPageResult.Failure(reason = CharacterRequestFailure.Network)
 
-        val result = charactersPagingSource.load(PagingSource.LoadParams.Append(2, 20, false))
+        val result = charactersPagingSource.load(
+            params = PagingSource.LoadParams.Append(key = 2, loadSize = 20, placeholdersEnabled = false),
+        )
 
         assertTrue(result is PagingSource.LoadResult.Error)
         assertEquals(57, totalCount)
@@ -62,14 +66,16 @@ class CharactersPagingSourceTest {
 
     @Test
     fun `GIVEN the final append WHEN loading succeeds THEN it has no next key and retains the first page total`() = runTest {
-        charactersPagingSource.load(PagingSource.LoadParams.Refresh(null, 20, false))
+        charactersPagingSource.load(params = PagingSource.LoadParams.Refresh(key = null, loadSize = 20, placeholdersEnabled = false))
         fakeCharactersRepository.result =
-            CharactersPageResult.Success(CharacterPage(listOf(character), 58, null))
+            CharactersPageResult.Success(page = CharacterPage(characters = listOf(character), totalCount = 58, nextPage = null))
 
-        val result = charactersPagingSource.load(PagingSource.LoadParams.Append(2, 20, false))
+        val result = charactersPagingSource.load(
+            params = PagingSource.LoadParams.Append(key = 2, loadSize = 20, placeholdersEnabled = false),
+        )
 
         assertEquals(
-            PagingSource.LoadResult.Page<Int, CharacterSummary>(listOf(character), null, null),
+            PagingSource.LoadResult.Page<Int, CharacterSummary>(data = listOf(character), prevKey = null, nextKey = null),
             result,
         )
         assertEquals(57, totalCount)
@@ -79,13 +85,13 @@ class CharactersPagingSourceTest {
     fun `GIVEN a cancelled repository request WHEN loading a page THEN cancellation propagates to the caller`() = runTest {
         fakeCharactersRepository.cancelled = true
 
-        charactersPagingSource.load(PagingSource.LoadParams.Refresh(null, 20, false))
+        charactersPagingSource.load(params = PagingSource.LoadParams.Refresh(key = null, loadSize = 20, placeholdersEnabled = false))
     }
 
     @Test
     fun `GIVEN the first page WHEN loading succeeds THEN it returns characters next key and API total`() = runTest {
         val result = charactersPagingSource.load(
-            PagingSource.LoadParams.Refresh(
+            params = PagingSource.LoadParams.Refresh(
                 key = null,
                 loadSize = 20,
                 placeholdersEnabled = false,
@@ -93,7 +99,7 @@ class CharactersPagingSourceTest {
         )
 
         assertEquals(
-            PagingSource.LoadResult.Page<Int, CharacterSummary>(listOf(character), null, 2),
+            PagingSource.LoadResult.Page<Int, CharacterSummary>(data = listOf(character), prevKey = null, nextKey = 2),
             result,
         )
         assertEquals(57, totalCount)

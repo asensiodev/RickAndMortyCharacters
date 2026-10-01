@@ -34,7 +34,7 @@ class RemoteCharacterDetailsTest {
     fun setUp() {
         server.start()
         charactersRepository = RemoteCharactersRepository(
-            createCharactersApi(server.url("/api/"), OkHttpClient.Builder().build()),
+            api = createCharactersApi(baseUrl = server.url("/api/"), client = OkHttpClient.Builder().build()),
         )
     }
 
@@ -47,14 +47,14 @@ class RemoteCharacterDetailsTest {
     fun `GIVEN Toxic Rick WHEN his detail is requested THEN it maps his identity facts and episode count`() = runTest {
         server.enqueue(MockResponse.Builder().body(detailJson()).build())
 
-        val result = charactersRepository.getDetails(361)
+        val result = charactersRepository.getDetails(characterId = 361)
 
         assertEquals(
             CharacterDetailsResult.Success(
-                CharacterDetails(
-                    361, "Toxic Rick", CharacterStatus.Dead, "Humanoid", "Male",
-                    "Rick's toxic side", "Detoxifier", "Earth (Replacement Dimension)",
-                    1, "https://rickandmortyapi.com/api/character/avatar/361.jpeg",
+                character = CharacterDetails(
+                    id = 361, name = "Toxic Rick", status = CharacterStatus.Dead, species = "Humanoid", gender = "Male",
+                    type = "Rick's toxic side", origin = "Detoxifier", location = "Earth (Replacement Dimension)",
+                    episodeCount = 1, imageUrl = "https://rickandmortyapi.com/api/character/avatar/361.jpeg",
                 ),
             ),
             result,
@@ -73,7 +73,7 @@ class RemoteCharacterDetailsTest {
             ).body("""{"error":"Character not found"}""").build(),
         )
 
-        val result = charactersRepository.getDetails(999999999)
+        val result = charactersRepository.getDetails(characterId = 999999999)
 
         assertEquals(CharacterDetailsResult.NotFound, result)
     }
@@ -89,10 +89,10 @@ class RemoteCharacterDetailsTest {
         for ((code, body) in errors) {
             server.enqueue(MockResponse.Builder().code(code).body(body).build())
 
-            val result = charactersRepository.getDetails(361)
+            val result = charactersRepository.getDetails(characterId = 361)
 
             assertEquals(
-                CharacterDetailsResult.Failure(CharacterRequestFailure.Service),
+                CharacterDetailsResult.Failure(reason = CharacterRequestFailure.Service),
                 result,
             )
         }
@@ -103,17 +103,17 @@ class RemoteCharacterDetailsTest {
         for (body in listOf("{broken", "{}", detailJson().replace("361", "362"))) {
             server.enqueue(MockResponse.Builder().body(body).build())
 
-            val result = charactersRepository.getDetails(361)
+            val result = charactersRepository.getDetails(characterId = 361)
 
             assertEquals(
-                CharacterDetailsResult.Failure(CharacterRequestFailure.InvalidResponse),
+                CharacterDetailsResult.Failure(reason = CharacterRequestFailure.InvalidResponse),
                 result,
             )
         }
         server.enqueue(MockResponse.Builder().code(204).build())
         assertEquals(
-            CharacterDetailsResult.Failure(CharacterRequestFailure.InvalidResponse),
-            charactersRepository.getDetails(361),
+            CharacterDetailsResult.Failure(reason = CharacterRequestFailure.InvalidResponse),
+            charactersRepository.getDetails(characterId = 361),
         )
     }
 
@@ -121,15 +121,15 @@ class RemoteCharacterDetailsTest {
     fun `GIVEN a connection failure WHEN detail is requested THEN it reports a network failure`() = runTest {
         server.close()
 
-        val result = charactersRepository.getDetails(361)
+        val result = charactersRepository.getDetails(characterId = 361)
 
-        assertEquals(CharacterDetailsResult.Failure(CharacterRequestFailure.Network), result)
+        assertEquals(CharacterDetailsResult.Failure(reason = CharacterRequestFailure.Network), result)
     }
 
     @Test
     fun `GIVEN a pending detail request WHEN it is cancelled THEN cancellation propagates to the caller`() = runTest {
         server.enqueue(MockResponse.Builder().onResponseStart(SocketEffect.Stall).build())
-        val request = async { charactersRepository.getDetails(361) }
+        val request = async { charactersRepository.getDetails(characterId = 361) }
         assertNotNull(withContext(Dispatchers.IO) { server.takeRequest(5, TimeUnit.SECONDS) })
 
         request.cancel()
@@ -147,7 +147,7 @@ class RemoteCharacterDetailsTest {
             .replace("https://rickandmortyapi.com/api/character/avatar/361.jpeg", "")
         server.enqueue(MockResponse.Builder().body(body).build())
 
-        val result = charactersRepository.getDetails(361) as CharacterDetailsResult.Success
+        val result = charactersRepository.getDetails(characterId = 361) as CharacterDetailsResult.Success
 
         assertEquals(null, result.character.type)
         assertEquals(null, result.character.imageUrl)
@@ -166,7 +166,7 @@ class RemoteCharacterDetailsTest {
             ).build(),
         )
 
-        val result = charactersRepository.getDetails(361) as CharacterDetailsResult.Success
+        val result = charactersRepository.getDetails(characterId = 361) as CharacterDetailsResult.Success
 
         assertEquals(null, result.character.type)
         assertEquals(null, result.character.imageUrl)

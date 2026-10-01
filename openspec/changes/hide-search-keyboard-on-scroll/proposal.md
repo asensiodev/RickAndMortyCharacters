@@ -22,4 +22,4 @@ None.
 
 ## Impact
 
-Home rendering and its screen tests, plus the UI behavior document. This independently authorized refinement does not accept/archive C09 or advance state-restoration scope.
+Home rendering and its screen tests, plus the UI behavior document. This independently authorized refinement does not accept/archive C09 or advance the main queue.

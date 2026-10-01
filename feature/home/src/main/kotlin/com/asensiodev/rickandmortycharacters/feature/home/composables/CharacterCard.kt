@@ -65,7 +65,7 @@ fun CharacterCard(
         color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
         Column {
-            CharacterPortrait(character.imageUrl, imageLoader)
+            CharacterPortrait(imageUrl = character.imageUrl, imageLoader = imageLoader)
             Column(
                 modifier = Modifier.padding(Spacing.medium),
                 verticalArrangement = Arrangement.spacedBy(Spacing.small),
@@ -96,7 +96,7 @@ fun CharacterCard(
                         maxLines = CharacterCardTokens.METADATA_MAX_LINES,
                         overflow = TextOverflow.Ellipsis,
                     )
-                    StatusBadge(character.status)
+                    StatusBadge(status = character.status)
                 }
             }
         }
@@ -124,12 +124,16 @@ private fun StatusBadge(status: CharacterStatus) {
         CharacterStatus.Unknown -> R.string.status_unknown
     }
     Row(
-        modifier = Modifier.background(background, MaterialTheme.shapes.small)
+        modifier = Modifier.background(color = background, shape = MaterialTheme.shapes.small)
             .padding(horizontal = Spacing.small, vertical = Spacing.tiny),
         horizontalArrangement = Arrangement.spacedBy(Spacing.extraSmall),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(CharacterCardTokens.statusDotSize).background(foreground, CircleShape))
+        Box(
+            modifier = Modifier.size(
+                CharacterCardTokens.statusDotSize,
+            ).background(color = foreground, shape = CircleShape),
+        )
         Text(
             text = stringResource(label),
             color = foreground,
@@ -174,7 +178,7 @@ private fun CharacterPortrait(imageUrl: String?, imageLoader: ImageLoader) {
             )
         } else if (state is AsyncImagePainter.State.Loading) {
             LoadingPlaceholder(
-                Modifier.matchParentSize().progressSemantics()
+                modifier = Modifier.matchParentSize().progressSemantics()
                     .semantics { contentDescription = loadingDescription },
             )
         }
@@ -189,7 +193,7 @@ private fun CharacterCardPreview() {
         ImageLoader.Builder(context).components {
             add(
                 Interceptor { chain ->
-                    SuccessResult(ColorImage(android.graphics.Color.DKGRAY), chain.request)
+                    SuccessResult(image = ColorImage(android.graphics.Color.DKGRAY), request = chain.request)
                 },
             )
         }.build()
@@ -199,15 +203,15 @@ private fun CharacterCardPreview() {
     }
     RickAndMortyTheme {
         CharacterCard(
-            CharacterCardUiModel(
-                196,
-                "Krombopulos Michael",
-                "Mythological Creature",
-                CharacterStatus.Dead,
-                "preview://portrait",
+            character = CharacterCardUiModel(
+                id = 196,
+                name = "Krombopulos Michael",
+                species = "Mythological Creature",
+                status = CharacterStatus.Dead,
+                imageUrl = "preview://portrait",
             ),
-            loader,
-            {},
+            imageLoader = loader,
+            onClick = {},
         )
     }
 }
@@ -222,15 +226,15 @@ private fun MissingPortraitPreview() {
     }
     RickAndMortyTheme {
         CharacterCard(
-            CharacterCardUiModel(
-                1,
-                "Missing portrait example",
-                "Human",
-                CharacterStatus.Unknown,
-                null,
+            character = CharacterCardUiModel(
+                id = 1,
+                name = "Missing portrait example",
+                species = "Human",
+                status = CharacterStatus.Unknown,
+                imageUrl = null,
             ),
-            loader,
-            {
+            imageLoader = loader,
+            onClick = {
             },
         )
     }

@@ -38,31 +38,31 @@ fun CharacterCardSkeleton(modifier: Modifier = Modifier, animated: Boolean = tru
     ) {
         Column {
             LoadingPlaceholder(
-                Modifier.fillMaxWidth().aspectRatio(CharacterCardTokens.PORTRAIT_ASPECT_RATIO),
-                animated,
+                modifier = Modifier.fillMaxWidth().aspectRatio(CharacterCardTokens.PORTRAIT_ASPECT_RATIO),
+                animated = animated,
             )
             Column(
                 modifier = Modifier.padding(Spacing.medium),
                 verticalArrangement = Arrangement.spacedBy(Spacing.small),
             ) {
                 LoadingPlaceholder(
-                    Modifier.fillMaxWidth(CharacterCardTokens.SKELETON_NAME_WIDTH_FRACTION)
+                    modifier = Modifier.fillMaxWidth(CharacterCardTokens.SKELETON_NAME_WIDTH_FRACTION)
                         .height(CharacterCardTokens.skeletonNameHeight)
                         .clip(MaterialTheme.shapes.small),
-                    animated,
+                    animated = animated,
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(Spacing.small)) {
                     LoadingPlaceholder(
-                        Modifier.weight(1f)
+                        modifier = Modifier.weight(1f)
                             .height(CharacterCardTokens.skeletonMetadataHeight)
                             .clip(MaterialTheme.shapes.small),
-                        animated,
+                        animated = animated,
                     )
                     LoadingPlaceholder(
-                        Modifier.weight(1f)
+                        modifier = Modifier.weight(1f)
                             .height(CharacterCardTokens.skeletonMetadataHeight)
                             .clip(MaterialTheme.shapes.small),
-                        animated,
+                        animated = animated,
                     )
                 }
             }

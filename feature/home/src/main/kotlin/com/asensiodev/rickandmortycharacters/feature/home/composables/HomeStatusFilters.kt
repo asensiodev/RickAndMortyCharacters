@@ -56,7 +56,7 @@ internal fun HomeStatusFilters(
                         horizontalArrangement = Arrangement.spacedBy(Spacing.small),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        StatusFilterIndicator(status, status == selectedStatus)
+                        StatusFilterIndicator(status = status, status == selectedStatus)
                         Text(
                             labels[index],
                             style = textStyle,
@@ -94,6 +94,6 @@ private fun StatusFilterIndicator(status: CharacterStatus?, selected: Boolean) {
             CharacterStatus.Dead -> StatusColors.onDeadContainer
             else -> MaterialTheme.colorScheme.onSurfaceVariant
         }
-        Box(Modifier.size(CharacterCardTokens.statusDotSize).background(color, CircleShape))
+        Box(modifier = Modifier.size(CharacterCardTokens.statusDotSize).background(color = color, shape = CircleShape))
     }
 }

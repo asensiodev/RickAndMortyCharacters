@@ -59,10 +59,6 @@ These statuses describe completed planning, not a working Android application. N
 
 **Accepted for publication and locally validated; archival pending.** See the [proposal](../openspec/changes/cache-character-http-responses/proposal.md), [scenarios](../openspec/changes/cache-character-http-responses/specs/character-http-cache/spec.md), [design/test boundaries](../openspec/changes/cache-character-http-responses/design.md) and [tasks](../openspec/changes/cache-character-http-responses/tasks.md). OpenSpec owns C09's detailed work. C08 and C09 acceptance are recorded; archival remains pending.
 
-### C10 — Minimal state restoration — Should
-
-Depends on C09. Specify and verify recreation behavior for query, status and destination ID. Normal back retains scroll. After process death, request data through the repository and HTTP cache as usual; restore scroll when the needed items return or document an agreed reset. Distinguish activity recreation tests from an actual process-death check; do not persist a separate catalogue database.
-
 ### C11 — Visual and motion consistency
 
 Depends on the implemented main flow. Reconcile cards, chips, detail, loading feedback, image fades and transitions with the approved design. Evaluate additional UI animations, including skeleton-to-content and navigation transitions, and add only motion that improves continuity or feedback without delaying data or disrupting interaction. Choose its scope and native Compose API after reviewing the integrated screens. Check system animation settings, narrow layouts, text size and image-heavy scrolling. Address observed issues and add regression tests where they protect behavior. Visual quality is implemented throughout earlier changes; this pass closes inconsistencies.
@@ -93,4 +89,4 @@ Each optional change is selected and reviewed independently before C12.
 
 **Portal gun launcher and native splash:** implemented, locally validated on API 37 and accepted by the user on 2026-10-01; not yet archived. [Change and evidence](../openspec/changes/add-portal-gun-branding/proposal.md). This adjustment does not advance the C08/C09 queue.
 
-**Search keyboard dismissal on result drag:** independently approved by the user on 2026-10-01; implemented, locally validated and accepted for publication; archival pending. [Change and evidence](../openspec/changes/hide-search-keyboard-on-scroll/proposal.md). This refinement preserves the active name/status and does not advance the C09/C10 queue.
+**Search keyboard dismissal on result drag:** independently approved by the user on 2026-10-01; implemented, locally validated and accepted for publication; archival pending. [Change and evidence](../openspec/changes/hide-search-keyboard-on-scroll/proposal.md). This refinement preserves the active name/status and does not advance the main queue.

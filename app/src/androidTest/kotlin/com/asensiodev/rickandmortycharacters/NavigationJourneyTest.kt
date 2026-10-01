@@ -234,7 +234,7 @@ class NavigationJourneyTest {
     fun GIVEN_a_detail_error_WHEN_retry_succeeds_THEN_it_shows_loading_and_content_for_the_same_ID() {
         compose.runOnIdle {
             fakeCharactersRepository.detailResult = CharacterDetailsResult.Failure(
-                CharacterRequestFailure.Network,
+                reason = CharacterRequestFailure.Network,
             )
         }
         compose.onNodeWithText("Character 2").performClick()

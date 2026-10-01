@@ -59,7 +59,7 @@ internal fun DetailsPortrait(imageUrl: String?, imageLoader: ImageLoader, scroll
     }
     val loadingDescription = stringResource(R.string.portrait_loading)
     Box(
-        Modifier.widthIn(max = DetailsTokens.portraitMaxWidth).fillMaxWidth()
+        modifier = Modifier.widthIn(max = DetailsTokens.portraitMaxWidth).fillMaxWidth()
             .aspectRatio(DetailsTokens.PORTRAIT_ASPECT_RATIO)
             .clip(MaterialTheme.shapes.large)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh),
@@ -91,7 +91,7 @@ internal fun DetailsPortrait(imageUrl: String?, imageLoader: ImageLoader, scroll
             )
         } else if (state is AsyncImagePainter.State.Loading) {
             LoadingPlaceholder(
-                Modifier.matchParentSize().progressSemantics()
+                modifier = Modifier.matchParentSize().progressSemantics()
                     .semantics { contentDescription = loadingDescription },
             )
         }

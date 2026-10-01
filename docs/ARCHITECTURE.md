@@ -103,7 +103,7 @@ HomeContent keeps search mounted outside the results branch. Compose owns text s
 
 App owns serializable Home and Detail(ID) keys through `rememberNavBackStack` and `NavDisplay`, with the saveable-state decorator before the ViewModel-store decorator. Hilt resolves ViewModels inside their entry owners. Selection is accepted only while Home is the top entry; detail Back only pops its active entry, never the root. Home's ViewModel and saveable grid position survive normal return; popping detail cancels its request owner.
 
-The portrait uses the shared Coil loader, clipped bounds and layer-phase scroll reads. Its local effect observes the framework `MotionDurationScale` signal; scale zero disables scroll-linked translation without a second platform observer. `StatusColors` supplies the same Alive/Dead palette to both features. See [C05 evidence](../openspec/changes/archive/2026-10-01-character-detail-navigation/design.md#validation-and-ai-record) for the tests and native motion check. Process-death acceptance remains C10.
+The portrait uses the shared Coil loader, clipped bounds and layer-phase scroll reads. Its local effect observes the framework `MotionDurationScale` signal; scale zero disables scroll-linked translation without a second platform observer. `StatusColors` supplies the same Alive/Dead palette to both features. See [C05 evidence](../openspec/changes/archive/2026-10-01-character-detail-navigation/design.md#validation-and-ai-record) for the tests and native motion check.
 
 ## Direct repositories and selective use cases
 

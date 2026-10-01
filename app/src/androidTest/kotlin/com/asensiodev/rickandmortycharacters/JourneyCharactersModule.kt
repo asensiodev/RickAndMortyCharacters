@@ -43,12 +43,24 @@ class JourneyCharactersRepository : CharactersRepository {
         requestedNames += name
         requestedStatuses += status
         return CharactersPageResult.Success(
-            CharacterPage(
-                ((page - 1) * 20 + 1..page * 20).map {
-                    CharacterSummary(it, if (name == null) "Character $it" else "$name $it", "Human", status ?: CharacterStatus.Alive, null)
+            page = CharacterPage(
+                characters = ((page - 1) * 20 + 1..page * 20).map {
+                    CharacterSummary(
+                        id = it,
+                        name = if (name ==
+                            null
+                        ) {
+                            "Character $it"
+                        } else {
+                            "$name $it"
+                        },
+                        species = "Human",
+                        status = status ?: CharacterStatus.Alive,
+                        imageUrl = null,
+                    )
                 },
-                pageCount * 20,
-                if (page < pageCount) page + 1 else null,
+                totalCount = pageCount * 20,
+                nextPage = if (page < pageCount) page + 1 else null,
             ),
         )
     }
@@ -58,9 +70,9 @@ class JourneyCharactersRepository : CharactersRepository {
         return try {
             detailGate?.await()
             detailResult ?: CharacterDetailsResult.Success(
-                CharacterDetails(
-                    characterId, "Character $characterId", CharacterStatus.Alive, "Human", "Male",
-                    null, "Earth", "Earth", 3, null,
+                character = CharacterDetails(
+                    id = characterId, name = "Character $characterId", status = CharacterStatus.Alive, species = "Human", gender = "Male",
+                    type = null, origin = "Earth", location = "Earth", episodeCount = 3, imageUrl = null,
                 ),
             )
         } catch (error: CancellationException) {

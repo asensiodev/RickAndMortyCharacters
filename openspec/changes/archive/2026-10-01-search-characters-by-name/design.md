@@ -86,4 +86,4 @@ Temporary airplane mode caused a new name request to show the contextual error w
 
 ### Acceptance
 
-Human acceptance was received on 2026-10-01, with explicit authorization to archive, commit and push C07, then prepare C08. Status chips are the next increment; caching and process-death restoration retain their separate changes.
+Human acceptance was received on 2026-10-01, with explicit authorization to archive, commit and push C07, then prepare C08. Status chips are the next increment; caching retains its separate change.

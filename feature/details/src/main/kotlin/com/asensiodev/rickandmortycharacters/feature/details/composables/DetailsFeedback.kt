@@ -79,7 +79,7 @@ internal fun DetailsFeedback(title: String, description: String, onRetry: (() ->
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                     ),
                 ) {
-                    Text(stringResource(R.string.retry))
+                    Text(text = stringResource(R.string.retry))
                 }
             }
         }

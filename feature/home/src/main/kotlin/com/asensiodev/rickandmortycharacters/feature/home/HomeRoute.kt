@@ -18,7 +18,12 @@ import com.asensiodev.rickandmortycharacters.feature.home.paging.CharactersPagin
 
 @Composable
 fun HomeRoute(imageLoader: ImageLoader, onCharacterSelected: (Int) -> Unit, modifier: Modifier = Modifier) {
-    HomeRoute(hiltViewModel<HomeViewModel>(), imageLoader, onCharacterSelected, modifier)
+    HomeRoute(
+        viewModel = hiltViewModel<HomeViewModel>(),
+        imageLoader = imageLoader,
+        onCharacterSelected = onCharacterSelected,
+        modifier = modifier,
+    )
 }
 
 @Composable
@@ -67,7 +72,7 @@ internal fun HomeRoute(
         modifier = modifier,
         cardContent = { index, _ ->
             characters[index]?.let { character ->
-                CharacterCard(character, imageLoader, selectCharacter)
+                CharacterCard(character = character, imageLoader = imageLoader, onClick = selectCharacter)
             }
         },
     )

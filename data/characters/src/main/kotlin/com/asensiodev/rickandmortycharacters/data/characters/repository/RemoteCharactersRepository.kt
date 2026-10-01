@@ -23,49 +23,51 @@ private const val HTTP_NOT_FOUND = 404
 internal class RemoteCharactersRepository @Inject constructor(private val api: CharactersApi) :
     CharactersRepository {
     override suspend fun getDetails(characterId: Int): CharacterDetailsResult = try {
-        val response = api.getDetails(characterId)
+        val response = api.getDetails(characterId = characterId)
         if (!response.isSuccessful) {
-            if (response.hasApiError("Character not found")) {
+            if (response.hasApiError(expectedMessage = "Character not found")) {
                 CharacterDetailsResult.NotFound
             } else {
-                CharacterDetailsResult.Failure(CharacterRequestFailure.Service)
+                CharacterDetailsResult.Failure(reason = CharacterRequestFailure.Service)
             }
         } else {
-            response.body()?.toResult(characterId)
-                ?: CharacterDetailsResult.Failure(CharacterRequestFailure.InvalidResponse)
+            response.body()?.toResult(requestedId = characterId)
+                ?: CharacterDetailsResult.Failure(reason = CharacterRequestFailure.InvalidResponse)
         }
     } catch (_: SerializationException) {
-        CharacterDetailsResult.Failure(CharacterRequestFailure.InvalidResponse)
+        CharacterDetailsResult.Failure(reason = CharacterRequestFailure.InvalidResponse)
     } catch (_: IOException) {
-        CharacterDetailsResult.Failure(CharacterRequestFailure.Network)
+        CharacterDetailsResult.Failure(reason = CharacterRequestFailure.Network)
     }
 
     override suspend fun getPage(page: Int, name: String?, status: CharacterStatus?): CharactersPageResult = try {
         val requestedName = name?.trim()?.takeIf { it.isNotEmpty() }
         val requestedStatus = status.toApiValue()
         val hasConstraints = requestedName != null || status != null
-        val response = api.getPage(page, requestedName, requestedStatus)
+        val response = api.getPage(page = page, name = requestedName, status = requestedStatus)
         if (!response.isSuccessful) {
-            if ((page > 1 || hasConstraints) && response.hasApiError("There is nothing here")) {
+            if ((page > 1 || hasConstraints) && response.hasApiError(expectedMessage = "There is nothing here")) {
                 if (page > 1) {
                     CharactersPageResult.EndOfCatalogue
                 } else {
-                    CharactersPageResult.Success(CharacterPage(emptyList(), 0, null))
+                    CharactersPageResult.Success(
+                        page = CharacterPage(characters = emptyList(), totalCount = 0, nextPage = null),
+                    )
                 }
             } else {
                 response.errorBody()?.close()
-                CharactersPageResult.Failure(CharacterRequestFailure.Service)
+                CharactersPageResult.Failure(reason = CharacterRequestFailure.Service)
             }
         } else {
             val body = response.body()
             if (body == null) {
-                CharactersPageResult.Failure(CharacterRequestFailure.InvalidResponse)
+                CharactersPageResult.Failure(reason = CharacterRequestFailure.InvalidResponse)
             } else {
                 val nextPage = body.info.next?.toHttpUrlOrNull()?.queryParameter(
                     "page",
                 )?.toIntOrNull()
                 CharactersPageResult.Success(
-                    CharacterPage(
+                    page = CharacterPage(
                         characters = body.results.map { character ->
                             CharacterSummary(
                                 id = character.id,
@@ -86,9 +88,9 @@ internal class RemoteCharactersRepository @Inject constructor(private val api: C
             }
         }
     } catch (_: SerializationException) {
-        CharactersPageResult.Failure(CharacterRequestFailure.InvalidResponse)
+        CharactersPageResult.Failure(reason = CharacterRequestFailure.InvalidResponse)
     } catch (_: IOException) {
-        CharactersPageResult.Failure(CharacterRequestFailure.Network)
+        CharactersPageResult.Failure(reason = CharacterRequestFailure.Network)
     }
 }
 
@@ -103,10 +105,10 @@ private fun Response<*>.hasApiError(expectedMessage: String): Boolean = errorBod
 
 private fun CharacterDetailsDto.toResult(requestedId: Int): CharacterDetailsResult {
     if (id != requestedId || id <= 0 || name.isBlank()) {
-        return CharacterDetailsResult.Failure(CharacterRequestFailure.InvalidResponse)
+        return CharacterDetailsResult.Failure(reason = CharacterRequestFailure.InvalidResponse)
     }
     return CharacterDetailsResult.Success(
-        CharacterDetails(
+        character = CharacterDetails(
             id = id,
             name = name,
             status = when (status) {

@@ -16,7 +16,7 @@ internal class CharactersPagingSource(
 ) : PagingSource<Int, CharacterSummary>() {
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, CharacterSummary> {
         val page = params.key ?: 1
-        return when (val result = repository.getPage(page, name, status)) {
+        return when (val result = repository.getPage(page = page, name = name, status = status)) {
             is CharactersPageResult.Success -> {
                 if (page == 1) onTotalCount(result.page.totalCount)
                 LoadResult.Page(
@@ -33,7 +33,7 @@ internal class CharactersPagingSource(
             )
 
             is CharactersPageResult.Failure -> LoadResult.Error(
-                CharactersPagingException(result.reason, generation),
+                CharactersPagingException(reason = result.reason, generation = generation),
             )
         }
     }

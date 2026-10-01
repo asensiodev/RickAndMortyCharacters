@@ -34,27 +34,35 @@ class DetailsViewModelTest {
 
     @Before
     fun setUp() {
-        detailsViewModel = DetailsViewModel(fakeCharactersRepository)
+        detailsViewModel = DetailsViewModel(repository = fakeCharactersRepository)
     }
 
     @Test
     fun `GIVEN a failed detail request WHEN retry succeeds THEN it loads content for the same character`() =
         runTest(mainDispatcher.dispatcher) {
             fakeCharactersRepository.result = CharacterDetailsResult.Failure(
-                CharacterRequestFailure.Network,
+                reason = CharacterRequestFailure.Network,
             )
-            detailsViewModel.process(DetailsAction.Load(361))
+            detailsViewModel.process(action = DetailsAction.Load(characterId = 361))
             advanceUntilIdle()
             fakeCharactersRepository.result = CharacterDetailsResult.Success(
-                CharacterDetails(
-                    361, "Toxic Rick", CharacterStatus.Dead, "Humanoid", "Male", null,
-                    "Detoxifier", "Earth (Replacement Dimension)", 1, null,
+                character = CharacterDetails(
+                    id = 361,
+                    name = "Toxic Rick",
+                    status = CharacterStatus.Dead,
+                    species = "Humanoid",
+                    gender = "Male",
+                    type = null,
+                    origin = "Detoxifier",
+                    location = "Earth (Replacement Dimension)",
+                    episodeCount = 1,
+                    imageUrl = null,
                 ),
             )
 
             detailsViewModel.state.test {
                 assertEquals(DetailsUiState.Error, awaitItem())
-                detailsViewModel.process(DetailsAction.Retry)
+                detailsViewModel.process(action = DetailsAction.Retry)
                 assertEquals(DetailsUiState.Loading, detailsViewModel.state.value)
                 assertEquals(DetailsUiState.Loading, awaitItem())
                 advanceUntilIdle()
@@ -67,16 +75,16 @@ class DetailsViewModelTest {
     fun `GIVEN a pending retry WHEN retry is requested again THEN it keeps one request for the same character`() =
         runTest(mainDispatcher.dispatcher) {
             fakeCharactersRepository.result = CharacterDetailsResult.Failure(
-                CharacterRequestFailure.Service,
+                reason = CharacterRequestFailure.Service,
             )
-            detailsViewModel.process(DetailsAction.Load(361))
+            detailsViewModel.process(action = DetailsAction.Load(characterId = 361))
             advanceUntilIdle()
             val gate = CompletableDeferred<Unit>()
             fakeCharactersRepository.pending = gate
 
             repeat(4) {
-                detailsViewModel.process(DetailsAction.Retry)
-                detailsViewModel.process(DetailsAction.Load(361))
+                detailsViewModel.process(action = DetailsAction.Retry)
+                detailsViewModel.process(action = DetailsAction.Load(characterId = 361))
             }
             advanceUntilIdle()
 
@@ -93,7 +101,7 @@ class DetailsViewModelTest {
             fakeCharactersRepository.pending = CompletableDeferred()
             val store = ViewModelStore()
             store.put("details", detailsViewModel)
-            detailsViewModel.process(DetailsAction.Load(361))
+            detailsViewModel.process(action = DetailsAction.Load(characterId = 361))
             advanceUntilIdle()
 
             store.clear()
@@ -106,13 +114,13 @@ class DetailsViewModelTest {
     @Test
     fun `GIVEN loaded detail WHEN loading and observation repeat THEN it reuses content without another request`() =
         runTest(mainDispatcher.dispatcher) {
-            detailsViewModel.process(DetailsAction.Load(361))
+            detailsViewModel.process(action = DetailsAction.Load(characterId = 361))
             advanceUntilIdle()
 
             detailsViewModel.state.test { assertTrue(awaitItem() is DetailsUiState.Content) }
-            detailsViewModel.process(DetailsAction.Load(361))
-            detailsViewModel.process(DetailsAction.Load(2))
-            detailsViewModel.process(DetailsAction.Retry)
+            detailsViewModel.process(action = DetailsAction.Load(characterId = 361))
+            detailsViewModel.process(action = DetailsAction.Load(characterId = 2))
+            detailsViewModel.process(action = DetailsAction.Retry)
             advanceUntilIdle()
 
             assertEquals(listOf(361), fakeCharactersRepository.requestedIds)
@@ -124,9 +132,9 @@ class DetailsViewModelTest {
         runTest(mainDispatcher.dispatcher) {
             fakeCharactersRepository.result = CharacterDetailsResult.NotFound
 
-            detailsViewModel.process(DetailsAction.Load(361))
+            detailsViewModel.process(action = DetailsAction.Load(characterId = 361))
             advanceUntilIdle()
-            detailsViewModel.process(DetailsAction.Retry)
+            detailsViewModel.process(action = DetailsAction.Retry)
             advanceUntilIdle()
 
             assertEquals(DetailsUiState.NotFound, detailsViewModel.state.value)
@@ -139,8 +147,8 @@ class DetailsViewModelTest {
             val gate = CompletableDeferred<Unit>()
             fakeCharactersRepository.pending = gate
 
-            repeat(4) { detailsViewModel.process(DetailsAction.Load(361)) }
-            detailsViewModel.process(DetailsAction.Retry)
+            repeat(4) { detailsViewModel.process(action = DetailsAction.Load(characterId = 361)) }
+            detailsViewModel.process(action = DetailsAction.Retry)
             advanceUntilIdle()
 
             assertEquals(listOf(361), fakeCharactersRepository.requestedIds)
@@ -156,7 +164,7 @@ class DetailsViewModelTest {
             detailsViewModel.state.test {
                 assertEquals(DetailsUiState.Loading, awaitItem())
 
-                detailsViewModel.process(DetailsAction.Load(361))
+                detailsViewModel.process(action = DetailsAction.Load(characterId = 361))
                 advanceUntilIdle()
 
                 val content = awaitItem()
@@ -173,16 +181,20 @@ class DetailsViewModelTest {
 private class FakeCharactersRepository : CharactersRepository {
     val requestedIds = mutableListOf<Int>()
     var result: CharacterDetailsResult = CharacterDetailsResult.Success(
-        CharacterDetails(
-            361, "Toxic Rick", CharacterStatus.Dead, "Humanoid", "Male",
-            "Rick's toxic side", "Detoxifier", "Earth (Replacement Dimension)", 1, null,
+        character = CharacterDetails(
+            id = 361, name = "Toxic Rick", status = CharacterStatus.Dead, species = "Humanoid", gender = "Male",
+            type = "Rick's toxic side",
+            origin = "Detoxifier",
+            location = "Earth (Replacement Dimension)",
+            episodeCount = 1,
+            imageUrl = null,
         ),
     )
     var pending: CompletableDeferred<Unit>? = null
     var cancelled = false
 
     override suspend fun getPage(page: Int, name: String?, status: CharacterStatus?): CharactersPageResult =
-        CharactersPageResult.Failure(CharacterRequestFailure.Service)
+        CharactersPageResult.Failure(reason = CharacterRequestFailure.Service)
 
     override suspend fun getDetails(characterId: Int): CharacterDetailsResult {
         requestedIds += characterId

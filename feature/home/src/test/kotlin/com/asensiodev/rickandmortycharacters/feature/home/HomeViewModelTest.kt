@@ -43,7 +43,7 @@ class HomeViewModelTest {
 
     @Before
     fun setUp() {
-        homeViewModel = HomeViewModel(fakeCharactersRepository)
+        homeViewModel = HomeViewModel(repository = fakeCharactersRepository)
         viewModelStore.put("home", homeViewModel)
     }
 
@@ -61,18 +61,18 @@ class HomeViewModelTest {
                 if (status == CharacterStatus.Alive && number == 2) {
                     appendStarted.complete(Unit)
                     withContext(NonCancellable) { obsoleteAppend.await() }
-                    CharactersPageResult.Success(page(2, 60, null))
+                    CharactersPageResult.Success(page = page(number = 2, total = 60, next = null))
                 } else {
                     CharactersPageResult.Success(
-                        page(
-                            1,
-                            if (status == CharacterStatus.Alive) 60 else 20,
-                            if (status == CharacterStatus.Alive) 2 else null,
+                        page = page(
+                            number = 1,
+                            total = if (status == CharacterStatus.Alive) 60 else 20,
+                            next = if (status == CharacterStatus.Alive) 2 else null,
                         ),
                     )
                 }
             }
-            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Alive))
+            homeViewModel.onSearchAction(action = HomeSearchAction.SelectStatus(status = CharacterStatus.Alive))
             backgroundScope.launch { homeViewModel.characters.asSnapshot { scrollTo(19) } }
             repeat(10) {
                 advanceTimeBy(100)
@@ -80,7 +80,7 @@ class HomeViewModelTest {
             }
             assertTrue(appendStarted.isCompleted)
 
-            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Dead))
+            homeViewModel.onSearchAction(action = HomeSearchAction.SelectStatus(status = CharacterStatus.Dead))
             repeat(10) {
                 advanceTimeBy(100)
                 runCurrent()
@@ -97,12 +97,12 @@ class HomeViewModelTest {
     @Test
     fun `GIVEN pending typing with an active filter WHEN that chip is selected again THEN debounce still applies the name`() =
         runTest(mainDispatcher.dispatcher) {
-            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Alive))
+            homeViewModel.onSearchAction(action = HomeSearchAction.SelectStatus(status = CharacterStatus.Alive))
             homeViewModel.characters.asSnapshot()
-            homeViewModel.onSearchAction(HomeSearchAction.Edit("Rick"))
+            homeViewModel.onSearchAction(action = HomeSearchAction.Edit(name = "Rick"))
             advanceTimeBy(200)
 
-            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Alive))
+            homeViewModel.onSearchAction(action = HomeSearchAction.SelectStatus(status = CharacterStatus.Alive))
             assertEquals(1L, homeViewModel.state.value.generation)
             advanceTimeBy(101)
             runCurrent()
@@ -116,15 +116,15 @@ class HomeViewModelTest {
     @Test
     fun `GIVEN combined constraints WHEN Clear suggestions and All are applied THEN each preserves the other constraint`() =
         runTest(mainDispatcher.dispatcher) {
-            homeViewModel.onSearchAction(HomeSearchAction.Edit("Rick"))
-            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Unknown))
+            homeViewModel.onSearchAction(action = HomeSearchAction.Edit(name = "Rick"))
+            homeViewModel.onSearchAction(action = HomeSearchAction.SelectStatus(status = CharacterStatus.Unknown))
             homeViewModel.characters.asSnapshot()
 
-            homeViewModel.onSearchAction(HomeSearchAction.Clear)
+            homeViewModel.onSearchAction(action = HomeSearchAction.Clear)
             homeViewModel.characters.asSnapshot()
-            homeViewModel.onSearchAction(HomeSearchAction.Suggest("Beth"))
+            homeViewModel.onSearchAction(action = HomeSearchAction.Suggest(name = "Beth"))
             homeViewModel.characters.asSnapshot()
-            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(null))
+            homeViewModel.onSearchAction(action = HomeSearchAction.SelectStatus(status = null))
             assertEquals(null, homeViewModel.state.value.totalCount)
             homeViewModel.characters.asSnapshot()
 
@@ -141,10 +141,10 @@ class HomeViewModelTest {
     fun `GIVEN loaded filtered pages WHEN the selected chip is repeated THEN recollection preserves pages and total`() =
         runTest(mainDispatcher.dispatcher) {
             fakeCharactersRepository.addThreePages()
-            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Dead))
+            homeViewModel.onSearchAction(action = HomeSearchAction.SelectStatus(status = CharacterStatus.Dead))
             val first = homeViewModel.characters.asSnapshot { scrollTo(45) }
 
-            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Dead))
+            homeViewModel.onSearchAction(action = HomeSearchAction.SelectStatus(status = CharacterStatus.Dead))
             val second = homeViewModel.characters.asSnapshot()
 
             assertEquals(first, second)
@@ -157,10 +157,10 @@ class HomeViewModelTest {
     @Test
     fun `GIVEN a pending name edit WHEN a new status is selected THEN it immediately applies one combined query`() =
         runTest(mainDispatcher.dispatcher) {
-            homeViewModel.onSearchAction(HomeSearchAction.Edit(" Rick "))
+            homeViewModel.onSearchAction(action = HomeSearchAction.Edit(name = " Rick "))
             advanceTimeBy(200)
 
-            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Dead))
+            homeViewModel.onSearchAction(action = HomeSearchAction.SelectStatus(status = CharacterStatus.Dead))
             assertEquals("Rick", homeViewModel.state.value.appliedName)
             val snapshot = homeViewModel.characters.asSnapshot()
             advanceTimeBy(500)
@@ -188,20 +188,22 @@ class HomeViewModelTest {
                     }
                 }
                 CharactersPageResult.Success(
-                    CharacterPage(
-                        listOf(CharacterSummary(1, "Beth", "Human", CharacterStatus.Alive, null)),
-                        1,
-                        null,
+                    page = CharacterPage(
+                        characters = listOf(
+                            CharacterSummary(id = 1, name = "Beth", species = "Human", status = CharacterStatus.Alive, imageUrl = null),
+                        ),
+                        totalCount = 1,
+                        nextPage = null,
                     ),
                 )
             }
-            homeViewModel.onSearchAction(HomeSearchAction.Edit("Rick"))
-            homeViewModel.onSearchAction(HomeSearchAction.Submit)
+            homeViewModel.onSearchAction(action = HomeSearchAction.Edit(name = "Rick"))
+            homeViewModel.onSearchAction(action = HomeSearchAction.Submit)
             backgroundScope.launch { homeViewModel.characters.asSnapshot() }
             repeat(10) { runCurrent() }
 
-            homeViewModel.onSearchAction(HomeSearchAction.Edit("Beth"))
-            homeViewModel.onSearchAction(HomeSearchAction.Submit)
+            homeViewModel.onSearchAction(action = HomeSearchAction.Edit(name = "Beth"))
+            homeViewModel.onSearchAction(action = HomeSearchAction.Submit)
             repeat(10) { runCurrent() }
             val snapshot = homeViewModel.characters.asSnapshot()
 
@@ -213,12 +215,12 @@ class HomeViewModelTest {
     @Test
     fun `GIVEN an applied name WHEN an equivalent name is submitted THEN it preserves the generation and pages`() =
         runTest(mainDispatcher.dispatcher) {
-            homeViewModel.onSearchAction(HomeSearchAction.Edit("Rick"))
-            homeViewModel.onSearchAction(HomeSearchAction.Submit)
+            homeViewModel.onSearchAction(action = HomeSearchAction.Edit(name = "Rick"))
+            homeViewModel.onSearchAction(action = HomeSearchAction.Submit)
             val first = homeViewModel.characters.asSnapshot()
 
-            homeViewModel.onSearchAction(HomeSearchAction.Edit(" Rick "))
-            homeViewModel.onSearchAction(HomeSearchAction.Submit)
+            homeViewModel.onSearchAction(action = HomeSearchAction.Edit(name = " Rick "))
+            homeViewModel.onSearchAction(action = HomeSearchAction.Submit)
             advanceTimeBy(500)
             val second = homeViewModel.characters.asSnapshot()
 
@@ -230,12 +232,12 @@ class HomeViewModelTest {
     @Test
     fun `GIVEN a pending name edit WHEN search is cleared THEN it reloads the unfiltered result immediately`() =
         runTest(mainDispatcher.dispatcher) {
-            homeViewModel.onSearchAction(HomeSearchAction.Edit("Rick"))
-            homeViewModel.onSearchAction(HomeSearchAction.Submit)
+            homeViewModel.onSearchAction(action = HomeSearchAction.Edit(name = "Rick"))
+            homeViewModel.onSearchAction(action = HomeSearchAction.Submit)
             homeViewModel.characters.asSnapshot()
-            homeViewModel.onSearchAction(HomeSearchAction.Edit("Beth"))
+            homeViewModel.onSearchAction(action = HomeSearchAction.Edit(name = "Beth"))
 
-            homeViewModel.onSearchAction(HomeSearchAction.Clear)
+            homeViewModel.onSearchAction(action = HomeSearchAction.Clear)
             homeViewModel.characters.asSnapshot()
             advanceTimeBy(500)
             runCurrent()
@@ -251,10 +253,10 @@ class HomeViewModelTest {
         runTest(mainDispatcher.dispatcher) {
             fakeCharactersRepository.addThreePages()
             fakeCharactersRepository.failOnce += 2
-            homeViewModel.onSearchAction(HomeSearchAction.Edit("Rick"))
-            homeViewModel.onSearchAction(HomeSearchAction.Submit)
+            homeViewModel.onSearchAction(action = HomeSearchAction.Edit(name = "Rick"))
+            homeViewModel.onSearchAction(action = HomeSearchAction.Submit)
 
-            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Dead))
+            homeViewModel.onSearchAction(action = HomeSearchAction.SelectStatus(status = CharacterStatus.Dead))
 
             val snapshot = homeViewModel.characters.asSnapshot(onError = { ErrorRecovery.RETRY }) { scrollTo(45) }
 
@@ -274,28 +276,36 @@ class HomeViewModelTest {
                 if (name == "Rick" && firstRick) {
                     firstRick = false
                     withContext(NonCancellable) { obsoleteResponse.await() }
-                    CharactersPageResult.Success(CharacterPage(emptyList(), 999, null))
+                    CharactersPageResult.Success(page = CharacterPage(characters = emptyList(), totalCount = 999, nextPage = null))
                 } else {
                     CharactersPageResult.Success(
-                        CharacterPage(
-                            listOf(CharacterSummary(42, name ?: "All", "Human", CharacterStatus.Alive, null)),
-                            1,
-                            null,
+                        page = CharacterPage(
+                            characters = listOf(
+                                CharacterSummary(
+                                    id = 42,
+                                    name = name ?: "All",
+                                    species = "Human",
+                                    status = CharacterStatus.Alive,
+                                    imageUrl = null,
+                                ),
+                            ),
+                            totalCount = 1,
+                            nextPage = null,
                         ),
                     )
                 }
             }
-            homeViewModel.onSearchAction(HomeSearchAction.Edit("Rick"))
-            homeViewModel.onSearchAction(HomeSearchAction.Submit)
+            homeViewModel.onSearchAction(action = HomeSearchAction.Edit(name = "Rick"))
+            homeViewModel.onSearchAction(action = HomeSearchAction.Submit)
             backgroundScope.launch { homeViewModel.characters.asSnapshot() }
             repeat(10) { runCurrent() }
             assertEquals(listOf("Rick"), fakeCharactersRepository.requestedNames)
 
-            homeViewModel.onSearchAction(HomeSearchAction.Edit("Beth"))
-            homeViewModel.onSearchAction(HomeSearchAction.Submit)
+            homeViewModel.onSearchAction(action = HomeSearchAction.Edit(name = "Beth"))
+            homeViewModel.onSearchAction(action = HomeSearchAction.Submit)
             repeat(10) { runCurrent() }
-            homeViewModel.onSearchAction(HomeSearchAction.Edit("Rick"))
-            homeViewModel.onSearchAction(HomeSearchAction.Submit)
+            homeViewModel.onSearchAction(action = HomeSearchAction.Edit(name = "Rick"))
+            homeViewModel.onSearchAction(action = HomeSearchAction.Submit)
             repeat(10) { runCurrent() }
             obsoleteResponse.complete(Unit)
             val snapshot = homeViewModel.characters.asSnapshot()
@@ -315,25 +325,33 @@ class HomeViewModelTest {
                 if (status == CharacterStatus.Alive && firstAlive) {
                     firstAlive = false
                     withContext(NonCancellable) { obsoleteResponse.await() }
-                    CharactersPageResult.Success(CharacterPage(emptyList(), 999, null))
+                    CharactersPageResult.Success(page = CharacterPage(characters = emptyList(), totalCount = 999, nextPage = null))
                 } else {
                     CharactersPageResult.Success(
-                        CharacterPage(
-                            listOf(CharacterSummary(42, name ?: "All", "Human", CharacterStatus.Alive, null)),
-                            1,
-                            null,
+                        page = CharacterPage(
+                            characters = listOf(
+                                CharacterSummary(
+                                    id = 42,
+                                    name = name ?: "All",
+                                    species = "Human",
+                                    status = CharacterStatus.Alive,
+                                    imageUrl = null,
+                                ),
+                            ),
+                            totalCount = 1,
+                            nextPage = null,
                         ),
                     )
                 }
             }
-            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Alive))
+            homeViewModel.onSearchAction(action = HomeSearchAction.SelectStatus(status = CharacterStatus.Alive))
             backgroundScope.launch { homeViewModel.characters.asSnapshot() }
             repeat(10) { runCurrent() }
             assertEquals(listOf(CharacterStatus.Alive), fakeCharactersRepository.requestedStatuses)
 
-            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Dead))
+            homeViewModel.onSearchAction(action = HomeSearchAction.SelectStatus(status = CharacterStatus.Dead))
             repeat(10) { runCurrent() }
-            homeViewModel.onSearchAction(HomeSearchAction.SelectStatus(CharacterStatus.Alive))
+            homeViewModel.onSearchAction(action = HomeSearchAction.SelectStatus(status = CharacterStatus.Alive))
             repeat(10) { runCurrent() }
             obsoleteResponse.complete(Unit)
             val snapshot = homeViewModel.characters.asSnapshot()
@@ -348,13 +366,15 @@ class HomeViewModelTest {
     fun `GIVEN loaded pages WHEN a new name is submitted THEN it starts a fresh named first page`() = runTest(mainDispatcher.dispatcher) {
         homeViewModel.characters.asSnapshot()
         fakeCharactersRepository.pages[1] = CharacterPage(
-            listOf(CharacterSummary(90, "Beth", "Human", CharacterStatus.Alive, null)),
-            1,
-            null,
+            characters = listOf(
+                CharacterSummary(id = 90, name = "Beth", species = "Human", status = CharacterStatus.Alive, imageUrl = null),
+            ),
+            totalCount = 1,
+            nextPage = null,
         )
-        homeViewModel.onSearchAction(HomeSearchAction.Edit(" Beth "))
+        homeViewModel.onSearchAction(action = HomeSearchAction.Edit(name = " Beth "))
 
-        homeViewModel.onSearchAction(HomeSearchAction.Submit)
+        homeViewModel.onSearchAction(action = HomeSearchAction.Submit)
         runCurrent()
         val snapshot = homeViewModel.characters.asSnapshot()
         advanceTimeBy(500)
@@ -370,9 +390,9 @@ class HomeViewModelTest {
     @Test
     fun `GIVEN successive name edits WHEN the debounce elapses THEN only the latest name is applied`() =
         runTest(mainDispatcher.dispatcher) {
-            homeViewModel.onSearchAction(HomeSearchAction.Edit("Ri"))
+            homeViewModel.onSearchAction(action = HomeSearchAction.Edit(name = "Ri"))
             advanceTimeBy(200)
-            homeViewModel.onSearchAction(HomeSearchAction.Edit(" Rick "))
+            homeViewModel.onSearchAction(action = HomeSearchAction.Edit(name = " Rick "))
             advanceTimeBy(299)
             runCurrent()
             assertEquals(null, homeViewModel.state.value.appliedName)
@@ -388,15 +408,17 @@ class HomeViewModelTest {
     @Test
     fun `GIVEN remote characters WHEN paging is collected THEN it emits the repository catalogue`() = runTest(mainDispatcher.dispatcher) {
         fakeCharactersRepository.pages[1] = CharacterPage(
-            listOf(CharacterSummary(1, "Rick", "Human", CharacterStatus.Alive, null)),
-            1,
-            null,
+            characters = listOf(
+                CharacterSummary(id = 1, name = "Rick", species = "Human", status = CharacterStatus.Alive, imageUrl = null),
+            ),
+            totalCount = 1,
+            nextPage = null,
         )
 
         val snapshot = homeViewModel.characters.asSnapshot()
 
         assertEquals(
-            listOf(CharacterCardUiModel(1, "Rick", "Human", CharacterStatus.Alive, null)),
+            listOf(CharacterCardUiModel(id = 1, name = "Rick", species = "Human", status = CharacterStatus.Alive, imageUrl = null)),
             snapshot,
         )
         assertEquals(1, homeViewModel.state.value.totalCount)
@@ -460,7 +482,7 @@ class HomeViewModelTest {
 
     @Test
     fun `GIVEN an empty first page WHEN paging is collected THEN it emits no characters`() = runTest(mainDispatcher.dispatcher) {
-        fakeCharactersRepository.pages[1] = CharacterPage(emptyList(), 0, null)
+        fakeCharactersRepository.pages[1] = CharacterPage(characters = emptyList(), totalCount = 0, nextPage = null)
 
         val snapshot = homeViewModel.characters.asSnapshot()
 
@@ -502,7 +524,7 @@ class HomeViewModelTest {
 }
 
 private class FakeCharactersRepository : CharactersRepository {
-    val pages = mutableMapOf(1 to page(1, 20, null))
+    val pages = mutableMapOf(1 to page(number = 1, total = 20, next = null))
     val requestedPages = mutableListOf<Int>()
     val requestedNames = mutableListOf<String?>()
     val requestedStatuses = mutableListOf<CharacterStatus?>()
@@ -513,9 +535,9 @@ private class FakeCharactersRepository : CharactersRepository {
     var response: (suspend (Int, String?) -> CharactersPageResult)? = null
 
     fun addThreePages() {
-        pages[1] = page(1, 60, 2)
-        pages[2] = page(2, 60, 3)
-        pages[3] = page(3, 60, null)
+        pages[1] = page(number = 1, total = 60, next = 2)
+        pages[2] = page(number = 2, total = 60, next = 3)
+        pages[3] = page(number = 3, total = 60, next = null)
     }
 
     override suspend fun getDetails(characterId: Int): CharacterDetailsResult = CharacterDetailsResult.NotFound
@@ -529,7 +551,7 @@ private class FakeCharactersRepository : CharactersRepository {
             if (controlled != null) return controlled
             pending?.await()
             if (failOnce.remove(page)) {
-                CharactersPageResult.Failure(CharacterRequestFailure.Service)
+                CharactersPageResult.Failure(reason = CharacterRequestFailure.Service)
             } else {
                 pages[page]?.let(CharactersPageResult::Success)
                     ?: CharactersPageResult.EndOfCatalogue
@@ -542,9 +564,9 @@ private class FakeCharactersRepository : CharactersRepository {
 }
 
 private fun page(number: Int, total: Int, next: Int?): CharacterPage = CharacterPage(
-    ((number - 1) * 20 + 1..number * 20).map {
-        CharacterSummary(it, "Character $it", "Human", CharacterStatus.Alive, null)
+    characters = ((number - 1) * 20 + 1..number * 20).map {
+        CharacterSummary(id = it, name = "Character $it", species = "Human", status = CharacterStatus.Alive, imageUrl = null)
     },
-    total,
-    next,
+    totalCount = total,
+    nextPage = next,
 )

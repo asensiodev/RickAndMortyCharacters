@@ -89,7 +89,7 @@ class HomeContentTest {
                     when (chain.request.data) {
                         "test://pending" -> {
                             portraitGate.await()
-                            SuccessResult(ColorImage(android.graphics.Color.DKGRAY), chain.request)
+                            SuccessResult(image = ColorImage(android.graphics.Color.DKGRAY), request = chain.request)
                         }
 
                         "test://failure" -> ErrorResult(
@@ -99,8 +99,8 @@ class HomeContentTest {
                         )
 
                         else -> SuccessResult(
-                            ColorImage(android.graphics.Color.DKGRAY),
-                            chain.request,
+                            image = ColorImage(android.graphics.Color.DKGRAY),
+                            request = chain.request,
                         )
                     }
                 },
@@ -120,14 +120,20 @@ class HomeContentTest {
         compose.setContent {
             RickAndMortyTheme {
                 HomeContent(
-                    HomeUiState.Content(
-                        (1..20).map {
-                            CharacterCardUiModel(it, "Character $it", "Human", CharacterStatus.Alive, null)
+                    state = HomeUiState.Content(
+                        characters = (1..20).map {
+                            CharacterCardUiModel(
+                                id = it,
+                                name = "Character $it",
+                                species = "Human",
+                                status = CharacterStatus.Alive,
+                                imageUrl = null,
+                            )
                         },
                     ),
-                    imageLoader,
-                    {},
-                    {},
+                    imageLoader = imageLoader,
+                    onRetry = {},
+                    onCharacterSelected = {},
                 )
             }
         }
@@ -148,12 +154,12 @@ class HomeContentTest {
 
     @Test
     fun GIVEN_a_visible_append_error_WHEN_retry_loads_and_fails_again_THEN_feedback_stays_in_place_above_the_counter() {
-        verifyStableAppendFeedback(1f)
+        verifyStableAppendFeedback(fontScale = 1f)
     }
 
     @Test
     fun GIVEN_large_text_and_an_append_error_WHEN_retry_loads_and_fails_again_THEN_feedback_stays_visible_in_place() {
-        verifyStableAppendFeedback(2f)
+        verifyStableAppendFeedback(fontScale = 2f)
     }
 
     @Test
@@ -161,14 +167,22 @@ class HomeContentTest {
         val species = "Mythological Creature from another dimension"
         compose.setContent {
             RickAndMortyTheme {
-                Box(Modifier.width(HomeLayoutTokens.twoColumnMinWidth)) {
+                Box(modifier = Modifier.width(HomeLayoutTokens.twoColumnMinWidth)) {
                     HomeContent(
-                        HomeUiState.Content(
-                            listOf(CharacterCardUiModel(1, "Mr. Booby Buyer", species, CharacterStatus.Alive, null)),
+                        state = HomeUiState.Content(
+                            characters = listOf(
+                                CharacterCardUiModel(
+                                    id = 1,
+                                    name = "Mr. Booby Buyer",
+                                    species = species,
+                                    status = CharacterStatus.Alive,
+                                    imageUrl = null,
+                                ),
+                            ),
                         ),
-                        imageLoader,
-                        {},
-                        {},
+                        imageLoader = imageLoader,
+                        onRetry = {},
+                        onCharacterSelected = {},
                     )
                 }
             }
@@ -193,23 +207,23 @@ class HomeContentTest {
             RickAndMortyTheme {
                 Column {
                     BasicTextField(query, { query = it }, Modifier.testTag("keyboard-input"))
-                    Box(Modifier.weight(1f)) {
+                    Box(modifier = Modifier.weight(1f)) {
                         HomeContent(
-                            HomeUiState.Content(
-                                listOf(
+                            state = HomeUiState.Content(
+                                characters = listOf(
                                     CharacterCardUiModel(
-                                        1,
-                                        "Rick",
-                                        "Human",
-                                        CharacterStatus.Alive,
-                                        null,
+                                        id = 1,
+                                        name = "Rick",
+                                        species = "Human",
+                                        status = CharacterStatus.Alive,
+                                        imageUrl = null,
                                     ),
                                 ),
-                                40,
+                                totalCount = 40,
                             ),
-                            imageLoader,
-                            {},
-                            {},
+                            imageLoader = imageLoader,
+                            onRetry = {},
+                            onCharacterSelected = {},
                         )
                     }
                 }
@@ -235,22 +249,22 @@ class HomeContentTest {
     @Test
     fun GIVEN_a_counter_WHEN_load_states_change_THEN_it_is_visible_only_with_loaded_content() {
         val characters = listOf(
-            CharacterCardUiModel(1, "Rick", "Human", CharacterStatus.Alive, null),
+            CharacterCardUiModel(id = 1, name = "Rick", species = "Human", status = CharacterStatus.Alive, imageUrl = null),
         )
-        var state by mutableStateOf<HomeUiState>(HomeUiState.Content(characters, 40))
+        var state by mutableStateOf<HomeUiState>(HomeUiState.Content(characters = characters, totalCount = 40))
         compose.setContent {
-            RickAndMortyTheme { HomeContent(state, imageLoader, {}, {}) }
+            RickAndMortyTheme { HomeContent(state = state, imageLoader = imageLoader, onRetry = {}, onCharacterSelected = {}) }
         }
 
         compose.onNodeWithText("Loaded 1 of 40 characters").assertIsDisplayed()
-        compose.runOnIdle { state = HomeUiState.Content(characters, 40, HomeAppendState.Loading) }
+        compose.runOnIdle { state = HomeUiState.Content(characters = characters, totalCount = 40, append = HomeAppendState.Loading) }
         compose.onNodeWithText("Loaded 1 of 40 characters").assertIsDisplayed()
         compose.onNodeWithContentDescription("Loading more characters").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Retry").assertDoesNotExist()
-        compose.runOnIdle { state = HomeUiState.Content(characters, 40, HomeAppendState.Error) }
+        compose.runOnIdle { state = HomeUiState.Content(characters = characters, totalCount = 40, append = HomeAppendState.Error) }
         compose.onNodeWithText("Loaded 1 of 40 characters").assertIsDisplayed()
         compose.onNodeWithText("Retry").assertIsDisplayed()
-        compose.runOnIdle { state = HomeUiState.Content(characters) }
+        compose.runOnIdle { state = HomeUiState.Content(characters = characters) }
         compose.onNodeWithText("Loaded 1 of 40 characters").assertDoesNotExist()
         for (initial in listOf(HomeUiState.Loading, HomeUiState.Empty, HomeUiState.Error)) {
             compose.runOnIdle { state = initial }
@@ -263,25 +277,25 @@ class HomeContentTest {
         compose.setContent {
             val density = LocalDensity.current
             RickAndMortyTheme {
-                Box(Modifier.width(HomeLayoutTokens.twoColumnMinWidth - Spacing.extraLarge)) {
+                Box(modifier = Modifier.width(HomeLayoutTokens.twoColumnMinWidth - Spacing.extraLarge)) {
                     CompositionLocalProvider(LocalDensity provides Density(density.density, 2f)) {
                         HomeContent(
-                            HomeUiState.Content(
-                                (1..20).map {
+                            state = HomeUiState.Content(
+                                characters = (1..20).map {
                                     CharacterCardUiModel(
-                                        it,
-                                        "Character $it",
-                                        "Human",
-                                        CharacterStatus.Alive,
-                                        null,
+                                        id = it,
+                                        name = "Character $it",
+                                        species = "Human",
+                                        status = CharacterStatus.Alive,
+                                        imageUrl = null,
                                     )
                                 },
-                                40,
-                                HomeAppendState.Error,
+                                totalCount = 40,
+                                append = HomeAppendState.Error,
                             ),
-                            imageLoader,
-                            {},
-                            {},
+                            imageLoader = imageLoader,
+                            onRetry = {},
+                            onCharacterSelected = {},
                         )
                     }
                 }
@@ -314,22 +328,28 @@ class HomeContentTest {
                 if (page == 2) {
                     val attempt = requestedPages.count { it == 2 }
                     if (attempt == 2) failedRetryGate.await()
-                    if (attempt <= 2) return CharactersPageResult.Failure(CharacterRequestFailure.Network)
+                    if (attempt <= 2) return CharactersPageResult.Failure(reason = CharacterRequestFailure.Network)
                     responseGate.await()
                 }
                 return CharactersPageResult.Success(
-                    CharacterPage(
-                        ((page - 1) * 20 + 1..page * 20).map {
-                            CharacterSummary(it, "Character $it", "Human", CharacterStatus.Alive, null)
+                    page = CharacterPage(
+                        characters = ((page - 1) * 20 + 1..page * 20).map {
+                            CharacterSummary(
+                                id = it,
+                                name = "Character $it",
+                                species = "Human",
+                                status = CharacterStatus.Alive,
+                                imageUrl = null,
+                            )
                         },
-                        40,
-                        if (page == 1) 2 else null,
+                        totalCount = 40,
+                        nextPage = if (page == 1) 2 else null,
                     ),
                 )
             }
         }
 
-        homeViewModel = HomeViewModel(repository)
+        homeViewModel = HomeViewModel(repository = repository)
         val store = ViewModelStore()
         store.put("home", homeViewModel)
         try {
@@ -388,21 +408,21 @@ class HomeContentTest {
         compose.setContent {
             RickAndMortyTheme {
                 HomeContent(
-                    HomeUiState.Content(
-                        (1..20).map {
+                    state = HomeUiState.Content(
+                        characters = (1..20).map {
                             CharacterCardUiModel(
-                                it,
-                                "Character $it",
-                                "Human",
-                                CharacterStatus.Alive,
-                                null,
+                                id = it,
+                                name = "Character $it",
+                                species = "Human",
+                                status = CharacterStatus.Alive,
+                                imageUrl = null,
                             )
                         },
                         totalCount = 40,
                     ),
-                    imageLoader,
-                    {},
-                    {},
+                    imageLoader = imageLoader,
+                    onRetry = {},
+                    onCharacterSelected = {},
                 )
             }
         }
@@ -420,16 +440,16 @@ class HomeContentTest {
         compose.setContent {
             RickAndMortyTheme {
                 HomeContent(
-                    HomeUiState.Content(
-                        listOf(
-                            CharacterCardUiModel(1, "Rick", "Human", CharacterStatus.Alive, null),
+                    state = HomeUiState.Content(
+                        characters = listOf(
+                            CharacterCardUiModel(id = 1, name = "Rick", species = "Human", status = CharacterStatus.Alive, imageUrl = null),
                         ),
                         totalCount = 40,
                         append = HomeAppendState.Error,
                     ),
-                    imageLoader,
-                    { retries++ },
-                    { selectedId = it },
+                    imageLoader = imageLoader,
+                    onRetry = { retries++ },
+                    onCharacterSelected = { selectedId = it },
                 )
             }
         }
@@ -450,34 +470,34 @@ class HomeContentTest {
         compose.setContent {
             RickAndMortyTheme {
                 HomeContent(
-                    HomeUiState.Content(
-                        listOf(
+                    state = HomeUiState.Content(
+                        characters = listOf(
                             CharacterCardUiModel(
-                                1,
-                                "Rick Sanchez",
-                                "Human",
-                                CharacterStatus.Alive,
-                                "test://pending",
+                                id = 1,
+                                name = "Rick Sanchez",
+                                species = "Human",
+                                status = CharacterStatus.Alive,
+                                imageUrl = "test://pending",
                             ),
                             CharacterCardUiModel(
-                                2,
-                                "Morty Smith",
-                                "Human",
-                                CharacterStatus.Alive,
-                                "test://failure",
+                                id = 2,
+                                name = "Morty Smith",
+                                species = "Human",
+                                status = CharacterStatus.Alive,
+                                imageUrl = "test://failure",
                             ),
                             CharacterCardUiModel(
-                                3,
-                                "Summer Smith",
-                                "Human",
-                                CharacterStatus.Unknown,
-                                null,
+                                id = 3,
+                                name = "Summer Smith",
+                                species = "Human",
+                                status = CharacterStatus.Unknown,
+                                imageUrl = null,
                             ),
                         ),
                     ),
-                    imageLoader,
-                    {},
-                    { selected += it },
+                    imageLoader = imageLoader,
+                    onRetry = {},
+                    onCharacterSelected = { selected += it },
                 )
             }
         }
@@ -510,11 +530,11 @@ class HomeContentTest {
         compose.setContent {
             val density = LocalDensity.current
             RickAndMortyTheme {
-                Box(Modifier.width(HomeLayoutTokens.twoColumnMinWidth - Spacing.extraLarge)) {
+                Box(modifier = Modifier.width(HomeLayoutTokens.twoColumnMinWidth - Spacing.extraLarge)) {
                     CompositionLocalProvider(
                         LocalDensity provides Density(density.density, fontScale = 2f),
                     ) {
-                        HomeContent(HomeUiState.Error, imageLoader, { retries++ }, {})
+                        HomeContent(state = HomeUiState.Error, imageLoader = imageLoader, onRetry = { retries++ }, onCharacterSelected = {})
                     }
                 }
             }
@@ -534,33 +554,35 @@ class HomeContentTest {
             override suspend fun getPage(page: Int, name: String?, status: CharacterStatus?): CharactersPageResult {
                 requests++
                 return if (requests == 1) {
-                    CharactersPageResult.Failure(CharacterRequestFailure.Service)
+                    CharactersPageResult.Failure(reason = CharacterRequestFailure.Service)
                 } else {
                     responseGate.await()
                     CharactersPageResult.Success(
-                        CharacterPage(
-                            listOf(
+                        page = CharacterPage(
+                            characters = listOf(
                                 CharacterSummary(
-                                    1,
-                                    "Rick Sanchez",
-                                    "Human",
-                                    CharacterStatus.Alive,
-                                    null,
+                                    id = 1,
+                                    name = "Rick Sanchez",
+                                    species = "Human",
+                                    status = CharacterStatus.Alive,
+                                    imageUrl = null,
                                 ),
                             ),
-                            1,
-                            null,
+                            totalCount = 1,
+                            nextPage = null,
                         ),
                     )
                 }
             }
         }
 
-        homeViewModel = HomeViewModel(repository)
+        homeViewModel = HomeViewModel(repository = repository)
         val store = ViewModelStore()
         store.put("home", homeViewModel)
         try {
-            compose.setContent { RickAndMortyTheme { HomeRoute(homeViewModel, imageLoader, {}) } }
+            compose.setContent {
+                RickAndMortyTheme { HomeRoute(viewModel = homeViewModel, imageLoader = imageLoader, onCharacterSelected = {}) }
+            }
             compose.onNodeWithText("Retry").assertIsDisplayed().performClick()
             compose.onNodeWithText("Retry").assertDoesNotExist()
             assertTrue(
@@ -587,7 +609,7 @@ class HomeContentTest {
     @Test
     fun GIVEN_an_empty_catalogue_WHEN_Home_is_rendered_THEN_it_shows_feedback_without_actions() {
         compose.setContent {
-            RickAndMortyTheme { HomeContent(HomeUiState.Empty, imageLoader, {}, {}) }
+            RickAndMortyTheme { HomeContent(state = HomeUiState.Empty, imageLoader = imageLoader, onRetry = {}, onCharacterSelected = {}) }
         }
 
         compose.onNodeWithText("No characters available.").assertIsDisplayed()
@@ -598,7 +620,9 @@ class HomeContentTest {
     @Test
     fun GIVEN_a_loading_catalogue_WHEN_Home_is_rendered_THEN_it_shows_noninteractive_skeletons() {
         compose.setContent {
-            RickAndMortyTheme { HomeContent(HomeUiState.Loading, imageLoader, {}, {}) }
+            RickAndMortyTheme {
+                HomeContent(state = HomeUiState.Loading, imageLoader = imageLoader, onRetry = {}, onCharacterSelected = {})
+            }
         }
 
         val skeletons = compose.onAllNodesWithContentDescription("Loading character")
@@ -613,7 +637,7 @@ class HomeContentTest {
         var retries = 0
         compose.setContent {
             RickAndMortyTheme {
-                HomeContent(HomeUiState.Error, imageLoader, { retries++ }, {})
+                HomeContent(state = HomeUiState.Error, imageLoader = imageLoader, onRetry = { retries++ }, onCharacterSelected = {})
             }
         }
 
@@ -630,13 +654,13 @@ class HomeContentTest {
             RickAndMortyTheme {
                 HomeContent(
                     state = HomeUiState.Content(
-                        listOf(
+                        characters = listOf(
                             CharacterCardUiModel(
-                                1,
-                                "Rick Sanchez",
-                                "Human",
-                                CharacterStatus.Alive,
-                                "test://rick",
+                                id = 1,
+                                name = "Rick Sanchez",
+                                species = "Human",
+                                status = CharacterStatus.Alive,
+                                imageUrl = "test://rick",
                             ),
                         ),
                     ),
@@ -656,21 +680,21 @@ class HomeContentTest {
         var append by mutableStateOf<HomeAppendState>(HomeAppendState.Error)
         var retries = 0
         val characters = (1..20).map {
-            CharacterCardUiModel(it, "Character $it", "Human", CharacterStatus.Alive, null)
+            CharacterCardUiModel(id = it, name = "Character $it", species = "Human", status = CharacterStatus.Alive, imageUrl = null)
         }
         compose.setContent {
             val density = LocalDensity.current
             CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
                 RickAndMortyTheme {
-                    Box(Modifier.width(HomeLayoutTokens.twoColumnMinWidth + Spacing.extraLarge)) {
+                    Box(modifier = Modifier.width(HomeLayoutTokens.twoColumnMinWidth + Spacing.extraLarge)) {
                         HomeContent(
-                            HomeUiState.Content(characters, 40, append),
-                            imageLoader,
-                            {
+                            state = HomeUiState.Content(characters = characters, totalCount = 40, append = append),
+                            imageLoader = imageLoader,
+                            onRetry = {
                                 retries++
                                 append = HomeAppendState.Loading
                             },
-                            {},
+                            onCharacterSelected = {},
                         )
                     }
                 }

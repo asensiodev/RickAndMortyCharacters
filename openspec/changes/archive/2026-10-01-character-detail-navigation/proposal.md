@@ -14,7 +14,7 @@ Home already loads real characters but selection has no destination. Add the sec
 - Add bounded portrait parallax with a static alternative and native destination transitions.
 - Verify repository, ViewModel, screen and production navigation behavior through controlled fixtures and behavior-focused TDD.
 
-C05 applies normal-back retention to today's first-page Home. Search/filter retention and keyboard behavior are extended and verified when C07/C08 introduce those controls. Pagination, HTTP caching, process-death restoration, shared-image transitions, full accessibility demonstration and screenshot tooling retain their own tickets.
+C05 applies normal-back retention to today's first-page Home. Search/filter retention and keyboard behavior are extended and verified when C07/C08 introduce those controls. Pagination, HTTP caching, shared-image transitions, full accessibility demonstration and screenshot tooling retain their own tickets.
 
 ## Capabilities
 

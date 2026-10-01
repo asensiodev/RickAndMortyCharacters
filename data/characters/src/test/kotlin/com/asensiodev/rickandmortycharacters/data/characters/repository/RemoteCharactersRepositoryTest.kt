@@ -34,8 +34,8 @@ class RemoteCharactersRepositoryTest {
     @Before
     fun setUp() {
         server.start()
-        val api = createCharactersApi(server.url("/api/"), OkHttpClient.Builder().build())
-        charactersRepository = RemoteCharactersRepository(api)
+        val api = createCharactersApi(baseUrl = server.url("/api/"), client = OkHttpClient.Builder().build())
+        charactersRepository = RemoteCharactersRepository(api = api)
     }
 
     @After
@@ -54,7 +54,7 @@ class RemoteCharactersRepositoryTest {
             for (page in 1..2) {
                 server.enqueue(MockResponse.Builder().body("""{"info":{"count":0,"next":null},"results":[]}""").build())
 
-                charactersRepository.getPage(page, " Rick ", status)
+                charactersRepository.getPage(page = page, name = " Rick ", status = status)
 
                 val request = server.takeRequest()
                 assertEquals(expected, request.url.queryParameter("status"))
@@ -69,14 +69,17 @@ class RemoteCharactersRepositoryTest {
         for (name in listOf(null, "Rick")) {
             server.enqueue(MockResponse.Builder().code(404).body("""{"error":"There is nothing here"}""").build())
 
-            val result = charactersRepository.getPage(1, name, CharacterStatus.Unknown)
+            val result = charactersRepository.getPage(page = 1, name = name, status = CharacterStatus.Unknown)
 
-            assertEquals(CharactersPageResult.Success(CharacterPage(emptyList(), 0, null)), result)
+            assertEquals(
+                CharactersPageResult.Success(page = CharacterPage(characters = emptyList(), totalCount = 0, nextPage = null)),
+                result,
+            )
         }
         server.enqueue(MockResponse.Builder().code(404).body("{} ").build())
         assertEquals(
-            CharactersPageResult.Failure(CharacterRequestFailure.Service),
-            charactersRepository.getPage(1, null, CharacterStatus.Unknown),
+            CharactersPageResult.Failure(reason = CharacterRequestFailure.Service),
+            charactersRepository.getPage(page = 1, name = null, status = CharacterStatus.Unknown),
         )
     }
 
@@ -84,7 +87,7 @@ class RemoteCharactersRepositoryTest {
     fun `GIVEN a status constraint WHEN a page is requested THEN it sends the API status value`() = runTest {
         server.enqueue(MockResponse.Builder().body("""{"info":{"count":0,"next":null},"results":[]}""").build())
 
-        charactersRepository.getPage(1, "Rick", CharacterStatus.Dead)
+        charactersRepository.getPage(page = 1, name = "Rick", status = CharacterStatus.Dead)
 
         val request = server.takeRequest()
         assertEquals("dead", request.url.queryParameter("status"))
@@ -97,7 +100,7 @@ class RemoteCharactersRepositoryTest {
         for (page in 1..2) {
             server.enqueue(MockResponse.Builder().body(body).build())
 
-            charactersRepository.getPage(page, "  Rick & Morty  ")
+            charactersRepository.getPage(page = page, name = "  Rick & Morty  ")
 
             val request = server.takeRequest()
             assertEquals("Rick & Morty", request.url.queryParameter("name"))
@@ -109,7 +112,7 @@ class RemoteCharactersRepositoryTest {
     fun `GIVEN a blank name WHEN its page is requested THEN it omits the name constraint`() = runTest {
         server.enqueue(MockResponse.Builder().body("""{"info":{"count":0,"next":null},"results":[]}""").build())
 
-        charactersRepository.getPage(1, "   ")
+        charactersRepository.getPage(page = 1, name = "   ")
 
         assertEquals(null, server.takeRequest().url.queryParameter("name"))
     }
@@ -119,9 +122,9 @@ class RemoteCharactersRepositoryTest {
         for (body in listOf("{broken", "{}", """{"error":"Unavailable"}""")) {
             server.enqueue(MockResponse.Builder().code(404).body(body).build())
 
-            val result = charactersRepository.getPage(1, "Rick")
+            val result = charactersRepository.getPage(page = 1, name = "Rick")
 
-            assertEquals(CharactersPageResult.Failure(CharacterRequestFailure.Service), result)
+            assertEquals(CharactersPageResult.Failure(reason = CharacterRequestFailure.Service), result)
         }
     }
 
@@ -129,9 +132,9 @@ class RemoteCharactersRepositoryTest {
     fun `GIVEN a name without matches WHEN its first page is requested THEN it returns an empty result`() = runTest {
         server.enqueue(MockResponse.Builder().code(404).body("""{"error":"There is nothing here"}""").build())
 
-        val result = charactersRepository.getPage(1, "Missing name")
+        val result = charactersRepository.getPage(page = 1, name = "Missing name")
 
-        assertEquals(CharactersPageResult.Success(CharacterPage(emptyList(), 0, null)), result)
+        assertEquals(CharactersPageResult.Success(page = CharacterPage(characters = emptyList(), totalCount = 0, nextPage = null)), result)
         assertEquals("Missing name", server.takeRequest().url.queryParameter("name"))
     }
 
@@ -143,7 +146,7 @@ class RemoteCharactersRepositoryTest {
             ).body("""{"error":"There is nothing here"}""").build(),
         )
 
-        val result = charactersRepository.getPage(2)
+        val result = charactersRepository.getPage(page = 2)
 
         assertEquals(CharactersPageResult.EndOfCatalogue, result)
         assertEquals("2", server.takeRequest().url.queryParameter("page"))
@@ -155,9 +158,9 @@ class RemoteCharactersRepositoryTest {
         for (body in bodies) {
             server.enqueue(MockResponse.Builder().code(404).body(body).build())
 
-            val result = charactersRepository.getPage(2)
+            val result = charactersRepository.getPage(page = 2)
 
-            assertEquals(CharactersPageResult.Failure(CharacterRequestFailure.Service), result)
+            assertEquals(CharactersPageResult.Failure(reason = CharacterRequestFailure.Service), result)
         }
         server.enqueue(
             MockResponse.Builder().code(
@@ -166,8 +169,8 @@ class RemoteCharactersRepositoryTest {
         )
 
         assertEquals(
-            CharactersPageResult.Failure(CharacterRequestFailure.Service),
-            charactersRepository.getPage(2),
+            CharactersPageResult.Failure(reason = CharacterRequestFailure.Service),
+            charactersRepository.getPage(page = 2),
         )
     }
 
@@ -177,7 +180,7 @@ class RemoteCharactersRepositoryTest {
             .replace("\"https://rickandmortyapi.com/api/character?page=2\"", "null")
         server.enqueue(MockResponse.Builder().body(body).build())
 
-        val result = charactersRepository.getPage(3) as CharactersPageResult.Success
+        val result = charactersRepository.getPage(page = 3) as CharactersPageResult.Success
 
         assertEquals(57, result.page.totalCount)
         assertEquals(null, result.page.nextPage)
@@ -188,7 +191,7 @@ class RemoteCharactersRepositoryTest {
     @Test
     fun `GIVEN a pending page request WHEN it is cancelled THEN cancellation propagates to the caller`() = runTest {
         server.enqueue(MockResponse.Builder().onResponseStart(SocketEffect.Stall).build())
-        val pending = async { charactersRepository.getPage(1) }
+        val pending = async { charactersRepository.getPage(page = 1) }
         val request = withContext(Dispatchers.IO) { server.takeRequest(5, TimeUnit.SECONDS) }
         assertNotNull(request)
 
@@ -207,10 +210,10 @@ class RemoteCharactersRepositoryTest {
             MockResponse.Builder().body("""{"info":{"count":1,"next":null}}""").build(),
         )
 
-        val result = charactersRepository.getPage(1)
+        val result = charactersRepository.getPage(page = 1)
 
         assertEquals(
-            CharactersPageResult.Failure(CharacterRequestFailure.InvalidResponse),
+            CharactersPageResult.Failure(reason = CharacterRequestFailure.InvalidResponse),
             result,
         )
     }
@@ -219,10 +222,10 @@ class RemoteCharactersRepositoryTest {
     fun `GIVEN an absent response body WHEN a page is requested THEN it reports an invalid response`() = runTest {
         server.enqueue(MockResponse.Builder().code(204).build())
 
-        val result = charactersRepository.getPage(1)
+        val result = charactersRepository.getPage(page = 1)
 
         assertEquals(
-            CharactersPageResult.Failure(CharacterRequestFailure.InvalidResponse),
+            CharactersPageResult.Failure(reason = CharacterRequestFailure.InvalidResponse),
             result,
         )
     }
@@ -235,10 +238,10 @@ class RemoteCharactersRepositoryTest {
             ).body("""{"error":"There is nothing here"}""").build(),
         )
 
-        val result = charactersRepository.getPage(1)
+        val result = charactersRepository.getPage(page = 1)
 
         assertEquals(
-            CharactersPageResult.Failure(CharacterRequestFailure.Service),
+            CharactersPageResult.Failure(reason = CharacterRequestFailure.Service),
             result,
         )
     }
@@ -251,10 +254,10 @@ class RemoteCharactersRepositoryTest {
             ).build(),
         )
 
-        val result = charactersRepository.getPage(1)
+        val result = charactersRepository.getPage(page = 1)
 
         assertEquals(
-            CharactersPageResult.Success(CharacterPage(emptyList(), 0, null)),
+            CharactersPageResult.Success(page = CharacterPage(characters = emptyList(), totalCount = 0, nextPage = null)),
             result,
         )
     }
@@ -263,10 +266,10 @@ class RemoteCharactersRepositoryTest {
     fun `GIVEN malformed JSON WHEN a page is requested THEN it reports an invalid response`() = runTest {
         server.enqueue(MockResponse.Builder().body("{broken").build())
 
-        val result = charactersRepository.getPage(1)
+        val result = charactersRepository.getPage(page = 1)
 
         assertEquals(
-            CharactersPageResult.Failure(CharacterRequestFailure.InvalidResponse),
+            CharactersPageResult.Failure(reason = CharacterRequestFailure.InvalidResponse),
             result,
         )
     }
@@ -275,10 +278,10 @@ class RemoteCharactersRepositoryTest {
     fun `GIVEN a connection failure WHEN a page is requested THEN it reports a network failure`() = runTest {
         server.close()
 
-        val result = charactersRepository.getPage(1)
+        val result = charactersRepository.getPage(page = 1)
 
         assertEquals(
-            CharactersPageResult.Failure(CharacterRequestFailure.Network),
+            CharactersPageResult.Failure(reason = CharacterRequestFailure.Network),
             result,
         )
     }
@@ -291,10 +294,10 @@ class RemoteCharactersRepositoryTest {
             ).body("""{"error":"Service unavailable"}""").build(),
         )
 
-        val result = charactersRepository.getPage(1)
+        val result = charactersRepository.getPage(page = 1)
 
         assertEquals(
-            CharactersPageResult.Failure(CharacterRequestFailure.Service),
+            CharactersPageResult.Failure(reason = CharacterRequestFailure.Service),
             result,
         )
     }
@@ -304,25 +307,25 @@ class RemoteCharactersRepositoryTest {
         val body = requireNotNull(javaClass.getResource("/characters-page.json")).readText()
         server.enqueue(MockResponse.Builder().body(body).build())
 
-        val result = charactersRepository.getPage(1)
+        val result = charactersRepository.getPage(page = 1)
 
         assertEquals(
             CharactersPageResult.Success(
-                CharacterPage(
-                    listOf(
+                page = CharacterPage(
+                    characters = listOf(
                         CharacterSummary(
-                            1,
-                            "Rick Sanchez",
-                            "Human",
-                            CharacterStatus.Alive,
-                            "https://images.example/rick.jpeg",
+                            id = 1,
+                            name = "Rick Sanchez",
+                            species = "Human",
+                            status = CharacterStatus.Alive,
+                            imageUrl = "https://images.example/rick.jpeg",
                         ),
                         CharacterSummary(
-                            2,
-                            "Morty Smith",
-                            "Human",
-                            CharacterStatus.Unknown,
-                            null,
+                            id = 2,
+                            name = "Morty Smith",
+                            species = "Human",
+                            status = CharacterStatus.Unknown,
+                            imageUrl = null,
                         ),
                     ),
                     totalCount = 57,

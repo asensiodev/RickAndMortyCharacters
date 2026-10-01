@@ -40,7 +40,7 @@ Selection appends Detail for the supplied ID. Guard rapid repeated selection fro
 
 Keep Home's NavEntry and ViewModel while detail is on top; retain its saveable lazy-grid position. Returning does not issue another first-page request solely because Home recomposes. Popping Details clears its entry-owned ViewModel; reopening loads the newly selected ID through its own request owner. Features only receive callbacks/IDs and never depend on each other.
 
-The saveable-key plumbing is part of using Navigation 3 correctly. C10 still owns the deliberate process-death/recreation acceptance journey. Search/status/keyboard retention is tested in C07/C08 when implemented, rather than simulated now.
+The saveable-key plumbing is part of using Navigation 3 correctly. Search/status/keyboard retention is tested in C07/C08 when implemented, rather than simulated now.
 
 References checked during preparation: [Navigation 3 basics](https://developer.android.com/guide/navigation/navigation-3/basics), [entry saveable state and ViewModel ownership](https://developer.android.com/guide/navigation/navigation-3/save-state), [Hilt integration](https://developer.android.com/training/dependency-injection/hilt-jetpack#navigation). No dependency version or runtime behavior is claimed verified until implementation checks run.
 
@@ -121,4 +121,4 @@ Additional HTTP/image/state cases verify the existing implementations at those s
 - At the same scrolled position, the portrait bounds remain `[204,183][876,855]`; disabling motion changes the image layer's top from 171 to 156 while Back remains `[79,216][132,269]`. This confirms that scroll translation is removed and the fixed control is unaffected. The final episode row stays reachable. The original animator setting and 1080×2424 display are restored, and native system Back returns to Home.
 - Strict OpenSpec validation, local documentation links and `git diff --check` are checked after updating this record. The wrapper is finished after validation, removing only its own temporary logs.
 
-There is no measured performance claim or screenshot regression baseline. Android Studio preview rendering has not been manually exercised. Search/filter/pagination and process-death acceptance retain their later increments. Human acceptance completed on 2026-10-01. All C05 tasks are checked; the change is archived and its accepted requirements are merged into the capability specifications.
+There is no measured performance claim or screenshot regression baseline. Android Studio preview rendering has not been manually exercised. Search/filter/pagination retain their later increments. Human acceptance completed on 2026-10-01. All C05 tasks are checked; the change is archived and its accepted requirements are merged into the capability specifications.

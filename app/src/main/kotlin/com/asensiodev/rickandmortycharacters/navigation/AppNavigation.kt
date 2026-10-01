@@ -27,14 +27,14 @@ internal fun AppNavigation(imageLoader: ImageLoader, modifier: Modifier = Modifi
         ),
         entryProvider = entryProvider {
             entry<AppDestination.Home> {
-                HomeRoute(imageLoader, onCharacterSelected = { id ->
+                HomeRoute(imageLoader = imageLoader, onCharacterSelected = { id ->
                     if (backStack.lastOrNull() == AppDestination.Home) {
-                        backStack.add(AppDestination.Detail(id))
+                        backStack.add(AppDestination.Detail(characterId = id))
                     }
                 })
             }
             entry<AppDestination.Detail> { destination ->
-                DetailsRoute(destination.characterId, imageLoader, onBack = {
+                DetailsRoute(characterId = destination.characterId, imageLoader = imageLoader, onBack = {
                     if (backStack.lastOrNull() == destination) onBack()
                 })
             }

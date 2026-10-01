@@ -11,7 +11,7 @@ Catalogue and detail requests currently use an API client without a disk cache. 
 - Keep page, name, status and detail-ID responses distinct, with ordinary repository failures on network-dependent requests that fail.
 - Verify the contract through repository calls, MockWebServer and temporary disk storage; recheck real endpoint headers during implementation.
 
-No offline catalogue, Room database, custom JSON store, forced cache-only requests, custom stale-on-error policy, connectivity monitor or UI controls are added. State restoration remains C10.
+No offline catalogue, Room database, custom JSON store, forced cache-only requests, custom stale-on-error policy, connectivity monitor or UI controls are added.
 
 ## Capabilities
 

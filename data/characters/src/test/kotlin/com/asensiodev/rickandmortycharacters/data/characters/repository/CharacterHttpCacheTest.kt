@@ -28,7 +28,7 @@ class CharacterHttpCacheTest {
 
     private val server = MockWebServer()
     private val cacheDirectory by lazy { temporaryFolder.newFolder("cache") }
-    private val client by lazy { createCharactersHttpClient(cacheDirectory) }
+    private val client by lazy { createCharactersHttpClient(cacheDirectory = cacheDirectory) }
     private val reopenedClients = mutableListOf<OkHttpClient>()
 
     private lateinit var charactersRepository: CharactersRepository
@@ -36,7 +36,7 @@ class CharacterHttpCacheTest {
     @Before
     fun setUp() {
         server.start()
-        charactersRepository = RemoteCharactersRepository(createCharactersApi(server.url("/api/"), client))
+        charactersRepository = RemoteCharactersRepository(api = createCharactersApi(baseUrl = server.url("/api/"), client = client))
     }
 
     @After
@@ -47,11 +47,11 @@ class CharacterHttpCacheTest {
 
     @Test
     fun `GIVEN a fresh page WHEN the same page is requested twice THEN it reuses the stored response`() = runTest {
-        server.enqueue(pageResponse(20))
-        server.enqueue(pageResponse(99))
+        server.enqueue(pageResponse(total = 20))
+        server.enqueue(pageResponse(total = 99))
 
-        val first = charactersRepository.getPage(1)
-        val repeated = charactersRepository.getPage(1)
+        val first = charactersRepository.getPage(page = 1)
+        val repeated = charactersRepository.getPage(page = 1)
 
         assertEquals(20, (first as CharactersPageResult.Success).page.totalCount)
         assertEquals(first, repeated)
@@ -62,14 +62,14 @@ class CharacterHttpCacheTest {
 
     @Test
     fun `GIVEN a fresh detail WHEN its cache is reopened THEN it reuses the persisted response`() = runTest {
-        server.enqueue(detailResponse(361))
-        server.enqueue(detailResponse(361, "Changed Rick"))
-        val first = charactersRepository.getDetails(361)
-        closeClient(client)
-        val reopened = createCharactersHttpClient(cacheDirectory).also(reopenedClients::add)
-        charactersRepository = RemoteCharactersRepository(createCharactersApi(server.url("/api/"), reopened))
+        server.enqueue(detailResponse(id = 361))
+        server.enqueue(detailResponse(id = 361, name = "Changed Rick"))
+        val first = charactersRepository.getDetails(characterId = 361)
+        closeClient(httpClient = client)
+        val reopened = createCharactersHttpClient(cacheDirectory = cacheDirectory).also(reopenedClients::add)
+        charactersRepository = RemoteCharactersRepository(api = createCharactersApi(baseUrl = server.url("/api/"), client = reopened))
 
-        val repeated = charactersRepository.getDetails(361)
+        val repeated = charactersRepository.getDetails(characterId = 361)
 
         assertEquals("Toxic Rick", (first as CharacterDetailsResult.Success).character.name)
         assertEquals(first, repeated)
@@ -78,11 +78,11 @@ class CharacterHttpCacheTest {
 
     @Test
     fun `GIVEN a fresh detail WHEN its ID is requested twice THEN it avoids another HTTP request`() = runTest {
-        server.enqueue(detailResponse(361))
-        server.enqueue(detailResponse(361, "Changed Rick"))
+        server.enqueue(detailResponse(id = 361))
+        server.enqueue(detailResponse(id = 361, name = "Changed Rick"))
 
-        val first = charactersRepository.getDetails(361)
-        val repeated = charactersRepository.getDetails(361)
+        val first = charactersRepository.getDetails(characterId = 361)
+        val repeated = charactersRepository.getDetails(characterId = 361)
 
         assertEquals(first, repeated)
         assertEquals("Toxic Rick", (repeated as CharacterDetailsResult.Success).character.name)
@@ -91,16 +91,16 @@ class CharacterHttpCacheTest {
 
     @Test
     fun `GIVEN a stale ETag WHEN validation returns 304 THEN it reuses the body with renewed freshness`() = runTest {
-        server.enqueue(pageResponse(20, "max-age=60", age = 120))
+        server.enqueue(pageResponse(total = 20, policy = "max-age=60", age = 120))
         server.enqueue(
             MockResponse.Builder().code(304).addHeader("ETag", "\"version-1\"")
                 .addHeader("Cache-Control", "max-age=3600").addHeader("Age", "0").build(),
         )
-        server.enqueue(pageResponse(99))
-        val first = charactersRepository.getPage(1)
+        server.enqueue(pageResponse(total = 99))
+        val first = charactersRepository.getPage(page = 1)
 
-        val validated = charactersRepository.getPage(1)
-        val repeated = charactersRepository.getPage(1)
+        val validated = charactersRepository.getPage(page = 1)
+        val repeated = charactersRepository.getPage(page = 1)
 
         assertEquals(first, validated)
         assertEquals(first, repeated)
@@ -111,13 +111,13 @@ class CharacterHttpCacheTest {
 
     @Test
     fun `GIVEN a stale ETag WHEN validation returns changed content THEN it stores the replacement body`() = runTest {
-        server.enqueue(pageResponse(20, "max-age=60", age = 120))
-        server.enqueue(pageResponse(99, etag = "\"version-2\""))
-        server.enqueue(pageResponse(50))
-        charactersRepository.getPage(1)
+        server.enqueue(pageResponse(total = 20, policy = "max-age=60", age = 120))
+        server.enqueue(pageResponse(total = 99, etag = "\"version-2\""))
+        server.enqueue(pageResponse(total = 50))
+        charactersRepository.getPage(page = 1)
 
-        val changed = charactersRepository.getPage(1)
-        val repeated = charactersRepository.getPage(1)
+        val changed = charactersRepository.getPage(page = 1)
+        val repeated = charactersRepository.getPage(page = 1)
 
         assertEquals(99, (changed as CharactersPageResult.Success).page.totalCount)
         assertEquals(changed, repeated)
@@ -128,11 +128,11 @@ class CharacterHttpCacheTest {
 
     @Test
     fun `GIVEN a stale response without a validator WHEN it is requested again THEN it fetches normally`() = runTest {
-        server.enqueue(pageResponse(20, "max-age=60", age = 120, etag = null))
-        server.enqueue(pageResponse(99))
-        charactersRepository.getPage(1)
+        server.enqueue(pageResponse(total = 20, policy = "max-age=60", age = 120, etag = null))
+        server.enqueue(pageResponse(total = 99))
+        charactersRepository.getPage(page = 1)
 
-        val result = charactersRepository.getPage(1)
+        val result = charactersRepository.getPage(page = 1)
 
         assertEquals(99, (result as CharactersPageResult.Success).page.totalCount)
         assertEquals(2, server.requestCount)
@@ -153,12 +153,12 @@ class CharacterHttpCacheTest {
             Triple(1, "Rick", CharacterStatus.Dead),
         )
         queries.forEachIndexed { index, (page, name, status) ->
-            server.enqueue(pageResponse(index + 20))
-            charactersRepository.getPage(page, name, status)
+            server.enqueue(pageResponse(total = index + 20))
+            charactersRepository.getPage(page = page, name = name, status = status)
         }
-        server.enqueue(pageResponse(99))
+        server.enqueue(pageResponse(total = 99))
 
-        val repeated = queries.map { (page, name, status) -> charactersRepository.getPage(page, name, status) }
+        val repeated = queries.map { (page, name, status) -> charactersRepository.getPage(page = page, name = name, status = status) }
 
         assertEquals(listOf(20, 21, 22, 23, 24, 25), repeated.map { (it as CharactersPageResult.Success).page.totalCount })
         assertEquals(6, server.requestCount)
@@ -172,17 +172,17 @@ class CharacterHttpCacheTest {
 
     @Test
     fun `GIVEN distinct detail IDs and a page WHEN each is repeated THEN their bodies remain separate`() = runTest {
-        server.enqueue(detailResponse(361))
-        server.enqueue(detailResponse(362, "Other Rick"))
-        server.enqueue(pageResponse(20))
-        charactersRepository.getDetails(361)
-        charactersRepository.getDetails(362)
-        charactersRepository.getPage(1)
-        server.enqueue(pageResponse(99))
+        server.enqueue(detailResponse(id = 361))
+        server.enqueue(detailResponse(id = 362, name = "Other Rick"))
+        server.enqueue(pageResponse(total = 20))
+        charactersRepository.getDetails(characterId = 361)
+        charactersRepository.getDetails(characterId = 362)
+        charactersRepository.getPage(page = 1)
+        server.enqueue(pageResponse(total = 99))
 
-        val first = charactersRepository.getDetails(361) as CharacterDetailsResult.Success
-        val second = charactersRepository.getDetails(362) as CharacterDetailsResult.Success
-        val page = charactersRepository.getPage(1) as CharactersPageResult.Success
+        val first = charactersRepository.getDetails(characterId = 361) as CharacterDetailsResult.Success
+        val second = charactersRepository.getDetails(characterId = 362) as CharacterDetailsResult.Success
+        val page = charactersRepository.getPage(page = 1) as CharactersPageResult.Success
 
         assertEquals(361, first.character.id)
         assertEquals("Toxic Rick", first.character.name)
@@ -197,18 +197,18 @@ class CharacterHttpCacheTest {
         val englishClient = client.newBuilder().addInterceptor { chain ->
             chain.proceed(chain.request().newBuilder().header("Accept-Language", "en").build())
         }.build()
-        charactersRepository = RemoteCharactersRepository(createCharactersApi(server.url("/api/"), englishClient))
-        server.enqueue(pageResponse(20, vary = "Accept-Language"))
-        charactersRepository.getPage(1)
+        charactersRepository = RemoteCharactersRepository(api = createCharactersApi(baseUrl = server.url("/api/"), client = englishClient))
+        server.enqueue(pageResponse(total = 20, vary = "Accept-Language"))
+        charactersRepository.getPage(page = 1)
         val spanishClient = client.newBuilder().addInterceptor { chain ->
             chain.proceed(chain.request().newBuilder().header("Accept-Language", "es").build())
         }.build()
-        charactersRepository = RemoteCharactersRepository(createCharactersApi(server.url("/api/"), spanishClient))
-        server.enqueue(pageResponse(99, vary = "Accept-Language"))
-        server.enqueue(pageResponse(50))
+        charactersRepository = RemoteCharactersRepository(api = createCharactersApi(baseUrl = server.url("/api/"), client = spanishClient))
+        server.enqueue(pageResponse(total = 99, vary = "Accept-Language"))
+        server.enqueue(pageResponse(total = 50))
 
-        val changed = charactersRepository.getPage(1)
-        val repeated = charactersRepository.getPage(1)
+        val changed = charactersRepository.getPage(page = 1)
+        val repeated = charactersRepository.getPage(page = 1)
 
         assertEquals(99, (changed as CharactersPageResult.Success).page.totalCount)
         assertEquals(changed, repeated)
@@ -219,11 +219,11 @@ class CharacterHttpCacheTest {
 
     @Test
     fun `GIVEN no-store WHEN a request is repeated THEN it fetches a new response`() = runTest {
-        server.enqueue(pageResponse(20, "no-store"))
-        server.enqueue(pageResponse(99, "no-store"))
-        charactersRepository.getPage(1)
+        server.enqueue(pageResponse(total = 20, policy = "no-store"))
+        server.enqueue(pageResponse(total = 99, policy = "no-store"))
+        charactersRepository.getPage(page = 1)
 
-        val result = charactersRepository.getPage(1)
+        val result = charactersRepository.getPage(page = 1)
 
         assertEquals(99, (result as CharactersPageResult.Success).page.totalCount)
         assertEquals(2, server.requestCount)
@@ -231,11 +231,11 @@ class CharacterHttpCacheTest {
 
     @Test
     fun `GIVEN no-cache with an ETag WHEN a request is repeated THEN it validates before reuse`() = runTest {
-        server.enqueue(pageResponse(20, "no-cache, max-age=3600"))
+        server.enqueue(pageResponse(total = 20, policy = "no-cache, max-age=3600"))
         server.enqueue(MockResponse.Builder().code(304).addHeader("Cache-Control", "no-cache").build())
-        val first = charactersRepository.getPage(1)
+        val first = charactersRepository.getPage(page = 1)
 
-        val result = charactersRepository.getPage(1)
+        val result = charactersRepository.getPage(page = 1)
 
         assertEquals(first, result)
         assertEquals(2, server.requestCount)
@@ -245,35 +245,35 @@ class CharacterHttpCacheTest {
 
     @Test
     fun `GIVEN an expired entry WHEN transport fails THEN it returns a network failure instead of stale content`() = runTest {
-        server.enqueue(pageResponse(20, "max-age=60", age = 120))
-        charactersRepository.getPage(1)
+        server.enqueue(pageResponse(total = 20, policy = "max-age=60", age = 120))
+        charactersRepository.getPage(page = 1)
         server.close()
 
-        val result = charactersRepository.getPage(1)
+        val result = charactersRepository.getPage(page = 1)
 
-        assertEquals(CharactersPageResult.Failure(CharacterRequestFailure.Network), result)
+        assertEquals(CharactersPageResult.Failure(reason = CharacterRequestFailure.Network), result)
     }
 
     @Test
     fun `GIVEN an expired entry WHEN validation returns 503 THEN it returns a service failure instead of stale content`() = runTest {
-        server.enqueue(pageResponse(20, "max-age=60", age = 120))
+        server.enqueue(pageResponse(total = 20, policy = "max-age=60", age = 120))
         server.enqueue(MockResponse.Builder().code(503).body("unavailable").build())
-        charactersRepository.getPage(1)
+        charactersRepository.getPage(page = 1)
 
-        val result = charactersRepository.getPage(1)
+        val result = charactersRepository.getPage(page = 1)
 
-        assertEquals(CharactersPageResult.Failure(CharacterRequestFailure.Service), result)
+        assertEquals(CharactersPageResult.Failure(reason = CharacterRequestFailure.Service), result)
         assertEquals(2, server.requestCount)
     }
 
     @Test
     fun `GIVEN cache storage was cleared WHEN a page is requested THEN it uses the normal network path`() = runTest {
-        server.enqueue(pageResponse(20))
-        charactersRepository.getPage(1)
+        server.enqueue(pageResponse(total = 20))
+        charactersRepository.getPage(page = 1)
         client.cache?.evictAll()
-        server.enqueue(pageResponse(99))
+        server.enqueue(pageResponse(total = 99))
 
-        val result = charactersRepository.getPage(1)
+        val result = charactersRepository.getPage(page = 1)
 
         assertEquals(99, (result as CharactersPageResult.Success).page.totalCount)
         assertEquals(2, server.requestCount)
