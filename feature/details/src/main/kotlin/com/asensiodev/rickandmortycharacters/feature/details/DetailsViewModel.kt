@@ -16,8 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-internal class DetailsViewModel @Inject constructor(private val repository: CharactersRepository) :
-    ViewModel() {
+internal class DetailsViewModel @Inject constructor(private val repository: CharactersRepository) : ViewModel() {
     private val mutableState = MutableStateFlow<DetailsUiState>(DetailsUiState.Loading)
     val state: StateFlow<DetailsUiState> = mutableState.asStateFlow()
 

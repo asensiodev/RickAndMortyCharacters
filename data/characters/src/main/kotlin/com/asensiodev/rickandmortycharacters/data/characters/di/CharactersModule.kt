@@ -20,9 +20,7 @@ private const val API_BASE_URL = "https://rickandmortyapi.com/api/"
 abstract class CharactersBindings {
     @Binds
     @Singleton
-    internal abstract fun repository(
-        implementation: RemoteCharactersRepository,
-    ): CharactersRepository
+    internal abstract fun repository(implementation: RemoteCharactersRepository): CharactersRepository
 }
 
 @Module
@@ -34,6 +32,5 @@ internal object CharactersNetworkModule {
 
     @Provides
     @Singleton
-    fun api(client: OkHttpClient): CharactersApi =
-        createCharactersApi(API_BASE_URL.toHttpUrl(), client)
+    fun api(client: OkHttpClient): CharactersApi = createCharactersApi(API_BASE_URL.toHttpUrl(), client)
 }

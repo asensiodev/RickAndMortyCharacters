@@ -21,10 +21,9 @@ internal interface CharactersApi {
     suspend fun getDetails(@Path("id") characterId: Int): Response<CharacterDetailsDto>
 }
 
-internal fun createCharactersApi(baseUrl: HttpUrl, client: OkHttpClient): CharactersApi =
-    Retrofit.Builder()
-        .baseUrl(baseUrl)
-        .client(client)
-        .addConverterFactory(CharactersJson.asConverterFactory("application/json".toMediaType()))
-        .build()
-        .create(CharactersApi::class.java)
+internal fun createCharactersApi(baseUrl: HttpUrl, client: OkHttpClient): CharactersApi = Retrofit.Builder()
+    .baseUrl(baseUrl)
+    .client(client)
+    .addConverterFactory(CharactersJson.asConverterFactory("application/json".toMediaType()))
+    .build()
+    .create(CharactersApi::class.java)

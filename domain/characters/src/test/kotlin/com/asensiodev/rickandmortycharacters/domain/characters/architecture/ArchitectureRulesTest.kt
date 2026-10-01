@@ -1,7 +1,6 @@
 package com.asensiodev.rickandmortycharacters.domain.characters.architecture
 
 import com.lemonappdev.konsist.api.Konsist
-import com.lemonappdev.konsist.api.container.KoScope
 import com.lemonappdev.konsist.api.declaration.KoClassDeclaration
 import com.lemonappdev.konsist.api.verify.assertTrue
 import java.io.File
@@ -9,14 +8,10 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
 
 class ArchitectureRulesTest {
-    private lateinit var productionScope: KoScope
-
-    @Before
-    fun setUp() {
+    private val productionScope by lazy {
         val sourceRoots = checkNotNull(System.getProperty("architecture.sourceRoots"))
             .split(File.pathSeparator)
             .map(::File)
@@ -27,11 +22,11 @@ class ArchitectureRulesTest {
                     root.walkTopDown().any { it.isFile && it.extension == "kt" },
             )
         }
-        productionScope = Konsist.scopeFromExternalDirectories(sourceRoots.map { it.absolutePath })
+        Konsist.scopeFromExternalDirectories(sourceRoots.map { it.absolutePath })
     }
 
     @Test
-    fun `GIVEN data implementation WHEN checking visibility THEN declarations stay encapsulated`() {
+    fun `GIVEN data implementation classes WHEN their visibility is inspected THEN they remain internal or private`() {
         val declarations = productionScope.classesAndInterfacesAndObjects(
             includeNested = false,
             includeLocal = false,
@@ -50,14 +45,14 @@ class ArchitectureRulesTest {
     }
 
     @Test
-    fun `GIVEN ViewModels WHEN checking visibility THEN they remain internal`() {
+    fun `GIVEN feature ViewModels WHEN their visibility is inspected THEN they remain internal`() {
         val viewModels = featureViewModels()
 
         viewModels.assertTrue { it.hasInternalModifier }
     }
 
     @Test
-    fun `GIVEN screen state WHEN checking its contract THEN observation is explicitly read-only`() {
+    fun `GIVEN feature ViewModels WHEN their exposed flows are inspected THEN they expose only read-only state`() {
         val viewModels = featureViewModels()
 
         viewModels.forEach { viewModel ->
@@ -78,16 +73,15 @@ class ArchitectureRulesTest {
         }
     }
 
-    private fun featureViewModels(): List<KoClassDeclaration> =
-        listOf("home", "details").flatMap { feature ->
-            val viewModels = productionScope.classes(includeNested = false, includeLocal = false)
-                .filter {
-                    it.resideInPackage(
-                        "com.asensiodev.rickandmortycharacters.feature.$feature..",
-                    ) &&
-                        it.hasParentWithName("ViewModel")
-                }
-            assertTrue("Missing $feature ViewModel declarations", viewModels.isNotEmpty())
-            viewModels
-        }
+    private fun featureViewModels(): List<KoClassDeclaration> = listOf("home", "details").flatMap { feature ->
+        val viewModels = productionScope.classes(includeNested = false, includeLocal = false)
+            .filter {
+                it.resideInPackage(
+                    "com.asensiodev.rickandmortycharacters.feature.$feature..",
+                ) &&
+                    it.hasParentWithName("ViewModel")
+            }
+        assertTrue("Missing $feature ViewModel declarations", viewModels.isNotEmpty())
+        viewModels
+    }
 }

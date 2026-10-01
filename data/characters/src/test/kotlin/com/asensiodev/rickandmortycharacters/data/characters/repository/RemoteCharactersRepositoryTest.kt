@@ -27,13 +27,12 @@ import org.junit.Before
 import org.junit.Test
 
 class RemoteCharactersRepositoryTest {
-    private lateinit var server: MockWebServer
+    private val server = MockWebServer()
 
     private lateinit var charactersRepository: CharactersRepository
 
     @Before
     fun setUp() {
-        server = MockWebServer()
         server.start()
         val api = createCharactersApi(server.url("/api/"), OkHttpClient.Builder().build())
         charactersRepository = RemoteCharactersRepository(api)
@@ -45,7 +44,57 @@ class RemoteCharactersRepositoryTest {
     }
 
     @Test
-    fun `GIVEN pending request WHEN cancelled THEN cancellation propagates`() = runTest {
+    fun `GIVEN a recognized end response WHEN the next page is requested THEN it confirms the catalogue has ended`() = runTest {
+        server.enqueue(
+            MockResponse.Builder().code(
+                404,
+            ).body("""{"error":"There is nothing here"}""").build(),
+        )
+
+        val result = charactersRepository.getPage(2)
+
+        assertEquals(CharactersPageResult.EndOfCatalogue, result)
+        assertEquals("2", server.takeRequest().url.queryParameter("page"))
+    }
+
+    @Test
+    fun `GIVEN unexpected append errors WHEN the next page is requested THEN they remain request failures`() = runTest {
+        val bodies = listOf("{broken", "{}", "", """{"error":"Unavailable"}""")
+        for (body in bodies) {
+            server.enqueue(MockResponse.Builder().code(404).body(body).build())
+
+            val result = charactersRepository.getPage(2)
+
+            assertEquals(CharactersPageResult.Failure(CharacterRequestFailure.Service), result)
+        }
+        server.enqueue(
+            MockResponse.Builder().code(
+                503,
+            ).body("""{"error":"There is nothing here"}""").build(),
+        )
+
+        assertEquals(
+            CharactersPageResult.Failure(CharacterRequestFailure.Service),
+            charactersRepository.getPage(2),
+        )
+    }
+
+    @Test
+    fun `GIVEN the final page WHEN it is requested THEN it preserves the API total and has no next page`() = runTest {
+        val body = requireNotNull(javaClass.getResource("/characters-page.json")).readText()
+            .replace("\"https://rickandmortyapi.com/api/character?page=2\"", "null")
+        server.enqueue(MockResponse.Builder().body(body).build())
+
+        val result = charactersRepository.getPage(3) as CharactersPageResult.Success
+
+        assertEquals(57, result.page.totalCount)
+        assertEquals(null, result.page.nextPage)
+        assertEquals(2, result.page.characters.size)
+        assertEquals("3", server.takeRequest().url.queryParameter("page"))
+    }
+
+    @Test
+    fun `GIVEN a pending page request WHEN it is cancelled THEN cancellation propagates to the caller`() = runTest {
         server.enqueue(MockResponse.Builder().onResponseStart(SocketEffect.Stall).build())
         val pending = async { charactersRepository.getPage(1) }
         val request = withContext(Dispatchers.IO) { server.takeRequest(5, TimeUnit.SECONDS) }
@@ -61,8 +110,10 @@ class RemoteCharactersRepositoryTest {
     }
 
     @Test
-    fun `GIVEN missing fields WHEN requesting page THEN invalid response`() = runTest {
-        server.enqueue(MockResponse.Builder().body("""{"info":{"count":1,"next":null}}""").build())
+    fun `GIVEN missing required fields WHEN a page is requested THEN it reports an invalid response`() = runTest {
+        server.enqueue(
+            MockResponse.Builder().body("""{"info":{"count":1,"next":null}}""").build(),
+        )
 
         val result = charactersRepository.getPage(1)
 
@@ -73,7 +124,7 @@ class RemoteCharactersRepositoryTest {
     }
 
     @Test
-    fun `GIVEN absent body WHEN requesting page THEN invalid response`() = runTest {
+    fun `GIVEN an absent response body WHEN a page is requested THEN it reports an invalid response`() = runTest {
         server.enqueue(MockResponse.Builder().code(204).build())
 
         val result = charactersRepository.getPage(1)
@@ -85,9 +136,11 @@ class RemoteCharactersRepositoryTest {
     }
 
     @Test
-    fun `GIVEN unfiltered not found WHEN requesting page THEN service failure`() = runTest {
+    fun `GIVEN an unfiltered first page returning 404 WHEN it is requested THEN it reports a service failure`() = runTest {
         server.enqueue(
-            MockResponse.Builder().code(404).body("""{"error":"There is nothing here"}""").build(),
+            MockResponse.Builder().code(
+                404,
+            ).body("""{"error":"There is nothing here"}""").build(),
         )
 
         val result = charactersRepository.getPage(1)
@@ -99,7 +152,7 @@ class RemoteCharactersRepositoryTest {
     }
 
     @Test
-    fun `GIVEN empty response WHEN requesting page THEN empty page`() = runTest {
+    fun `GIVEN an empty API result WHEN a page is requested THEN it returns an empty character page`() = runTest {
         server.enqueue(
             MockResponse.Builder().body(
                 """{"info":{"count":0,"next":null},"results":[]}""",
@@ -115,7 +168,7 @@ class RemoteCharactersRepositoryTest {
     }
 
     @Test
-    fun `GIVEN malformed response WHEN requesting page THEN invalid response`() = runTest {
+    fun `GIVEN malformed JSON WHEN a page is requested THEN it reports an invalid response`() = runTest {
         server.enqueue(MockResponse.Builder().body("{broken").build())
 
         val result = charactersRepository.getPage(1)
@@ -127,7 +180,7 @@ class RemoteCharactersRepositoryTest {
     }
 
     @Test
-    fun `GIVEN connection failure WHEN requesting page THEN network failure`() = runTest {
+    fun `GIVEN a connection failure WHEN a page is requested THEN it reports a network failure`() = runTest {
         server.close()
 
         val result = charactersRepository.getPage(1)
@@ -139,9 +192,11 @@ class RemoteCharactersRepositoryTest {
     }
 
     @Test
-    fun `GIVEN server failure WHEN requesting page THEN service failure`() = runTest {
+    fun `GIVEN a server error WHEN a page is requested THEN it reports a service failure`() = runTest {
         server.enqueue(
-            MockResponse.Builder().code(503).body("""{"error":"Service unavailable"}""").build(),
+            MockResponse.Builder().code(
+                503,
+            ).body("""{"error":"Service unavailable"}""").build(),
         )
 
         val result = charactersRepository.getPage(1)
@@ -153,7 +208,7 @@ class RemoteCharactersRepositoryTest {
     }
 
     @Test
-    fun `GIVEN valid response WHEN requesting page THEN summaries and metadata`() = runTest {
+    fun `GIVEN a valid response WHEN a page is requested THEN it maps character summaries and pagination metadata`() = runTest {
         val body = requireNotNull(javaClass.getResource("/characters-page.json")).readText()
         server.enqueue(MockResponse.Builder().body(body).build())
 
@@ -170,7 +225,13 @@ class RemoteCharactersRepositoryTest {
                             CharacterStatus.Alive,
                             "https://images.example/rick.jpeg",
                         ),
-                        CharacterSummary(2, "Morty Smith", "Human", CharacterStatus.Unknown, null),
+                        CharacterSummary(
+                            2,
+                            "Morty Smith",
+                            "Human",
+                            CharacterStatus.Unknown,
+                            null,
+                        ),
                     ),
                     totalCount = 57,
                     nextPage = 2,

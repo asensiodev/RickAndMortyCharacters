@@ -7,6 +7,7 @@ import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasScrollToIndexAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -17,9 +18,9 @@ import androidx.test.espresso.Espresso
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.asensiodev.rickandmortycharacters.domain.characters.repository.CharacterDetailsResult
 import com.asensiodev.rickandmortycharacters.domain.characters.repository.CharacterRequestFailure
+import dagger.hilt.android.testing.BindValue
 import dagger.hilt.android.testing.HiltAndroidRule
 import dagger.hilt.android.testing.HiltAndroidTest
-import javax.inject.Inject
 import kotlinx.coroutines.CompletableDeferred
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -37,8 +38,9 @@ class NavigationJourneyTest {
     @get:Rule(order = 1)
     val compose = createEmptyComposeRule()
 
-    @Inject
-    lateinit var fakeCharactersRepository: JourneyCharactersRepository
+    @BindValue
+    @JvmField
+    val fakeCharactersRepository = JourneyCharactersRepository()
 
     private lateinit var mainActivityScenario: ActivityScenario<MainActivity>
 
@@ -54,7 +56,37 @@ class NavigationJourneyTest {
     }
 
     @Test
-    fun GIVEN_scrolledHome_WHEN_detailAndBack_THEN_selectedIdAndScrollRetained() {
+    fun GIVEN_multiple_pages_WHEN_returning_from_later_detail_THEN_it_retains_count_cards_and_scroll() {
+        mainActivityScenario.close()
+        fakeCharactersRepository.pageCount = 2
+        fakeCharactersRepository.pageRequests = 0
+        fakeCharactersRepository.requestedPages.clear()
+        mainActivityScenario = ActivityScenario.launch(MainActivity::class.java)
+        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Character 19"))
+        compose.waitUntil {
+            compose.onAllNodesWithText(
+                "Loaded 40 of 40 characters",
+            ).fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Character 40"))
+        val priorBounds = compose.onNodeWithText("Character 40").fetchSemanticsNode().boundsInRoot
+
+        compose.onNodeWithText("Character 40").performClick()
+        compose.onNodeWithText("ENTITY PROFILE #40").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Back").performClick()
+
+        compose.onNodeWithText("Loaded 40 of 40 characters").assertIsDisplayed()
+        compose.onNodeWithText("Character 40").assertIsDisplayed()
+        assertEquals(
+            priorBounds,
+            compose.onNodeWithText("Character 40").fetchSemanticsNode().boundsInRoot,
+        )
+        assertEquals(listOf(1, 2), fakeCharactersRepository.requestedPages)
+        assertEquals(listOf(40), fakeCharactersRepository.requestedIds)
+    }
+
+    @Test
+    fun GIVEN_scrolled_Home_WHEN_detail_is_opened_and_closed_THEN_it_uses_the_selected_ID_and_retains_scroll() {
         compose.onNode(hasScrollToIndexAction()).performScrollToNode(hasText("Character 15"))
         val priorBounds = compose.onNodeWithText("Character 15").fetchSemanticsNode().boundsInRoot
 
@@ -72,7 +104,7 @@ class NavigationJourneyTest {
     }
 
     @Test
-    fun GIVEN_content_WHEN_systemBackAndReopen_THEN_newDetailOwnerAndSameHome() {
+    fun GIVEN_loaded_Home_WHEN_detail_is_reopened_after_back_THEN_it_creates_a_new_detail_owner_and_keeps_Home() {
         compose.onNodeWithText("Character 1").performClick()
         compose.onNodeWithText("ENTITY PROFILE #1").assertIsDisplayed()
 
@@ -88,7 +120,7 @@ class NavigationJourneyTest {
     }
 
     @Test
-    fun GIVEN_pendingDetail_WHEN_back_THEN_requestCancelledAndHomeRetained() {
+    fun GIVEN_pending_detail_WHEN_back_is_pressed_THEN_it_cancels_the_request_and_retains_Home() {
         compose.runOnIdle { fakeCharactersRepository.detailGate = CompletableDeferred() }
         compose.onNodeWithText("Character 1").performClick()
         compose.onNodeWithContentDescription("Loading character details").assertIsDisplayed()
@@ -101,7 +133,7 @@ class NavigationJourneyTest {
     }
 
     @Test
-    fun GIVEN_rapidSelection_WHEN_tappedTwice_THEN_onlyOneDetailEntry() {
+    fun GIVEN_a_character_WHEN_it_is_tapped_twice_quickly_THEN_it_opens_only_one_detail_entry() {
         compose.onNodeWithText("Character 1").performTouchInput {
             click()
             click()
@@ -116,7 +148,7 @@ class NavigationJourneyTest {
     }
 
     @Test
-    fun GIVEN_detailError_WHEN_retry_THEN_sameIdLoadingAndContent() {
+    fun GIVEN_a_detail_error_WHEN_retry_succeeds_THEN_it_shows_loading_and_content_for_the_same_ID() {
         compose.runOnIdle {
             fakeCharactersRepository.detailResult = CharacterDetailsResult.Failure(
                 CharacterRequestFailure.Network,
@@ -143,7 +175,7 @@ class NavigationJourneyTest {
     }
 
     @Test
-    fun GIVEN_missingDetail_WHEN_systemBack_THEN_homeWithoutAnotherRoute() {
+    fun GIVEN_missing_detail_WHEN_system_back_is_pressed_THEN_it_returns_to_Home_without_adding_a_route() {
         compose.runOnIdle {
             fakeCharactersRepository.detailResult = CharacterDetailsResult.NotFound
         }

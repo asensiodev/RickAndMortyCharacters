@@ -40,11 +40,7 @@ import com.asensiodev.rickandmortycharacters.core.designsystem.composables.Loadi
 import com.asensiodev.rickandmortycharacters.feature.details.R
 
 @Composable
-internal fun DetailsPortrait(
-    imageUrl: String?,
-    imageLoader: ImageLoader,
-    scrollState: ScrollState,
-) {
+internal fun DetailsPortrait(imageUrl: String?, imageLoader: ImageLoader, scrollState: ScrollState) {
     val context = LocalContext.current
     val sizeResolver = rememberConstraintsSizeResolver()
     val request = remember(imageUrl, context, sizeResolver) {

@@ -6,5 +6,7 @@ naming:
     ignoreAnnotated: ['Composable', 'Test']
 
 style:
+  MaxLineLength:
+    excludes: ['**/src/test/**', '**/src/androidTest/**']
   MagicNumber:
     ignoreAnnotated: ['Composable', 'Preview']

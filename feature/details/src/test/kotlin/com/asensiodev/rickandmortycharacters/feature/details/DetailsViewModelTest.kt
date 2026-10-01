@@ -4,6 +4,7 @@ package com.asensiodev.rickandmortycharacters.feature.details
 
 import androidx.lifecycle.ViewModelStore
 import app.cash.turbine.test
+import com.asensiodev.rickandmortycharacters.core.testing.MainDispatcherRule
 import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterDetails
 import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterStatus
 import com.asensiodev.rickandmortycharacters.domain.characters.repository.CharacterDetailsResult
@@ -27,18 +28,17 @@ import org.junit.Test
 class DetailsViewModelTest {
     @get:Rule
     val mainDispatcher = MainDispatcherRule()
-    private lateinit var fakeCharactersRepository: FakeCharactersRepository
+    private val fakeCharactersRepository = FakeCharactersRepository()
 
     private lateinit var detailsViewModel: DetailsViewModel
 
     @Before
     fun setUp() {
-        fakeCharactersRepository = FakeCharactersRepository()
         detailsViewModel = DetailsViewModel(fakeCharactersRepository)
     }
 
     @Test
-    fun `GIVEN failed detail WHEN retrying THEN same ID progresses to content`() =
+    fun `GIVEN a failed detail request WHEN retry succeeds THEN it loads content for the same character`() =
         runTest(mainDispatcher.dispatcher) {
             fakeCharactersRepository.result = CharacterDetailsResult.Failure(
                 CharacterRequestFailure.Network,
@@ -64,7 +64,7 @@ class DetailsViewModelTest {
         }
 
     @Test
-    fun `GIVEN pending retry WHEN actions repeat THEN one same ID request`() =
+    fun `GIVEN a pending retry WHEN retry is requested again THEN it keeps one request for the same character`() =
         runTest(mainDispatcher.dispatcher) {
             fakeCharactersRepository.result = CharacterDetailsResult.Failure(
                 CharacterRequestFailure.Service,
@@ -88,7 +88,7 @@ class DetailsViewModelTest {
         }
 
     @Test
-    fun `GIVEN pending detail WHEN owner clears THEN cancel without user error`() =
+    fun `GIVEN a pending detail request WHEN the ViewModel is cleared THEN it cancels without reporting an error`() =
         runTest(mainDispatcher.dispatcher) {
             fakeCharactersRepository.pending = CompletableDeferred()
             val store = ViewModelStore()
@@ -104,7 +104,7 @@ class DetailsViewModelTest {
         }
 
     @Test
-    fun `GIVEN loaded detail WHEN load and observation repeat THEN no reload`() =
+    fun `GIVEN loaded detail WHEN loading and observation repeat THEN it reuses content without another request`() =
         runTest(mainDispatcher.dispatcher) {
             detailsViewModel.process(DetailsAction.Load(361))
             advanceUntilIdle()
@@ -120,7 +120,7 @@ class DetailsViewModelTest {
         }
 
     @Test
-    fun `GIVEN missing character WHEN retry submitted THEN not found without request`() =
+    fun `GIVEN a missing character WHEN retry is requested THEN it keeps not found without another request`() =
         runTest(mainDispatcher.dispatcher) {
             fakeCharactersRepository.result = CharacterDetailsResult.NotFound
 
@@ -134,7 +134,7 @@ class DetailsViewModelTest {
         }
 
     @Test
-    fun `GIVEN pending initial detail WHEN initialization repeats THEN one request`() =
+    fun `GIVEN a pending initial request WHEN initialization repeats THEN it keeps only one detail request`() =
         runTest(mainDispatcher.dispatcher) {
             val gate = CompletableDeferred<Unit>()
             fakeCharactersRepository.pending = gate
@@ -151,7 +151,7 @@ class DetailsViewModelTest {
         }
 
     @Test
-    fun `GIVEN character WHEN loading THEN immutable content for its ID`() =
+    fun `GIVEN a character WHEN detail loading succeeds THEN it exposes content for the requested ID`() =
         runTest(mainDispatcher.dispatcher) {
             detailsViewModel.state.test {
                 assertEquals(DetailsUiState.Loading, awaitItem())
@@ -181,8 +181,7 @@ private class FakeCharactersRepository : CharactersRepository {
     var pending: CompletableDeferred<Unit>? = null
     var cancelled = false
 
-    override suspend fun getPage(page: Int): CharactersPageResult =
-        CharactersPageResult.Failure(CharacterRequestFailure.Service)
+    override suspend fun getPage(page: Int): CharactersPageResult = CharactersPageResult.Failure(CharacterRequestFailure.Service)
 
     override suspend fun getDetails(characterId: Int): CharacterDetailsResult {
         requestedIds += characterId

@@ -14,6 +14,8 @@ dependencyResolutionManagement {
     }
 }
 
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
+
 rootProject.name = "RickAndMortyCharacters"
 
 include(":app")
@@ -22,3 +24,4 @@ include(":feature:details")
 include(":domain:characters")
 include(":data:characters")
 include(":core:designsystem")
+include(":core:testing")

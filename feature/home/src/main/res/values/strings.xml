@@ -10,4 +10,7 @@
     <string name="retry">Retry</string>
     <string name="catalogue_empty">No characters available.</string>
     <string name="catalogue_empty_description">The character catalogue is currently empty.</string>
+    <string name="catalogue_append_loading">Loading more characters</string>
+    <string name="catalogue_append_error">Couldn\'t load more characters</string>
+    <string name="catalogue_loaded_count">Loaded %1$d of %2$d characters</string>
 </resources>

@@ -8,6 +8,7 @@ import com.asensiodev.rickandmortycharacters.core.designsystem.theme.StatusColor
 internal object CharacterCardTokens {
     const val PORTRAIT_ASPECT_RATIO = 1f
     const val NAME_MIN_LINES = 2
+    const val METADATA_MAX_LINES = 1
     const val EXPANDED_NAME_FONT_SCALE = 1.3f
     const val SKELETON_NAME_WIDTH_FRACTION = 0.85f
 

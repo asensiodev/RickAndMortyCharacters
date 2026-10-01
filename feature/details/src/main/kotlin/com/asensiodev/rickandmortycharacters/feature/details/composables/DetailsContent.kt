@@ -209,9 +209,7 @@ private fun DetailsStatus(status: CharacterStatus) {
     showSystemUi = true,
 )
 @Composable
-private fun DetailsContentPreview(
-    @PreviewParameter(DetailsPreviewStates::class) state: DetailsUiState,
-) {
+private fun DetailsContentPreview(@PreviewParameter(DetailsPreviewStates::class) state: DetailsUiState) {
     val context = LocalContext.current
     val loader = remember(context) {
         ImageLoader.Builder(context).components {

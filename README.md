@@ -2,7 +2,7 @@
 
 An Android app for exploring Rick and Morty characters, searching by name, filtering by status and viewing character details.
 
-**Status:** Home loads the first remote character page and opens character details by ID. Both screens handle their applicable loading and error states; detail also handles missing characters. Back retains Home content and scroll. [C05](openspec/changes/archive/2026-10-01-character-detail-navigation/design.md) is accepted, locally validated on API 37 and archived. C01–C05 are accepted and archived; C05A architecture checks are accepted, locally validated and archived. Pagination, search/filter and HTTP response caching remain subsequent increments.
+**Status:** Home browses remote pages with Paging 3, contextual append Retry and a real loaded/total counter. Character detail opens by ID; Back retains loaded data and scroll. Both screens handle applicable loading/error states; detail also handles missing characters. C01–C05 and C05A are accepted and archived. [C06 pagination](openspec/changes/archive/2026-10-01-complete-catalogue-pagination/design.md) is accepted, locally validated on API 37 and archived. Search/filter and HTTP response caching remain subsequent increments.
 
 ## Planned experience
 
@@ -22,9 +22,9 @@ Selected Stitch mockups for the planned native app. See [UI/UX Definition](docs/
 
 ## Technical direction
 
-Home and details have separate feature modules. They share pure character-domain contracts, data access and a design system; the app composes navigation and dependencies. The six-module graph is defined in [ARCHITECTURE](docs/ARCHITECTURE.md).
+Home and details have separate feature modules. They share pure character-domain contracts, data access and a design system; the app composes navigation and dependencies. The six production modules and test-only `:core:testing` support module are shown in [ARCHITECTURE](docs/ARCHITECTURE.md).
 
-Presentation follows unidirectional data flow with ViewModel/StateFlow and explicit actions. ViewModels consume repository interfaces directly; use cases are introduced where business logic warrants them. Coil 3 is configured with a shared image loader and bounded memory/disk caches. Compose interaction tests cover implemented screen states and navigation journeys; screenshot checks remain later visual verification. Hilt creates entry-scoped Home and Details ViewModels through Navigation 3; Retrofit/OkHttp and kotlinx.serialization stay inside data. Repository tests use real HTTP fixtures through MockWebServer; ViewModel tests use fakes, coroutines-test and Turbine; Home/Details screen tests use Compose with controlled images; navigation tests run the production Activity with test-only Hilt repository replacement. ktlint, Detekt, Konsist, Android Lint and a GitHub Actions workflow are configured. The previously published Quality run passed; C05A's extended gate is verified locally and awaits a remote run. The foundation toolchain and setup are documented below; the remaining libraries and checks land in their corresponding changes.
+Presentation follows unidirectional data flow with ViewModel/StateFlow and explicit actions. ViewModels consume repository interfaces directly; use cases are introduced where business logic warrants them. Coil 3 is configured with a shared image loader and bounded memory/disk caches. Compose interaction tests cover implemented screen states and navigation journeys; screenshot checks remain later visual verification. Paging 3.5.1 owns page loading and retry through a Home-owned adapter, with one cached ViewModel generation and no duplicated item list. Hilt creates entry-scoped Home and Details ViewModels through Navigation 3; Retrofit/OkHttp and kotlinx.serialization stay inside data. Repository tests use real HTTP fixtures through MockWebServer; ViewModel tests use fakes, coroutines-test, Turbine and Paging snapshot helpers, with a shared JUnit 4 dispatcher rule from the test-only `:core:testing` module; Home/Details screen tests use Compose with controlled images; navigation tests run the production Activity with test-only Hilt repository replacement. ktlint, Detekt, Konsist, Android Lint and a GitHub Actions workflow are configured. The previously published Quality run passed; C05A's extended gate is verified locally and awaits a remote run. The foundation toolchain and setup are documented below; the remaining libraries and checks land in their corresponding changes.
 
 ## Development setup
 
@@ -40,7 +40,7 @@ Open this repository root in Android Studio and sync Gradle. The tracked daemon 
 | Java / JVM target | 17 |
 | Android compile / target / minimum SDK | 37.0 / 37 / 26 |
 
-Plugin/library versions and SDK levels live in [the version catalogue](gradle/libs.versions.toml). AGP provides Kotlin support in Android modules; the domain module applies Kotlin/JVM. Build output caching, parallel module tasks and parallel IDE tooling actions are enabled in `gradle.properties`; the daemon heap remains 2 GB. No build-time improvement has been measured.
+Plugin/library versions and SDK levels live in [the version catalogue](gradle/libs.versions.toml), accessed through `libs.*`. Local module dependencies use generated `projects.*` accessors, enabled in `settings.gradle.kts`; convention plugins are not required. AGP provides Kotlin support in Android modules; the domain module applies Kotlin/JVM. Build output caching, parallel module tasks and parallel IDE tooling actions are enabled in `gradle.properties`; the daemon heap remains 2 GB. No build-time improvement has been measured.
 
 With JDK 17 selected, run from the repository root:
 
@@ -55,9 +55,9 @@ adb install --no-streaming -r app/build/outputs/apk/debug/app-debug.apk
 adb shell am start -W -n com.asensiodev.rickandmortycharacters/.MainActivity
 ```
 
-The application opens the real Home grid using the shared dark Material 3 theme and requests the first unfiltered catalogue page. Selecting a card opens its detail through Navigation 3. See [C01 evidence](openspec/changes/archive/2026-09-30-android-foundation/design.md#assistance-and-validation-record) for the foundation checks and [C03 evidence](openspec/changes/archive/2026-10-01-character-card-images/design.md#validation-record) for implementation and verification.
+The application opens the real Home grid using the shared dark Material 3 theme and loads further unfiltered catalogue pages as the grid approaches the loaded end. The floating counter uses presented items and the API total; append failures retain cards with footer Retry. Selecting a card opens its detail through Navigation 3. See [C01 evidence](openspec/changes/archive/2026-09-30-android-foundation/design.md#assistance-and-validation-record) for the foundation checks and [C03 evidence](openspec/changes/archive/2026-10-01-character-card-images/design.md#validation-record) for implementation and verification.
 
-Components have standard Android Studio previews. Home includes previews for Loading, Content, Empty and Error at ordinary and narrow/large-text sizes. Details includes ordinary-size Content, Loading, Error and NotFound previews. Previews live beside their rendering composables, with controlled images and private fixtures.
+Components have standard Android Studio previews. Home includes previews for Loading, Content, Empty, Error and append progress/error, including ordinary and narrow/large-text sizes. Details includes ordinary-size Content, Loading, Error and NotFound previews. Previews live beside their rendering composables, with controlled images and private fixtures.
 
 ## Quality checks
 
@@ -69,11 +69,11 @@ Components have standard Android Studio previews. Home includes previews for Loa
 
 `qualityCheck` runs ktlint 1.8.0, Detekt 2.0.0-alpha.6, Konsist 0.17.3 architecture checks, Android debug lint, JVM test tasks and debug assembly. Detekt uses its isolated CLI for source analysis without type resolution; the pinned alpha is build tooling only. Tool versions live in the catalogue. See [C02](openspec/changes/archive/2026-09-30-shared-quality-checks/design.md) for compatibility and executed validation.
 
-`konsistCheck` verifies internal data implementation types, internal feature ViewModels and explicitly read-only state, with private mutable flow owners. It scans main sources from the six modules through test-only dependencies in domain; it also runs through `qualityCheck` and the module's `check`. See [C05A evidence](openspec/changes/archive/2026-10-01-konsist-architecture-checks/design.md#implementation-and-validation-record).
+`konsistCheck` verifies internal data implementation types, internal feature ViewModels and explicitly read-only state, with private mutable flow owners. It scans main sources from the six production modules through test-only dependencies in domain; it also runs through `qualityCheck` and the module's `check`. See [C05A evidence](openspec/changes/archive/2026-10-01-konsist-architecture-checks/design.md#implementation-and-validation-record).
 
 Install the hook explicitly once per clone. The pre-commit runs `ktlintCheck detekt` against working-tree source, including unstaged Kotlin changes. It never formats, stages or stashes files. Installation is repeatable and refuses to replace custom hook configuration. Full tests/build/lint remain in `qualityCheck` and CI.
 
-Current coverage includes 34 JVM tests (17 repository + 14 ViewModel + 3 architecture), validated locally in C05A, and 20 instrumented tests (7 Home + 7 Details + 6 production navigation journeys), previously verified on API 37 in C05. Run the screen/journey suites with a connected API 37 emulator/device:
+C06 validates 43 JVM tests (20 repository + 15 ViewModel + 5 PagingSource + 3 architecture). Following the test-readability and card-layout reviews, all 28 instrumented tests pass together on API 37 (14 Home + 7 Details + 7 production navigation journeys). The full local quality gate and release assembly pass; execution evidence lives in the C06 design record. Run the screen/journey suites with a connected API 37 emulator/device:
 
 ```sh
 ./gradlew :feature:home:connectedDebugAndroidTest :feature:details:connectedDebugAndroidTest :app:connectedDebugAndroidTest

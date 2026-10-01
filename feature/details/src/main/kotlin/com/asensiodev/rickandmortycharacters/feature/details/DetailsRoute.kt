@@ -11,12 +11,7 @@ import com.asensiodev.rickandmortycharacters.feature.details.composables.Details
 import com.asensiodev.rickandmortycharacters.feature.details.model.DetailsAction
 
 @Composable
-fun DetailsRoute(
-    characterId: Int,
-    imageLoader: ImageLoader,
-    onBack: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun DetailsRoute(characterId: Int, imageLoader: ImageLoader, onBack: () -> Unit, modifier: Modifier = Modifier) {
     DetailsRoute(hiltViewModel<DetailsViewModel>(), characterId, imageLoader, onBack, modifier)
 }
 

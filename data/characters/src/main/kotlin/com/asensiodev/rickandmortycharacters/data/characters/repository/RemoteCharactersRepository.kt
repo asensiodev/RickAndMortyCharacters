@@ -43,8 +43,12 @@ internal class RemoteCharactersRepository @Inject constructor(private val api: C
     override suspend fun getPage(page: Int): CharactersPageResult = try {
         val response = api.getPage(page)
         if (!response.isSuccessful) {
-            response.errorBody()?.close()
-            CharactersPageResult.Failure(CharacterRequestFailure.Service)
+            if (page > 1 && isCatalogueEnd(response)) {
+                CharactersPageResult.EndOfCatalogue
+            } else {
+                response.errorBody()?.close()
+                CharactersPageResult.Failure(CharacterRequestFailure.Service)
+            }
         } else {
             val body = response.body()
             if (body == null) {
@@ -81,16 +85,15 @@ internal class RemoteCharactersRepository @Inject constructor(private val api: C
     }
 }
 
-private fun isMissingCharacter(response: Response<*>): Boolean =
-    response.errorBody()?.use { errorBody ->
-        if (response.code() != HTTP_NOT_FOUND) return@use false
-        try {
-            CharactersJson.decodeFromString<CharacterErrorDto>(errorBody.string()).error ==
-                "Character not found"
-        } catch (_: SerializationException) {
-            false
-        }
-    } ?: false
+private fun isMissingCharacter(response: Response<*>): Boolean = response.errorBody()?.use { errorBody ->
+    if (response.code() != HTTP_NOT_FOUND) return@use false
+    try {
+        CharactersJson.decodeFromString<CharacterErrorDto>(errorBody.string()).error ==
+            "Character not found"
+    } catch (_: SerializationException) {
+        false
+    }
+} ?: false
 
 private fun CharacterDetailsDto.toResult(requestedId: Int): CharacterDetailsResult {
     if (id != requestedId || id <= 0 || name.isBlank()) {
@@ -115,3 +118,13 @@ private fun CharacterDetailsDto.toResult(requestedId: Int): CharacterDetailsResu
         ),
     )
 }
+
+private fun isCatalogueEnd(response: Response<*>): Boolean = response.errorBody()?.use { errorBody ->
+    if (response.code() != HTTP_NOT_FOUND) return@use false
+    try {
+        CharactersJson.decodeFromString<CharacterErrorDto>(errorBody.string()).error ==
+            "There is nothing here"
+    } catch (_: SerializationException) {
+        false
+    }
+} ?: false

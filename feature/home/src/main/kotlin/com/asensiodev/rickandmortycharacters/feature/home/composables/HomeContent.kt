@@ -5,40 +5,54 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
+import androidx.compose.ui.unit.Dp
 import coil3.ColorImage
 import coil3.ImageLoader
 import coil3.intercept.Interceptor
@@ -48,6 +62,7 @@ import com.asensiodev.rickandmortycharacters.core.designsystem.theme.Spacing
 import com.asensiodev.rickandmortycharacters.feature.home.R
 import com.asensiodev.rickandmortycharacters.feature.home.model.CharacterCardUiModel
 import com.asensiodev.rickandmortycharacters.feature.home.model.CharacterStatusUi
+import com.asensiodev.rickandmortycharacters.feature.home.model.HomeAppendState
 import com.asensiodev.rickandmortycharacters.feature.home.model.HomeUiState
 import kotlinx.collections.immutable.persistentListOf
 
@@ -56,6 +71,7 @@ private const val PHONE_PREVIEW_HEIGHT_DP = 891
 private const val NARROW_PREVIEW_WIDTH_DP = 320
 private const val HOME_PREVIEW_FONT_SCALE = 2f
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun HomeContent(
     state: HomeUiState,
@@ -63,12 +79,25 @@ fun HomeContent(
     onRetry: () -> Unit,
     onCharacterSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    cardContent: @Composable (Int, CharacterCardUiModel) -> Unit = { _, character ->
+        CharacterCard(character, imageLoader, onCharacterSelected)
+    },
 ) {
     BoxWithConstraints(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier
+            .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .safeDrawingPadding(),
     ) {
+        var counterHeightPx by rememberSaveable { mutableIntStateOf(0) }
+        val content = state as? HomeUiState.Content
+        val showCounter = content != null && content.characters.isNotEmpty() &&
+            content.totalCount != null && !WindowInsets.isImeVisible
+        val bottomPadding = if (showCounter) {
+            with(LocalDensity.current) { counterHeightPx.toDp() } + Spacing.large * 2
+        } else {
+            Spacing.large
+        }
         val columns = if (
             maxWidth < HomeLayoutTokens.twoColumnMinWidth ||
             LocalDensity.current.fontScale > HomeLayoutTokens.EXPANDED_TEXT_FONT_SCALE
@@ -77,38 +106,94 @@ fun HomeContent(
         } else {
             HomeLayoutTokens.ORDINARY_COLUMNS
         }
-        val feedbackModifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
-            .heightIn(min = maxHeight).padding(Spacing.extraLarge)
-        when (state) {
-            is HomeUiState.Content -> HomeGrid(columns) {
-                items(state.characters, key = {
-                    it.id
-                }, contentType = { "character" }) { character ->
-                    CharacterCard(character, imageLoader, onCharacterSelected)
-                }
-            }
-
-            HomeUiState.Loading -> HomeGrid(columns) {
-                items(HomeLayoutTokens.SKELETON_COUNT, contentType = { "skeleton" }) {
-                    CharacterCardSkeleton()
-                }
-            }
-
-            HomeUiState.Error -> HomeFeedback(
-                title = stringResource(R.string.catalogue_error),
-                description = stringResource(R.string.catalogue_error_description),
-                icon = R.drawable.ic_error,
-                modifier = feedbackModifier,
-            ) {
-                HomeRetryButton(onRetry)
-            }
-
-            HomeUiState.Empty -> HomeFeedback(
-                title = stringResource(R.string.catalogue_empty),
-                description = stringResource(R.string.catalogue_empty_description),
-                icon = R.drawable.ic_travel_explore,
-                modifier = feedbackModifier,
+        val feedbackModifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+            .heightIn(min = maxHeight)
+            .padding(Spacing.extraLarge)
+        HomeResults(state, columns, bottomPadding, feedbackModifier, onRetry, cardContent)
+        if (showCounter) {
+            HomeLoadedCounter(
+                loadedCount = content.characters.size,
+                totalCount = content.totalCount,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(Spacing.large)
+                    .widthIn(max = maxWidth - Spacing.large * 2)
+                    .onSizeChanged { counterHeightPx = it.height },
             )
+        }
+    }
+}
+
+@Composable
+private fun HomeResults(
+    state: HomeUiState,
+    columns: Int,
+    bottomPadding: Dp,
+    feedbackModifier: Modifier,
+    onRetry: () -> Unit,
+    cardContent: @Composable (Int, CharacterCardUiModel) -> Unit,
+) {
+    when (state) {
+        is HomeUiState.Content -> HomeCharacterGrid(
+            state,
+            columns,
+            bottomPadding,
+            onRetry,
+            cardContent,
+        )
+
+        HomeUiState.Loading -> HomeGrid(columns) {
+            items(HomeLayoutTokens.SKELETON_COUNT, contentType = { "skeleton" }) {
+                CharacterCardSkeleton()
+            }
+        }
+
+        HomeUiState.Error -> HomeFeedback(
+            title = stringResource(R.string.catalogue_error),
+            description = stringResource(R.string.catalogue_error_description),
+            icon = R.drawable.ic_error,
+            modifier = feedbackModifier,
+        ) {
+            HomeRetryButton(onRetry)
+        }
+
+        HomeUiState.Empty -> HomeFeedback(
+            title = stringResource(R.string.catalogue_empty),
+            description = stringResource(R.string.catalogue_empty_description),
+            icon = R.drawable.ic_travel_explore,
+            modifier = feedbackModifier,
+        )
+    }
+}
+
+@Composable
+private fun HomeCharacterGrid(
+    state: HomeUiState.Content,
+    columns: Int,
+    bottomPadding: Dp,
+    onRetry: () -> Unit,
+    cardContent: @Composable (Int, CharacterCardUiModel) -> Unit,
+) {
+    HomeGrid(columns, bottomPadding = bottomPadding) {
+        itemsIndexed(
+            state.characters,
+            key = { _, character ->
+                character.id
+            },
+            contentType = { _, _ -> "character" },
+        ) { index, character ->
+            cardContent(index, character)
+        }
+        if (state.append != HomeAppendState.Idle) {
+            item(
+                key = "pagination",
+                span = { GridItemSpan(maxLineSpan) },
+                contentType = "pagination",
+            ) {
+                HomeAppendFooter(state.append, onRetry)
+            }
         }
     }
 }
@@ -117,12 +202,18 @@ fun HomeContent(
 private fun HomeGrid(
     columns: Int,
     modifier: Modifier = Modifier,
+    bottomPadding: Dp = Spacing.large,
     content: LazyGridScope.() -> Unit,
 ) {
     LazyVerticalGrid(
         columns = GridCells.Fixed(columns),
         modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(Spacing.large),
+        contentPadding = PaddingValues(
+            start = Spacing.large,
+            top = Spacing.large,
+            end = Spacing.large,
+            bottom = bottomPadding,
+        ),
         horizontalArrangement = Arrangement.spacedBy(Spacing.large),
         verticalArrangement = Arrangement.spacedBy(Spacing.large),
         content = content,
@@ -168,6 +259,40 @@ private fun HomeFeedback(
             textAlign = TextAlign.Center,
         )
         action()
+    }
+}
+
+@Composable
+private fun HomeAppendFooter(state: HomeAppendState, onRetry: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = Spacing.large),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(Spacing.medium),
+    ) {
+        when (state) {
+            HomeAppendState.Loading -> {
+                val description = stringResource(R.string.catalogue_append_loading)
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(HomeLayoutTokens.paginationProgressSize)
+                        .semantics { contentDescription = description },
+                )
+            }
+
+            HomeAppendState.Error -> {
+                Text(
+                    stringResource(R.string.catalogue_append_error),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                )
+                HomeRetryButton(onRetry)
+            }
+
+            HomeAppendState.Idle -> Unit
+        }
     }
 }
 
@@ -218,26 +343,30 @@ private fun HomeContentPreview(@PreviewParameter(HomePreviewStates::class) state
 }
 
 private class HomePreviewStates : PreviewParameterProvider<HomeUiState> {
-    override val values = sequenceOf(
-        HomeUiState.Loading,
-        HomeUiState.Content(
-            persistentListOf(
-                CharacterCardUiModel(
-                    1,
-                    "Rick Sanchez",
-                    "Human",
-                    CharacterStatusUi.Alive,
-                    "preview://rick",
-                ),
-                CharacterCardUiModel(
-                    196,
-                    "Krombopulos Michael",
-                    "Alien",
-                    CharacterStatusUi.Dead,
-                    null,
-                ),
+    private val content = HomeUiState.Content(
+        persistentListOf(
+            CharacterCardUiModel(
+                1,
+                "Rick Sanchez",
+                "Human",
+                CharacterStatusUi.Alive,
+                "preview://rick",
+            ),
+            CharacterCardUiModel(
+                196,
+                "Krombopulos Michael",
+                "Alien",
+                CharacterStatusUi.Dead,
+                null,
             ),
         ),
+        totalCount = 57,
+    )
+    override val values = sequenceOf(
+        HomeUiState.Loading,
+        content,
+        content.copy(append = HomeAppendState.Loading),
+        content.copy(append = HomeAppendState.Error),
         HomeUiState.Empty,
         HomeUiState.Error,
     )

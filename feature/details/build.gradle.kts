@@ -35,6 +35,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.kotlinx.coroutines.android)
+    testImplementation(projects.core.testing)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
@@ -45,8 +46,8 @@ dependencies {
     androidTestImplementation(libs.androidx.test.espresso)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
-    implementation(project(":domain:characters"))
-    implementation(project(":core:designsystem"))
+    implementation(projects.domain.characters)
+    implementation(projects.core.designsystem)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui.tooling.preview)

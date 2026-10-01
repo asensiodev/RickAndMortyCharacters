@@ -33,8 +33,8 @@
 
 ## Verification and Git
 
-- Use uppercase `GIVEN / WHEN / THEN` in test names: backticks with spaces for JVM tests; underscores for instrumented tests while minimum API is below 30. Separate setup, action and assertions with blank lines.
-- For class-based tests, use a type-specific `lateinit var` name such as `homeViewModel`, separated from mocks/fakes by a blank line and initialized after them. Test composables directly without a wrapper object.
+- Write test names as readable sentences with uppercase `GIVEN / WHEN / THEN`: state the condition, an action with a verb, and the observable outcome with a verb. Use backticks/spaces for JVM tests and underscores between words for instrumented tests while minimum API is below 30. Separate setup, action and assertions with blank lines.
+- Keep framework rules above dependencies. Group dependency/mock/fake fields without blank separator lines; initialize them as `val` (lazily when framework context is required). Reserve `lateinit var` exclusively for the subject under test, named by its type (for example `homeViewModel`), after one blank line and initialized after its dependencies. Test composables and source rules directly without inventing a subject wrapper.
 - Test repository and ViewModel behavior through their contracts, using controlled responses/scheduling. Compose tests cover implemented screens with controlled images; add geometry screenshots only when their increment is selected.
 - Run affected checks first, then the documented completion gate. Report executed results and remaining manual checks; do not infer coverage from empty test tasks or generated code.
 - Preserve unrelated changes. Commit only on explicit request; push requires separate explicit authorization and is never implied by commit approval.

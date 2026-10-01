@@ -35,5 +35,5 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.mockwebserver)
 
-    implementation(project(":domain:characters"))
+    implementation(projects.domain.characters)
 }

@@ -1,6 +1,6 @@
 # Architecture and technical decisions
 
-Status: the six-module foundation and shared checks are implemented. C03 adds Home card components, generic theme/loading primitives and the app-owned Coil loader, accepted and archived. C04 implements domain/data contracts, Hilt and repository-backed Home first-page states, accepted and archived. C05 implements character detail and typed Navigation 3 wiring, accepted, locally validated and archived. C05A architecture checks are accepted, locally validated and archived. Further browsing capabilities remain planned; the production entry point opens Home.
+Status: the six-production-module foundation and shared checks are implemented. C03 adds Home card components, generic theme/loading primitives and the app-owned Coil loader, accepted and archived. C04 implements domain/data contracts, Hilt and repository-backed Home first-page states, accepted and archived. C05 implements character detail and typed Navigation 3 wiring, accepted, locally validated and archived. C05A architecture checks are accepted, locally validated and archived. C06 implements pagination, append recovery and the loaded/total counter, locally validated, accepted and archived. Search/filter and HTTP caching remain planned; the production entry point opens Home.
 
 ## Module boundaries
 
@@ -12,6 +12,7 @@ Status: the six-module foundation and shared checks are implemented. C03 adds Ho
 | `:domain:characters` | Character/query/page models and repository contract | Pure Kotlin models and interfaces |
 | `:data:characters` | Repository implementation, API client and cache, DTO mapping and error translation | Dependency bindings; implementation details remain internal |
 | `:core:designsystem` | Theme, design tokens and generic UI primitives | Reusable Compose foundations |
+| `:core:testing` | Kotlin/JVM support consumed only by tests | Shared JUnit 4 `MainDispatcherRule` |
 
 ```mermaid
 flowchart TD
@@ -24,13 +25,15 @@ flowchart TD
     Home --> UI
     Details --> UI
     Data --> Domain
+    Home -. testImplementation .-> Testing[":core:testing"]
+    Details -. testImplementation .-> Testing
 ```
 
-Arrows represent project dependencies. Neither feature imports the other feature or the data implementation. Domain does not depend on Android, Compose, Retrofit or Paging. DTOs and transport errors do not cross the repository interface. The design system has no character-domain dependency: `CharacterCard` belongs in home and detail-specific components in details, while theme and generic primitives belong in the design system.
+Solid arrows represent production project dependencies; dotted arrows represent test dependencies. There are six production modules and one test-support module. Neither feature imports the other feature or the data implementation. Domain does not depend on Android, Compose, Retrofit or Paging. DTOs and transport errors do not cross the repository interface. The design system has no character-domain dependency: `CharacterCard` belongs in home and detail-specific components in details, while theme and generic primitives belong in the design system.
 
 This split provides compiler-enforced separation between presentation, contracts and remote implementation, plus a controlled UI foundation. Its costs are additional Gradle configuration and public APIs to maintain. Build-time improvements will not be claimed without measurements. A single module would reduce configuration but would enforce these boundaries only by convention.
 
-The initial graph does not require a separate network module: there is one remote data owner. Extract shared networking or test utilities when a second consumer creates a concrete need. No automatic `api/impl` split is applied to every module. C01 uses direct module build files and a version catalogue. Convention plugins can be extracted when shared build policy becomes substantial enough to justify a separate build-logic module.
+The initial graph does not require a separate network module: there is one remote data owner. Extract shared networking or test utilities when a second consumer creates a concrete need. Home and Details now share `MainDispatcherRule` through `:core:testing`, a small Kotlin/JVM support module consumed only via `testImplementation`. It exports the JUnit/coroutines-test types used by its public rule, remains outside the runtime graph and has no Android or product dependencies. No automatic `api/impl` split is applied to every module. Direct module build files use generated `projects.*` accessors for local module dependencies and the `libs.*` version catalogue for external dependencies. `settings.gradle.kts` enables `TYPESAFE_PROJECT_ACCESSORS`; this works independently of convention plugins. Convention plugins can be extracted when shared build policy becomes substantial enough to justify a separate build-logic module.
 
 ## Decision: separate presentation features, shared data
 
@@ -55,7 +58,7 @@ Group existing files by responsibility within their module:
 
 | Owner | Packages |
 |---|---|
-| Home and Details | `composables` for rendering and its layout/card tokens; `model` for immutable UI models, state and actions. Private IDE previews and their fixtures live with their rendering composables. Route and ViewModel remain at the feature root |
+| Home and Details | `composables` for rendering and its layout/card tokens; `model` for immutable UI models, state and actions. Private IDE previews and their fixtures live with their rendering composables. Home adds `paging` for its internal repository adapter. Route and ViewModel remain at the feature root |
 | Character domain | `model` for character/page values; `repository` for the interface and its result/failure contract |
 | Character data | `remote` for API/DTOs; `repository` for the implementation; `di` for bindings |
 | Design system | `theme` for colours, typography, shapes, spacing and theme composition; `composables` for generic UI primitives |
@@ -78,7 +81,9 @@ Screens render immutable state and emit explicit actions. ViewModels coordinate 
 
 Durable loading/content/error outcomes are represented in state. A card click can invoke a navigation callback; navigation does not require a global event bus. Search, filter and load-state changes never navigate. Query changes cancel or supersede previous work, and cancellation must not be converted into a user error.
 
-If Paging 3 is selected, its page generation and load state have one owner. The screen may consume a control `UiState` alongside a paginated flow; it must not maintain a competing list of copied items. A presentation-side PagingSource can adapt the pure repository page contract without exposing Paging types from domain. The concrete contract will be reviewed before implementation. The pure page result also carries the active query total mapped from API `info.count`. Keep that metadata tied to the same query generation as the items; obsolete results must not update the counter. Derive the loaded count from real items available in that generation, without counting placeholders or maintaining a second item list. The counter needs no separate API call; reset it with query changes.
+C06 uses Paging 3.5.1. `HomeViewModel` owns one Pager, mapped to card models and cached in its lifetime; `CharactersPagingSource` adapts the pure repository contract inside Home. Paging owns items, request coordination and loading/retry states. The ViewModel exposes only the API total in read-only `HomePagingState`; it has no second accumulated list or refresh/append jobs. `HomeRoute` collects `LazyPagingItems`, references its item snapshot in a render projection and performs indexed access during lazy card rendering to supply prefetch hints. Stable keys use snapshot IDs without accessing every Paging index.
+
+Page size and initial load size are 20, prefetch distance is 5, placeholders are disabled and loaded pages are retained for the bounded catalogue. `nextPage` drives forward traversal; there is no refresh gesture. The counter uses real presented items and the first-page API total. Confirmed append end preserves that total; errors retain the grid with footer Retry. Home owns measured overlay clearance and hides the counter while the IME is visible. Query generation/reset belongs to C07/C08 and is not implemented yet. See [C06 evidence](../openspec/changes/archive/2026-10-01-complete-catalogue-pagination/design.md).
 
 ## Implemented detail and navigation
 
@@ -108,7 +113,7 @@ On 2026-09-30, three public GET probes returned 404 with different contextual me
 
 Sources: [empty query](https://rickandmortyapi.com/api/character/?name=zz_no_match_ux_review&page=1), [missing detail](https://rickandmortyapi.com/api/character/999999999), [out-of-range page](https://rickandmortyapi.com/api/character/?page=999999999). These probes characterize specific responses, not every possible 404.
 
-Data mapping must consider the endpoint, requested page and recognized API response; status code alone is insufficient. An unrecognized 404, transport failure, 5xx or malformed response remains an appropriate request error, not evidence of an empty catalogue. Additional-page errors expose footer Retry; only a confirmed list-end outcome stops pagination. Encode these distinctions in repository fixtures so transport details do not leak into screen decisions.
+Data mapping must consider the endpoint, requested page and recognized API response; status code alone is insufficient. An unrecognized 404, transport failure, 5xx or malformed response remains an appropriate request error, not evidence of an empty catalogue. Additional-page errors expose footer Retry; only a confirmed list-end outcome stops pagination. C06 implements `CharactersPageResult.EndOfCatalogue` for a recognized additional-page 404, distinct from an empty first-page result or failure. Encode these distinctions in repository fixtures so transport details do not leak into screen decisions.
 
 ## Connectivity awareness — Should
 

@@ -14,7 +14,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.components.SingletonComponent
 import dagger.hilt.testing.TestInstallIn
-import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 
@@ -22,16 +21,14 @@ import kotlinx.coroutines.CompletableDeferred
 @TestInstallIn(components = [SingletonComponent::class], replaces = [CharactersBindings::class])
 object JourneyCharactersModule {
     @Provides
-    @Singleton
-    fun fixture(): JourneyCharactersRepository = JourneyCharactersRepository()
-
-    @Provides
     fun repository(fixture: JourneyCharactersRepository): CharactersRepository = fixture
 }
 
 class JourneyCharactersRepository : CharactersRepository {
     val requestedIds = mutableListOf<Int>()
     var pageRequests = 0
+    val requestedPages = mutableListOf<Int>()
+    var pageCount = 1
     var detailResult: CharacterDetailsResult? = null
     var detailGate: CompletableDeferred<Unit>? = null
 
@@ -40,13 +37,14 @@ class JourneyCharactersRepository : CharactersRepository {
 
     override suspend fun getPage(page: Int): CharactersPageResult {
         pageRequests++
+        requestedPages += page
         return CharactersPageResult.Success(
             CharacterPage(
-                (1..20).map {
+                ((page - 1) * 20 + 1..page * 20).map {
                     CharacterSummary(it, "Character $it", "Human", CharacterStatus.Alive, null)
                 },
-                20,
-                null,
+                pageCount * 20,
+                if (page < pageCount) page + 1 else null,
             ),
         )
     }

@@ -9,6 +9,10 @@ trim_trailing_whitespace = true
 
 [*.{kt,kts}]
 ktlint_code_style = android_studio
+max_line_length = 120
 ktlint_function_naming_ignore_when_annotated_with = Composable,Test
 ij_kotlin_allow_trailing_comma = true
 ij_kotlin_allow_trailing_comma_on_call_site = true
+
+[**/src/{test,androidTest}/**/*.kt]
+max_line_length = 140

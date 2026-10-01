@@ -26,7 +26,6 @@ import kotlinx.coroutines.CompletableDeferred
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -36,12 +35,10 @@ class DetailsContentTest {
     @get:Rule
     val compose = createComposeRule()
     private val portraitGate = CompletableDeferred<Unit>()
-    private lateinit var imageLoader: ImageLoader
 
-    @Before
-    fun setUp() {
+    private val imageLoader by lazy {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
-        imageLoader = ImageLoader.Builder(context).components {
+        ImageLoader.Builder(context).components {
             add(
                 Interceptor { chain ->
                     when (chain.request.data) {
@@ -72,7 +69,7 @@ class DetailsContentTest {
     }
 
     @Test
-    fun GIVEN_character_WHEN_contentRenders_THEN_factsAndBack() {
+    fun GIVEN_a_character_WHEN_detail_is_rendered_THEN_it_shows_facts_and_allows_back_navigation() {
         var backRequests = 0
         compose.setContent {
             RickAndMortyTheme {
@@ -102,7 +99,7 @@ class DetailsContentTest {
     }
 
     @Test
-    fun GIVEN_error_WHEN_retryAndBack_THEN_contextualCallbacks() {
+    fun GIVEN_a_detail_error_WHEN_retry_and_back_are_tapped_THEN_it_calls_the_matching_callbacks() {
         var retries = 0
         var backRequests = 0
         compose.setContent {
@@ -119,7 +116,7 @@ class DetailsContentTest {
     }
 
     @Test
-    fun GIVEN_missingCharacter_WHEN_rendering_THEN_backWithoutRetry() {
+    fun GIVEN_a_missing_character_WHEN_detail_is_rendered_THEN_it_allows_back_without_offering_retry() {
         var backRequests = 0
         compose.setContent {
             RickAndMortyTheme {
@@ -134,7 +131,7 @@ class DetailsContentTest {
     }
 
     @Test
-    fun GIVEN_loading_WHEN_rendering_THEN_skeletonAndPersistentBack() {
+    fun GIVEN_loading_detail_WHEN_it_is_rendered_THEN_it_shows_a_skeleton_and_keeps_back_available() {
         var backRequests = 0
         compose.setContent {
             RickAndMortyTheme {
@@ -150,7 +147,7 @@ class DetailsContentTest {
     }
 
     @Test
-    fun GIVEN_pendingPortrait_WHEN_loaded_THEN_factsRemain() {
+    fun GIVEN_a_loading_portrait_WHEN_it_finishes_THEN_the_character_facts_remain_visible() {
         compose.setContent {
             RickAndMortyTheme {
                 DetailsContent(
@@ -182,7 +179,7 @@ class DetailsContentTest {
     }
 
     @Test
-    fun GIVEN_failedPortrait_WHEN_rendering_THEN_fallbackWithoutDataError() {
+    fun GIVEN_a_failed_portrait_WHEN_detail_is_rendered_THEN_it_shows_a_fallback_without_a_data_error() {
         compose.setContent {
             RickAndMortyTheme {
                 DetailsContent(
@@ -209,7 +206,7 @@ class DetailsContentTest {
     }
 
     @Test
-    fun GIVEN_optionalUnknownFacts_WHEN_rendering_THEN_noTypeAndOneEpisodeCount() {
+    fun GIVEN_unknown_facts_WHEN_detail_is_rendered_THEN_it_omits_empty_type_and_shows_one_episode_count() {
         val location = "Earth (Replacement Dimension), a long location name that wraps naturally"
         val character = toxicRick().copy(
             status = CharacterStatus.Unknown,

@@ -1,6 +1,6 @@
 # Implementation backlog
 
-Status: product/design preparation complete; OpenSpec initialized. C01 is accepted and archived; C02 is accepted, validated locally and in CI, and archived. C03 is accepted and archived; C04 is accepted, locally validated and archived; C05 is accepted, locally validated and archived; C05A is accepted, locally validated and archived; later identifiers remain queued tickets. Work advances after acceptance and human review. No time estimates are assigned.
+Status: product/design preparation complete; OpenSpec initialized. C01 is accepted and archived; C02 is accepted, validated locally and in CI, and archived. C03 is accepted and archived; C04 is accepted, locally validated and archived; C05 is accepted, locally validated and archived; C05A is accepted, locally validated and archived; C06 is accepted, locally validated and archived; later identifiers remain queued tickets. Work advances after acceptance and human review. No time estimates are assigned.
 
 Move each ticket into its OpenSpec change when it is prepared, then replace its detailed entry here with a link. OpenSpec owns that change's tasks and evidence from then on. Retire this temporary file when the remaining queue has been migrated; do not maintain two copies. Product priorities live in [PRD](PRD.md), screen design in [UI/UX Definition](UI_UX.md), technical decisions in [ARCHITECTURE](ARCHITECTURE.md), and the shared process in [DEVELOPMENT](DEVELOPMENT.md).
 
@@ -10,7 +10,7 @@ Before implementation, expand only the next ticket into a change with observable
 
 | Ticket | Reviewed result |
 |---|---|
-| P01 — Requirements and module contracts | Scope, priorities and the six-module graph selected in PRD/ARCHITECTURE; toolchain compatibility verified in C01 |
+| P01 — Requirements and module contracts | Scope, priorities and the six-production-module graph selected in PRD/ARCHITECTURE; toolchain compatibility verified in C01 |
 | P02 — Content screens | Selected Home/Detail references and API-backed fields reviewed in UI/UX Definition |
 | P03 — Home state variants | Visual references reviewed; loading/contrast adjustments recorded for Compose implementation |
 | P04 — Detail states and handoff | Content/loading/error references reviewed; Share-glyph omission recorded for implementation |
@@ -45,7 +45,7 @@ These statuses describe completed planning, not a working Android application. N
 
 ### C06 — Complete pagination
 
-Depends on accepted C04 and C05A; next change to prepare for scope and test-boundary review. Add subsequent pages, remote completion and append retry while retaining loaded cards. Prevent duplicate concurrent loads. Verify multipage fixtures, failing/retried pages and one state owner. Include the floating counter with the real loaded-item count and API total for the current query; test growth across pages, retention on append failure and end-of-list behavior without counting placeholders. Distinguish a confirmed API list-end response from retryable append errors, retaining loaded cards in both cases. Review the Paging adapter and load-state contract without leaking Paging into domain.
+**Accepted, locally validated and archived.** See the [proposal](../openspec/changes/archive/2026-10-01-complete-catalogue-pagination/proposal.md), [scenarios](../openspec/changes/archive/2026-10-01-complete-catalogue-pagination/specs/character-catalogue/spec.md), [design/test boundaries](../openspec/changes/archive/2026-10-01-complete-catalogue-pagination/design.md) and [tasks](../openspec/changes/archive/2026-10-01-complete-catalogue-pagination/tasks.md). OpenSpec owns the detailed C06 work. It follows accepted C04/C05/C05A; C07 is the next change to prepare.
 
 ### C07 — Search by name — Must
 

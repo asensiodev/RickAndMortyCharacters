@@ -83,6 +83,7 @@ tasks.register("qualityCheck") {
         detekt,
         konsistCheck,
         ":domain:characters:test",
+        ":core:testing:check",
         ":app:assembleDebug",
     )
     dependsOn(androidModules.map { "$it:lintDebug" })

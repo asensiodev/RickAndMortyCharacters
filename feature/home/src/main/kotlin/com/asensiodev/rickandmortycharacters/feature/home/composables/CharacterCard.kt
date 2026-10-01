@@ -5,7 +5,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -83,15 +82,18 @@ fun CharacterCard(
                     },
                     overflow = TextOverflow.Ellipsis,
                 )
-                FlowRow(
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalArrangement = Arrangement.spacedBy(Spacing.extraSmall),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.extraSmall),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         text = character.species,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.weight(1f),
+                        maxLines = CharacterCardTokens.METADATA_MAX_LINES,
+                        overflow = TextOverflow.Ellipsis,
                     )
                     StatusBadge(character.status)
                 }
@@ -131,6 +133,7 @@ private fun StatusBadge(status: CharacterStatusUi) {
             text = stringResource(label),
             color = foreground,
             style = MaterialTheme.typography.labelSmall,
+            maxLines = CharacterCardTokens.METADATA_MAX_LINES,
         )
     }
 }
@@ -198,7 +201,7 @@ private fun CharacterCardPreview() {
             CharacterCardUiModel(
                 196,
                 "Krombopulos Michael",
-                "Alien",
+                "Mythological Creature",
                 CharacterStatusUi.Dead,
                 "preview://portrait",
             ),
