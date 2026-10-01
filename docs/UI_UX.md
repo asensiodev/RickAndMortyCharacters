@@ -6,6 +6,8 @@ Status: the selected Stitch screenshots and HTML have been reviewed. The visual 
 
 ## Design sequence
 
+The user selected and accepted the blue portal gun with a green vial and broken blue ring for launcher identity and native startup. The background uses #121316. Platform resources provide adaptive masks and native startup without a timed screen. [Branding change and actual API 37 captures](../openspec/changes/add-portal-gun-branding/design.md) record implementation and device limitations.
+
 1. Use the selected content and state references in `docs/design/stitch/`.
 2. Apply the handoff decisions below when creating the shared theme and components.
 3. Implement the documented states in small reviewed changes; no further Stitch prompts are required.

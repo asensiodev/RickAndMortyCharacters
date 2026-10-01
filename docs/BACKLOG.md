@@ -90,3 +90,7 @@ Use a fake monitor to verify initial Unknown, disconnection/recovery, duplicate 
 **O03 — Additional visual verification:** use focused screenshot tests for card/skeleton geometry, portrait composition, theme and large text after identifying the visual behavior they protect. Compose interaction tests remain at real screen/flow boundaries; screenshots do not replace callbacks, retries or navigation assertions. Avoid assertions that merely restate implementation details. Mandatory architecture checks belong to C05A.
 
 Each optional change is selected and reviewed independently before C12.
+
+## Independently selected visual adjustment
+
+**Portal gun launcher and native splash:** implemented, locally validated on API 37 and accepted by the user on 2026-10-01; not yet archived. [Change and evidence](../openspec/changes/add-portal-gun-branding/proposal.md). This adjustment does not advance the C08/C09 queue.
