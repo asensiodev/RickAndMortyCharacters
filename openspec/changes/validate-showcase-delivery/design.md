@@ -160,3 +160,6 @@ The user selected automatic qualityCheck for pushes/PRs and manual-only API 37 i
 ### Parallel CI trial — 2026-10-02
 
 The user authorized removing the instrumented job dependency on quality, publishing the change and dispatching a manual trial. Both jobs can now start independently on workflow_dispatch; pushes/PRs still run only quality. Record measured job durations and actual emulator outcome before deciding whether to enable automatic instrumentation.
+
+
+Parallel trial [37036912920](https://github.com/asensiodev/RickAndMortyCharacters/actions/runs/37036912920), SHA 6c12a12: quality PASS in 3m34s; instrumentation FAILED in 6m19s before tests (all three XML suites report zero executed). App/Detail installation reported insufficient internal storage; Home installation reported unavailable package service. This is infrastructure failure, not failed app assertions. Configure the pinned emulator action supported disk-size input to 4G and repeat manually; automatic PR instrumentation remains conditional on a successful acceptable-duration run.
