@@ -121,3 +121,26 @@ The follow-up `./gradlew qualityCheck :app:assembleRelease -x detekt` also stopp
 The portrait-recovery work corrected the temporary blockers above. Managed workflow `213f6e6fe01414edab44c0bf8db0dd92` passed `qualityCheck :app:assembleRelease :app:installDebug` on the final combined sources. The full app suite passed seventeen instrumented tests; after the retry-timing adjustment, all eight image-recovery tests passed. The preceding C11 screen run passed 27 Home and seven Detail tests on API 37. The [portrait-recovery record](../recover-rate-limited-portraits/design.md) owns its timing regression and native image-cache conditions. Its final sixty-swipe run reached 260 loaded characters and all pending visible portraits completed without another gesture. These are behavior observations, not frame-rate measurements.
 
 The user explicitly accepted publication of the implemented C11/polish corrections and portrait recovery. Broader integrated-review items remain unchecked until their matrix is recorded; publication does not claim their completion or authorize archival/C12. OpenSpec validation and unchanged-source gate results are reused for publication.
+
+
+## Status badge shape refinement — 2026-10-02
+
+The user requested consistency between Home and Detail badges and clarified that the preference is Home's rounded-rectangle shape, not a new outline stroke. `DetailsStatus` now uses the same existing `MaterialTheme.shapes.small` token as Home's `StatusBadge`, replacing CircleShape. The shared status surface applies this shape to Alive, Dead and Unknown; colors, labels, padding and the existing Dead icon remain unchanged. Species presentation and Home filters are outside this focused correction. No new component, API, behavior test or dependency is needed for this one-token visual change.
+
+Explicitly rerecorded only the existing loaded Detail golden. Before: pill-shaped status Surface; after: rounded rectangle matching Home's shape token. Layoutlib visual review confirmed the new Alive shape and unchanged portrait/facts/Back hierarchy. Native phone review and final delivery screenshot refresh remain part of the user-owned C12 review; no manual checklist item is marked passed here.
+
+Managed incidental workflow `acdfc3bf48fc76cd4dce7793e1c550a6` launched `./gradlew :feature:details:recordPaparazziDebug --tests '*DetailsScreenshotTest*loaded*'`, question “¿Renderiza Detail la badge con la forma de Home?” — PASS in 5.385 s, one screenshot test executed; visual review confirmed the requested shape. No behavioral RED is fabricated for this visual token correction.
+
+
+“¿Pasan las nueve capturas, qualityCheck y release con la badge unificada?” — `./gradlew qualityCheck :app:assembleRelease` failed in 52.503 s at unrelated concurrent changes: Detekt MaxLineLength in `RateLimitedImageInterceptor.kt:23` and `CharactersHttpClient.kt:16`, and HTTP-cache tests (13 failures out of 14 in CharacterHttpCacheTest). Focused source diff showed temporary `C12NetworkProbe` Android logging added by another task; the cache XML reports a failed-result cast. Those source changes were preserved; this record does not diagnose the root cause of the cache failures or claim the global gate passed.
+
+“¿Pasan las nueve capturas tras cambiar únicamente la forma de la badge?” — `./gradlew :feature:home:verifyPaparazziDebug :feature:details:verifyPaparazziDebug --tests '*ScreenshotTest*'` passed in 4.539 s. Detail's four tests executed; Home reused matching UP-TO-DATE output. XML reports five Home and four Detail screenshots, zero failures/errors/skips. Only the loaded Detail golden was rerecorded for this correction.
+
+“¿Compila release con la forma de badge corregida?” — `./gradlew :app:assembleRelease` passed independently in 9.992 s (207 tasks: 18 executed, three FROM-CACHE, 186 UP-TO-DATE). This validates release assembly for the combined working tree, not native runtime acceptance. Strict C11 OpenSpec validation and whitespace checks pass. No commit/push, archival or manual acceptance was performed. Workflow finish removed only wrapper-owned logs; concurrent HTTP/keyboard work remains untouched.
+
+
+## Species badge consistency and README captures — 2026-10-02
+
+The user requested the same shape for Detail species (including Human) as its status badge. DetailsIdentity now uses MaterialTheme.shapes.small for the species Surface; text, icon, colors and padding remain unchanged. Managed incidental workflow `a39a8ed3b4ce10fd1a05afa51870b068` asked “¿Renderiza la etiqueta de especie con la misma forma que el estado y compila debug?” and passed `:feature:details:recordPaparazziDebug --tests '*DetailsScreenshotTest*loaded*' :app:assembleDebug` in 5.347 s. Only the loaded Detail golden was refreshed. Finish removed only wrapper-owned logs.
+
+The current debug was installed on emulator-5554 (API 37, 1080 × 2424). Native Home and Rick Sanchez Detail captures replaced docs/screenshots/home.png and detail.png. Visual review confirmed loaded portraits, readable metadata, and matching rounded-rectangle Alive/Human labels in Detail. README retains its existing image links. These captures are native app evidence, not release or human acceptance.

@@ -157,7 +157,7 @@ private fun DetailsIdentity(character: CharacterDetails) {
             verticalArrangement = Arrangement.spacedBy(Spacing.small),
         ) {
             DetailsStatus(status = character.status)
-            Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainer) {
+            Surface(shape = MaterialTheme.shapes.small, color = MaterialTheme.colorScheme.surfaceContainer) {
                 Row(
                     Modifier.padding(horizontal = Spacing.medium, vertical = Spacing.extraSmall),
                     horizontalArrangement = Arrangement.spacedBy(Spacing.extraSmall),
@@ -194,7 +194,7 @@ private fun DetailsStatus(status: CharacterStatus) {
         CharacterStatus.Dead -> R.string.status_dead
         CharacterStatus.Unknown -> R.string.unknown
     }
-    Surface(shape = CircleShape, color = background, contentColor = foreground) {
+    Surface(shape = MaterialTheme.shapes.small, color = background, contentColor = foreground) {
         Row(
             Modifier.padding(horizontal = Spacing.medium, vertical = Spacing.extraSmall),
             horizontalArrangement = Arrangement.spacedBy(Spacing.extraSmall),
