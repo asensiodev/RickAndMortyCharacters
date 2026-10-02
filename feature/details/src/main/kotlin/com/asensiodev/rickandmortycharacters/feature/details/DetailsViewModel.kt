@@ -37,7 +37,19 @@ internal class DetailsViewModel @Inject constructor(
                 val content = mutableState.value as? DetailsUiState.Content ?: return
                 if (content.episodes == EpisodesUiState.Error) {
                     mutableState.value = content.copy(episodes = EpisodesUiState.Loading)
-                    viewModelScope.launch { requestEpisodes(content = content) }
+                    viewModelScope.launch {
+                        val updatedContent = if (content.hasIncompleteEpisodeReferences()) {
+                            val result = repository.getDetails(characterId = content.character.id)
+                            if (result !is CharacterDetailsResult.Success) {
+                                mutableState.value = content.copy(episodes = EpisodesUiState.Error)
+                                return@launch
+                            }
+                            content.copy(character = result.character)
+                        } else {
+                            content
+                        }
+                        requestEpisodes(content = updatedContent)
+                    }
                 }
             }
 
@@ -61,23 +73,27 @@ internal class DetailsViewModel @Inject constructor(
     }
 
     private suspend fun requestEpisodes(content: DetailsUiState.Content) {
-        if (content.character.episodeIds.isEmpty()) return
-        mutableState.value = content.copy(episodes = EpisodesUiState.Loading)
-        val episodes = when (
-            val result = episodesRepository.getEpisodes(
-                episodeIds = content.character.episodeIds,
-            )
-        ) {
-            is EpisodesResult.Success -> if (result.episodes.isEmpty()) {
-                EpisodesUiState.Empty
-            } else {
-                EpisodesUiState.Content(
-                    episodes = result.episodes,
-                )
-            }
+        val episodes = when {
+            content.hasIncompleteEpisodeReferences() -> EpisodesUiState.Error
 
-            is EpisodesResult.Failure -> EpisodesUiState.Error
+            content.character.episodeIds.isEmpty() -> EpisodesUiState.Empty
+
+            else -> {
+                mutableState.value = content.copy(episodes = EpisodesUiState.Loading)
+                when (val result = episodesRepository.getEpisodes(episodeIds = content.character.episodeIds)) {
+                    is EpisodesResult.Success -> if (result.episodes.isEmpty()) {
+                        EpisodesUiState.Empty
+                    } else {
+                        EpisodesUiState.Content(episodes = result.episodes)
+                    }
+
+                    is EpisodesResult.Failure -> EpisodesUiState.Error
+                }
+            }
         }
         mutableState.value = content.copy(episodes = episodes)
     }
+
+    private fun DetailsUiState.Content.hasIncompleteEpisodeReferences(): Boolean =
+        character.episodeIds.size != character.episodeCount
 }

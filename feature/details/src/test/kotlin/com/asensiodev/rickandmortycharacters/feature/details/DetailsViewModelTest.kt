@@ -43,6 +43,132 @@ class DetailsViewModelTest {
     }
 
     @Test
+    fun `GIVEN missing episode references WHEN character detail loads THEN it keeps facts and reports a section error`() =
+        runTest(mainDispatcher.dispatcher) {
+            val character = (fakeCharactersRepository.result as CharacterDetailsResult.Success).character.copy(episodeIds = emptyList())
+            fakeCharactersRepository.result = CharacterDetailsResult.Success(character = character)
+
+            detailsViewModel.process(action = DetailsAction.Load(characterId = 361))
+            advanceUntilIdle()
+
+            assertEquals(DetailsUiState.Content(character = character, episodes = EpisodesUiState.Error), detailsViewModel.state.value)
+            assertTrue(fakeEpisodesRepository.requestedIds.isEmpty())
+        }
+
+    @Test
+    fun `GIVEN partially decoded episode references WHEN character detail loads THEN it reports an error without requesting a subset`() =
+        runTest(mainDispatcher.dispatcher) {
+            val character = (fakeCharactersRepository.result as CharacterDetailsResult.Success).character.copy(episodeCount = 2)
+            fakeCharactersRepository.result = CharacterDetailsResult.Success(character = character)
+
+            detailsViewModel.process(action = DetailsAction.Load(characterId = 361))
+            advanceUntilIdle()
+
+            assertEquals(DetailsUiState.Content(character = character, episodes = EpisodesUiState.Error), detailsViewModel.state.value)
+            assertTrue(fakeEpisodesRepository.requestedIds.isEmpty())
+        }
+
+    @Test
+    fun `GIVEN incomplete references WHEN repeated retries recover them THEN it retains facts and requests episodes once`() =
+        runTest(mainDispatcher.dispatcher) {
+            val character = (fakeCharactersRepository.result as CharacterDetailsResult.Success).character.copy(episodeIds = emptyList())
+            fakeCharactersRepository.result = CharacterDetailsResult.Success(character = character)
+            detailsViewModel.process(action = DetailsAction.Load(characterId = 361))
+            advanceUntilIdle()
+            val recoveredCharacter = character.copy(episodeIds = listOf(27))
+            fakeCharactersRepository.result = CharacterDetailsResult.Success(character = recoveredCharacter)
+            fakeCharactersRepository.pending = CompletableDeferred()
+
+            repeat(4) { detailsViewModel.process(action = DetailsAction.RetryEpisodes) }
+            advanceUntilIdle()
+
+            assertEquals(DetailsUiState.Content(character = character, episodes = EpisodesUiState.Loading), detailsViewModel.state.value)
+            assertEquals(listOf(361, 361), fakeCharactersRepository.requestedIds)
+            assertTrue(fakeEpisodesRepository.requestedIds.isEmpty())
+            fakeCharactersRepository.pending?.complete(Unit)
+            advanceUntilIdle()
+            assertEquals(listOf(listOf(27)), fakeEpisodesRepository.requestedIds)
+            assertEquals(
+                DetailsUiState.Content(
+                    character = recoveredCharacter,
+                    episodes = EpisodesUiState.Content(episodes = fakeEpisodesRepository.episodes),
+                ),
+                detailsViewModel.state.value,
+            )
+        }
+
+    @Test
+    fun `GIVEN incomplete references WHEN their refresh fails THEN it retains facts and restores the section error`() =
+        runTest(mainDispatcher.dispatcher) {
+            val character = (fakeCharactersRepository.result as CharacterDetailsResult.Success).character.copy(episodeIds = emptyList())
+            fakeCharactersRepository.result = CharacterDetailsResult.Success(character = character)
+            detailsViewModel.process(action = DetailsAction.Load(characterId = 361))
+            advanceUntilIdle()
+            fakeCharactersRepository.result = CharacterDetailsResult.Failure(reason = CharacterRequestFailure.Network)
+
+            detailsViewModel.process(action = DetailsAction.RetryEpisodes)
+            advanceUntilIdle()
+
+            assertEquals(DetailsUiState.Content(character = character, episodes = EpisodesUiState.Error), detailsViewModel.state.value)
+            assertEquals(listOf(361, 361), fakeCharactersRepository.requestedIds)
+            assertTrue(fakeEpisodesRepository.requestedIds.isEmpty())
+        }
+
+    @Test
+    fun `GIVEN incomplete references WHEN refresh still returns incomplete references THEN it keeps the section error`() =
+        runTest(mainDispatcher.dispatcher) {
+            val character = (fakeCharactersRepository.result as CharacterDetailsResult.Success).character.copy(episodeIds = emptyList())
+            fakeCharactersRepository.result = CharacterDetailsResult.Success(character = character)
+            detailsViewModel.process(action = DetailsAction.Load(characterId = 361))
+            advanceUntilIdle()
+
+            detailsViewModel.process(action = DetailsAction.RetryEpisodes)
+            advanceUntilIdle()
+
+            assertEquals(DetailsUiState.Content(character = character, episodes = EpisodesUiState.Error), detailsViewModel.state.value)
+            assertEquals(listOf(361, 361), fakeCharactersRepository.requestedIds)
+            assertTrue(fakeEpisodesRepository.requestedIds.isEmpty())
+        }
+
+    @Test
+    fun `GIVEN incomplete references WHEN refresh confirms no appearances THEN it shows empty episodes with updated facts`() =
+        runTest(mainDispatcher.dispatcher) {
+            val character = (fakeCharactersRepository.result as CharacterDetailsResult.Success).character.copy(episodeIds = emptyList())
+            fakeCharactersRepository.result = CharacterDetailsResult.Success(character = character)
+            detailsViewModel.process(action = DetailsAction.Load(characterId = 361))
+            advanceUntilIdle()
+            val recoveredCharacter = character.copy(episodeCount = 0)
+            fakeCharactersRepository.result = CharacterDetailsResult.Success(character = recoveredCharacter)
+
+            detailsViewModel.process(action = DetailsAction.RetryEpisodes)
+            advanceUntilIdle()
+
+            assertEquals(DetailsUiState.Content(character = recoveredCharacter), detailsViewModel.state.value)
+            assertTrue(fakeEpisodesRepository.requestedIds.isEmpty())
+        }
+
+    @Test
+    fun `GIVEN a pending reference refresh WHEN the ViewModel is cleared THEN it cancels while retaining character facts`() =
+        runTest(mainDispatcher.dispatcher) {
+            val character = (fakeCharactersRepository.result as CharacterDetailsResult.Success).character.copy(episodeIds = emptyList())
+            fakeCharactersRepository.result = CharacterDetailsResult.Success(character = character)
+            detailsViewModel.process(action = DetailsAction.Load(characterId = 361))
+            advanceUntilIdle()
+            fakeCharactersRepository.pending = CompletableDeferred()
+            val store = ViewModelStore()
+            store.put("details", detailsViewModel)
+            detailsViewModel.process(action = DetailsAction.RetryEpisodes)
+            advanceUntilIdle()
+
+            store.clear()
+            advanceUntilIdle()
+
+            assertTrue(fakeCharactersRepository.cancelled)
+            assertEquals(DetailsUiState.Content(character = character, episodes = EpisodesUiState.Loading), detailsViewModel.state.value)
+            assertTrue(fakeEpisodesRepository.requestedIds.isEmpty())
+        }
+
+    @Test
     fun `GIVEN failed episodes WHEN repeated section retries succeed THEN it keeps the character and makes one episode retry`() =
         runTest(mainDispatcher.dispatcher) {
             val character = (fakeCharactersRepository.result as CharacterDetailsResult.Success).character.copy(episodeIds = listOf(27))
@@ -92,6 +218,12 @@ class DetailsViewModelTest {
     @Test
     fun `GIVEN no episode references WHEN character detail loads THEN it shows empty episodes without a request`() =
         runTest(mainDispatcher.dispatcher) {
+            val character = (fakeCharactersRepository.result as CharacterDetailsResult.Success).character.copy(
+                episodeCount = 0,
+                episodeIds = emptyList(),
+            )
+            fakeCharactersRepository.result = CharacterDetailsResult.Success(character = character)
+
             detailsViewModel.process(action = DetailsAction.Load(characterId = 361))
             advanceUntilIdle()
 
@@ -142,6 +274,7 @@ class DetailsViewModelTest {
                     origin = "Detoxifier",
                     location = "Earth (Replacement Dimension)",
                     episodeCount = 1,
+                    episodeIds = listOf(27),
                     imageUrl = null,
                 ),
             )
@@ -152,7 +285,7 @@ class DetailsViewModelTest {
                 assertEquals(DetailsUiState.Loading, detailsViewModel.state.value)
                 assertEquals(DetailsUiState.Loading, awaitItem())
                 advanceUntilIdle()
-                assertTrue(awaitItem() is DetailsUiState.Content)
+                assertTrue(expectMostRecentItem() is DetailsUiState.Content)
             }
             assertEquals(listOf(361, 361), fakeCharactersRepository.requestedIds)
         }
@@ -253,7 +386,7 @@ class DetailsViewModelTest {
                 detailsViewModel.process(action = DetailsAction.Load(characterId = 361))
                 advanceUntilIdle()
 
-                val content = awaitItem()
+                val content = expectMostRecentItem()
                 assertTrue(content is DetailsUiState.Content)
                 val character = (content as DetailsUiState.Content).character
                 assertEquals(361, character.id)
@@ -273,6 +406,7 @@ private class FakeCharactersRepository : CharactersRepository {
             origin = "Detoxifier",
             location = "Earth (Replacement Dimension)",
             episodeCount = 1,
+            episodeIds = listOf(27),
             imageUrl = null,
         ),
     )
