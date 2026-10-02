@@ -1,4 +1,5 @@
 plugins {
+    alias(libs.plugins.paparazzi) apply false
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.android.library) apply false
     alias(libs.plugins.kotlin.jvm) apply false
@@ -77,7 +78,7 @@ val konsistCheck by tasks.registering {
 tasks.register("qualityCheck") {
     group = "verification"
     description =
-        "Runs formatting, static analysis, architecture checks, Android lint, JVM tests and debug assembly."
+        "Runs formatting, static analysis, architecture checks, Android lint, JVM/screenshot tests and debug assembly."
     dependsOn(
         ktlintCheck,
         detekt,
@@ -85,6 +86,8 @@ tasks.register("qualityCheck") {
         ":domain:characters:test",
         ":core:testing:check",
         ":app:assembleDebug",
+        ":feature:home:verifyPaparazziDebug",
+        ":feature:details:verifyPaparazziDebug",
     )
     dependsOn(androidModules.map { "$it:lintDebug" })
     dependsOn(androidModules.map { "$it:testDebugUnitTest" })

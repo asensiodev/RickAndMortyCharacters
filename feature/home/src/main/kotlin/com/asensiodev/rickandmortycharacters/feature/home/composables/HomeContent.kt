@@ -277,7 +277,10 @@ private fun HomeSearchSuggestions(onAction: (HomeSearchAction) -> Unit) {
         listOf(R.string.suggest_rick, R.string.suggest_morty, R.string.suggest_beth, R.string.suggest_summer)
             .forEach { resource ->
                 val name = stringResource(resource)
-                OutlinedButton(onClick = { onAction(HomeSearchAction.Suggest(name = name)) }) { Text(text = name) }
+                OutlinedButton(
+                    onClick = { onAction(HomeSearchAction.Suggest(name = name)) },
+                    contentPadding = PaddingValues(horizontal = Spacing.large, vertical = Spacing.small),
+                ) { Text(text = name) }
             }
     }
 }

@@ -1,78 +1,78 @@
 [versions]
-agp = "9.2.1"
-kotlin = "2.4.20"
-compose-bom = "2026.09.00"
 activity-compose = "1.13.0"
-compile-sdk = "37"
-min-sdk = "26"
-target-sdk = "37"
-ktlint = "1.8.0"
-detekt = "2.0.0-alpha.6"
-coil = "3.6.3"
-hilt = "2.60.1"
-ksp = "2.3.10"
+agp = "9.2.1"
 androidx-hilt = "1.4.0"
-lifecycle = "2.11.0"
-navigation3 = "1.2.0"
+androidx-test-junit = "1.3.0"
+androidx-test-runner = "1.7.0"
+coil = "3.6.3"
+compile-sdk = "37"
+compose-bom = "2026.09.00"
 coroutines = "1.11.0"
-serialization = "1.11.0"
-retrofit = "3.0.0"
-okhttp = "5.3.0"
+detekt = "2.0.0-alpha.6"
+espresso = "3.7.0"
+hilt = "2.60.1"
 junit = "4.13.2"
 konsist = "0.17.3"
-turbine = "1.2.1"
-androidx-test-runner = "1.7.0"
-androidx-test-junit = "1.3.0"
-espresso = "3.7.0"
+kotlin = "2.4.20"
+ksp = "2.3.10"
+ktlint = "1.8.0"
+lifecycle = "2.11.0"
+min-sdk = "26"
+navigation3 = "1.2.0"
+okhttp = "5.3.0"
 paging = "3.5.1"
+paparazzi = "2.0.0-alpha05.1"
+retrofit = "3.0.0"
+serialization = "1.11.0"
+target-sdk = "37"
+turbine = "1.2.1"
 
 [libraries]
-ktlint-cli = { module = "com.pinterest.ktlint:ktlint-cli", version.ref = "ktlint" }
-detekt-cli = { module = "dev.detekt:detekt-cli", version.ref = "detekt" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity-compose" }
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
 androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
+androidx-compose-ui-test = { module = "androidx.compose.ui:ui-test-junit4" }
+androidx-compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+androidx-hilt-viewmodel-compose = { module = "androidx.hilt:hilt-lifecycle-viewmodel-compose", version.ref = "androidx-hilt" }
+androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
+androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
+androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycle" }
+androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
+androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
+androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "paging" }
+androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "paging" }
+androidx-paging-testing = { module = "androidx.paging:paging-testing", version.ref = "paging" }
+androidx-test-espresso = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso" }
+androidx-test-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-junit" }
+androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidx-test-runner" }
 coil = { module = "io.coil-kt.coil3:coil", version.ref = "coil" }
 coil-compose-core = { module = "io.coil-kt.coil3:coil-compose-core", version.ref = "coil" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coil" }
-
+detekt-cli = { module = "dev.detekt:detekt-cli", version.ref = "detekt" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-android-testing = { module = "com.google.dagger:hilt-android-testing", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
-androidx-hilt-viewmodel-compose = { module = "androidx.hilt:hilt-lifecycle-viewmodel-compose", version.ref = "androidx-hilt" }
-androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
-androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "navigation3" }
-androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
-androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycle" }
-androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycle" }
-kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
-kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
-kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
-kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
-retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
-retrofit-serialization = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "retrofit" }
-okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
-mockwebserver = { module = "com.squareup.okhttp3:mockwebserver3", version.ref = "okhttp" }
 junit = { module = "junit:junit", version.ref = "junit" }
 konsist = { module = "com.lemonappdev:konsist", version.ref = "konsist" }
+kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
+ktlint-cli = { module = "com.pinterest.ktlint:ktlint-cli", version.ref = "ktlint" }
+mockwebserver = { module = "com.squareup.okhttp3:mockwebserver3", version.ref = "okhttp" }
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
+retrofit-serialization = { module = "com.squareup.retrofit2:converter-kotlinx-serialization", version.ref = "retrofit" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
-androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidx-test-runner" }
-androidx-test-junit = { module = "androidx.test.ext:junit", version.ref = "androidx-test-junit" }
-androidx-test-espresso = { module = "androidx.test.espresso:espresso-core", version.ref = "espresso" }
-androidx-compose-ui-test = { module = "androidx.compose.ui:ui-test-junit4" }
-androidx-compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
-
-androidx-paging-runtime = { module = "androidx.paging:paging-runtime", version.ref = "paging" }
-androidx-paging-compose = { module = "androidx.paging:paging-compose", version.ref = "paging" }
-androidx-paging-testing = { module = "androidx.paging:paging-testing", version.ref = "paging" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
-kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+paparazzi = { id = "app.cash.paparazzi", version.ref = "paparazzi" }
