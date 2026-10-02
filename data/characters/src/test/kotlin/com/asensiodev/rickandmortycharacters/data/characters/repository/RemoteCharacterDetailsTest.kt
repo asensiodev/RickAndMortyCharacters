@@ -44,6 +44,41 @@ class RemoteCharacterDetailsTest {
     }
 
     @Test
+    fun `GIVEN API character statuses WHEN detail loads THEN it maps known values and preserves the unknown fallback`() = runTest {
+        for ((status, expected) in listOf(
+            "Alive" to CharacterStatus.Alive,
+            "Dead" to CharacterStatus.Dead,
+            "unknown" to CharacterStatus.Unknown,
+            "unexpected" to CharacterStatus.Unknown,
+        )) {
+            server.enqueue(MockResponse.Builder().body(detailJson().replace("\"status\": \"Dead\"", "\"status\": \"$status\"")).build())
+
+            val result = charactersRepository.getDetails(characterId = 361) as CharacterDetailsResult.Success
+
+            assertEquals(expected, result.character.status)
+        }
+    }
+
+    @Test
+    fun `GIVEN malformed episode references WHEN detail loads THEN it retains facts and the original appearance count`() = runTest {
+        val reference = "\"https://rickandmortyapi.com/api/episode/27\""
+        val bodies = listOf(
+            detailJson().replace(reference, "\"broken\""),
+            detailJson().replace(reference, "$reference,\"broken\""),
+        )
+        for ((index, body) in bodies.withIndex()) {
+            server.enqueue(MockResponse.Builder().body(body).build())
+
+            val result = charactersRepository.getDetails(characterId = 361) as CharacterDetailsResult.Success
+
+            assertEquals("Toxic Rick", result.character.name)
+            assertEquals(index + 1, result.character.episodeCount)
+            assertEquals(if (index == 0) emptyList<Int>() else listOf(27), result.character.episodeIds)
+            assertTrue(result.character.episodeIds.size != result.character.episodeCount)
+        }
+    }
+
+    @Test
     fun `GIVEN Toxic Rick WHEN his detail is requested THEN it maps his identity facts and episode count`() = runTest {
         server.enqueue(MockResponse.Builder().body(detailJson()).build())
 

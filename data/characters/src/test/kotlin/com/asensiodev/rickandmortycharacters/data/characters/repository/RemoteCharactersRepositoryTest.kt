@@ -44,6 +44,76 @@ class RemoteCharactersRepositoryTest {
     }
 
     @Test
+    fun `GIVEN inconsistent page metadata WHEN the first page loads THEN it reports an invalid response`() = runTest {
+        val bodies = listOf(
+            """{"info":{"count":20,"next":null},"results":[]}""",
+            """{"info":{"count":-1,"next":null},"results":[]}""",
+            requireNotNull(javaClass.getResource("/characters-page.json")).readText().replace("\"count\": 57", "\"count\": 1"),
+        )
+        for (body in bodies) {
+            server.enqueue(MockResponse.Builder().body(body).build())
+
+            val result = charactersRepository.getPage(page = 1)
+
+            assertEquals(CharactersPageResult.Failure(reason = CharacterRequestFailure.InvalidResponse), result)
+        }
+    }
+
+    @Test
+    fun `GIVEN an invalid next link WHEN a page loads THEN it reports an error instead of ending pagination`() = runTest {
+        val body = requireNotNull(javaClass.getResource("/characters-page.json")).readText()
+        val links = listOf(
+            "broken",
+            "https://rickandmortyapi.com/api/character",
+            "https://rickandmortyapi.com/api/character?page=invalid",
+            "https://rickandmortyapi.com/api/character?page=0",
+            "https://rickandmortyapi.com/api/character?page=1",
+            "https://rickandmortyapi.com/api/character?page=2",
+        )
+        for (link in links) {
+            server.enqueue(MockResponse.Builder().body(body.replace("https://rickandmortyapi.com/api/character?page=2", link)).build())
+
+            val result = charactersRepository.getPage(page = 2)
+
+            assertEquals(CharactersPageResult.Failure(reason = CharacterRequestFailure.InvalidResponse), result)
+        }
+    }
+
+    @Test
+    fun `GIVEN invalid character identities WHEN a page loads THEN it reports an invalid response`() = runTest {
+        val body = requireNotNull(javaClass.getResource("/characters-page.json")).readText()
+        val bodies = listOf(
+            body.replace("\"id\": 1", "\"id\": 0"),
+            body.replace("\"id\": 2", "\"id\": 1"),
+            body.replace("Rick Sanchez", " "),
+        )
+        for (invalidBody in bodies) {
+            server.enqueue(MockResponse.Builder().body(invalidBody).build())
+
+            val result = charactersRepository.getPage(page = 1)
+
+            assertEquals(CharactersPageResult.Failure(reason = CharacterRequestFailure.InvalidResponse), result)
+        }
+    }
+
+    @Test
+    fun `GIVEN API character statuses WHEN a page loads THEN it maps known values and preserves the unknown fallback`() = runTest {
+        val body = requireNotNull(javaClass.getResource("/characters-page.json")).readText()
+        for ((status, expected) in listOf(
+            "Alive" to CharacterStatus.Alive,
+            "Dead" to CharacterStatus.Dead,
+            "unknown" to CharacterStatus.Unknown,
+            "unexpected" to CharacterStatus.Unknown,
+        )) {
+            server.enqueue(MockResponse.Builder().body(body.replace("\"status\": \"Alive\"", "\"status\": \"$status\"")).build())
+
+            val result = charactersRepository.getPage(page = 1) as CharactersPageResult.Success
+
+            assertEquals(expected, result.page.characters.first().status)
+        }
+    }
+
+    @Test
     fun `GIVEN supported status filters WHEN pages are requested THEN each retains its constraints`() = runTest {
         for ((status, expected) in listOf(
             CharacterStatus.Alive to "alive",

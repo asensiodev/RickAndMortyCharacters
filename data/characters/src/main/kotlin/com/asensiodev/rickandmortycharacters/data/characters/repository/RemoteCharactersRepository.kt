@@ -2,6 +2,7 @@ package com.asensiodev.rickandmortycharacters.data.characters.repository
 
 import com.asensiodev.rickandmortycharacters.data.characters.remote.CharacterDetailsDto
 import com.asensiodev.rickandmortycharacters.data.characters.remote.CharacterErrorDto
+import com.asensiodev.rickandmortycharacters.data.characters.remote.CharacterPageDto
 import com.asensiodev.rickandmortycharacters.data.characters.remote.CharactersApi
 import com.asensiodev.rickandmortycharacters.data.characters.remote.CharactersJson
 import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterDetails
@@ -59,39 +60,41 @@ internal class RemoteCharactersRepository @Inject constructor(private val api: C
                 CharactersPageResult.Failure(reason = CharacterRequestFailure.Service)
             }
         } else {
-            val body = response.body()
-            if (body == null) {
-                CharactersPageResult.Failure(reason = CharacterRequestFailure.InvalidResponse)
-            } else {
-                val nextPage = body.info.next?.toHttpUrlOrNull()?.queryParameter(
-                    "page",
-                )?.toIntOrNull()
-                CharactersPageResult.Success(
-                    page = CharacterPage(
-                        characters = body.results.map { character ->
-                            CharacterSummary(
-                                id = character.id,
-                                name = character.name,
-                                species = character.species,
-                                status = when (character.status) {
-                                    "Alive" -> CharacterStatus.Alive
-                                    "Dead" -> CharacterStatus.Dead
-                                    else -> CharacterStatus.Unknown
-                                },
-                                imageUrl = character.image,
-                            )
-                        },
-                        totalCount = body.info.count,
-                        nextPage = nextPage,
-                    ),
-                )
-            }
+            response.body()?.toResult(requestedPage = page)
+                ?: CharactersPageResult.Failure(reason = CharacterRequestFailure.InvalidResponse)
         }
     } catch (_: SerializationException) {
         CharactersPageResult.Failure(reason = CharacterRequestFailure.InvalidResponse)
     } catch (_: IOException) {
         CharactersPageResult.Failure(reason = CharacterRequestFailure.Network)
     }
+}
+
+private fun CharacterPageDto.toResult(requestedPage: Int): CharactersPageResult {
+    val nextPage = info.next?.toHttpUrlOrNull()?.queryParameter("page")?.toIntOrNull()
+    val hasInvalidNextPage = info.next != null && (nextPage == null || nextPage <= requestedPage)
+    val hasInvalidCount = info.count < results.size ||
+        (requestedPage == 1 && results.isEmpty() && info.count != 0)
+    val hasInvalidCharacters = results.any { it.id <= 0 || it.name.isBlank() } ||
+        results.map { it.id }.distinct().size != results.size
+    if (hasInvalidNextPage || hasInvalidCount || hasInvalidCharacters) {
+        return CharactersPageResult.Failure(reason = CharacterRequestFailure.InvalidResponse)
+    }
+    return CharactersPageResult.Success(
+        page = CharacterPage(
+            characters = results.map { character ->
+                CharacterSummary(
+                    id = character.id,
+                    name = character.name,
+                    species = character.species,
+                    status = character.status.toCharacterStatus(),
+                    imageUrl = character.image,
+                )
+            },
+            totalCount = info.count,
+            nextPage = nextPage,
+        ),
+    )
 }
 
 private fun Response<*>.hasApiError(expectedMessage: String): Boolean = errorBody()?.use { errorBody ->
@@ -111,11 +114,7 @@ private fun CharacterDetailsDto.toResult(requestedId: Int): CharacterDetailsResu
         character = CharacterDetails(
             id = id,
             name = name,
-            status = when (status) {
-                "Alive" -> CharacterStatus.Alive
-                "Dead" -> CharacterStatus.Dead
-                else -> CharacterStatus.Unknown
-            },
+            status = status.toCharacterStatus(),
             species = species,
             gender = gender,
             type = type?.takeIf { it.isNotBlank() },
@@ -131,6 +130,12 @@ private fun CharacterDetailsDto.toResult(requestedId: Int): CharacterDetailsResu
             imageUrl = image?.takeIf { it.isNotBlank() },
         ),
     )
+}
+
+private fun String.toCharacterStatus(): CharacterStatus = when (this) {
+    "Alive" -> CharacterStatus.Alive
+    "Dead" -> CharacterStatus.Dead
+    else -> CharacterStatus.Unknown
 }
 
 private fun CharacterStatus?.toApiValue(): String? = when (this) {

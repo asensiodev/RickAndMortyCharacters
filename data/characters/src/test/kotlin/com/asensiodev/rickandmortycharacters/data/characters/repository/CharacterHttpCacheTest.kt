@@ -153,7 +153,7 @@ class CharacterHttpCacheTest {
             Triple(1, "Rick", CharacterStatus.Dead),
         )
         queries.forEachIndexed { index, (page, name, status) ->
-            server.enqueue(pageResponse(total = index + 20))
+            server.enqueue(pageResponse(total = index + 20, nextPage = page + 1))
             charactersRepository.getPage(page = page, name = name, status = status)
         }
         server.enqueue(pageResponse(total = 99))
@@ -281,6 +281,7 @@ class CharacterHttpCacheTest {
 
     private fun pageResponse(
         total: Int,
+        nextPage: Int = 2,
         policy: String = "public, max-age=3600",
         age: Int = 0,
         etag: String? = "\"version-1\"",
@@ -288,6 +289,7 @@ class CharacterHttpCacheTest {
     ): MockResponse {
         val body = requireNotNull(javaClass.getResource("/characters-page.json")).readText()
             .replace("\"count\": 57", "\"count\": $total")
+            .replace("character?page=2", "character?page=$nextPage")
         return MockResponse.Builder().addHeader("Cache-Control", policy).addHeader("Age", age)
             .apply {
                 etag?.let { addHeader("ETag", it) }
