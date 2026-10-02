@@ -155,3 +155,8 @@ The user explicitly confirmed completing the remaining Home/Detail accessibility
 ### CI execution policy refinement — 2026-10-02
 
 The user selected automatic qualityCheck for pushes/PRs and manual-only API 37 instrumentation to keep routine feedback short while the emulator job gains remote execution evidence. The instrumented job is guarded by github.event_name == workflow_dispatch; README reflects that policy. Publication is authorized, but no remote instrumented success is claimed.
+
+
+### Parallel CI trial — 2026-10-02
+
+The user authorized removing the instrumented job dependency on quality, publishing the change and dispatching a manual trial. Both jobs can now start independently on workflow_dispatch; pushes/PRs still run only quality. Record measured job durations and actual emulator outcome before deciding whether to enable automatic instrumentation.
