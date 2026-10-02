@@ -65,7 +65,7 @@ These statuses describe completed planning, not a working Android application. N
 
 ### C12 — Reproducible release candidate
 
-Depends on all Must changes, including C05A Konsist checks, and selected optional work. Verify build instructions, automated checks, instrumented journey, release assembly and runtime behavior. Add actual screenshots and concise limitations to README; complete the AI/change record. Confirm the documentation matches the code and distinguish checks not executed from successful validation.
+**Execution in progress; final acceptance pending.** [Proposal](../openspec/changes/validate-showcase-delivery/proposal.md), [requirements](../openspec/changes/validate-showcase-delivery/specs/showcase-delivery/spec.md), [design/evidence](../openspec/changes/validate-showcase-delivery/design.md) and [tasks](../openspec/changes/validate-showcase-delivery/tasks.md) own the bounded closure. Freeze features; verify the final candidate's local checks, instrumented/device journey, release and remote CI. The user owns physical-device testing through [the editable manual checklist](MANUAL_QA.md) and edits documentation in parallel; C12 checks consistency without duplicating that rewrite. Remaining C11/O03 acceptance is reconciled from actual evidence. The user authorized committing and pushing the current work on 2026-10-02; final acceptance and archival remain separate.
 
 ## Preferred enhancement
 
