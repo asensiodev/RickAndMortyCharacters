@@ -5,7 +5,9 @@ import com.asensiodev.rickandmortycharacters.data.characters.remote.CharactersAp
 import com.asensiodev.rickandmortycharacters.data.characters.remote.createCharactersApi
 import com.asensiodev.rickandmortycharacters.data.characters.remote.createCharactersHttpClient
 import com.asensiodev.rickandmortycharacters.data.characters.repository.RemoteCharactersRepository
+import com.asensiodev.rickandmortycharacters.data.characters.repository.RemoteEpisodesRepository
 import com.asensiodev.rickandmortycharacters.domain.characters.repository.CharactersRepository
+import com.asensiodev.rickandmortycharacters.domain.characters.repository.EpisodesRepository
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -21,6 +23,10 @@ private const val API_BASE_URL = "https://rickandmortyapi.com/api/"
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class CharactersBindings {
+    @Binds
+    @Singleton
+    internal abstract fun episodesRepository(implementation: RemoteEpisodesRepository): EpisodesRepository
+
     @Binds
     @Singleton
     internal abstract fun repository(implementation: RemoteCharactersRepository): CharactersRepository

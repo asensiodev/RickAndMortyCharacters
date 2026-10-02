@@ -7,9 +7,12 @@ import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterDe
 import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterPage
 import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterStatus
 import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterSummary
+import com.asensiodev.rickandmortycharacters.domain.characters.model.Episode
 import com.asensiodev.rickandmortycharacters.domain.characters.repository.CharacterDetailsResult
 import com.asensiodev.rickandmortycharacters.domain.characters.repository.CharactersPageResult
 import com.asensiodev.rickandmortycharacters.domain.characters.repository.CharactersRepository
+import com.asensiodev.rickandmortycharacters.domain.characters.repository.EpisodesRepository
+import com.asensiodev.rickandmortycharacters.domain.characters.repository.EpisodesResult
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.components.SingletonComponent
@@ -21,10 +24,15 @@ import kotlinx.coroutines.CompletableDeferred
 @TestInstallIn(components = [SingletonComponent::class], replaces = [CharactersBindings::class])
 object JourneyCharactersModule {
     @Provides
+    fun episodesRepository(fixture: JourneyCharactersRepository): EpisodesRepository = fixture
+
+    @Provides
     fun repository(fixture: JourneyCharactersRepository): CharactersRepository = fixture
 }
 
-class JourneyCharactersRepository : CharactersRepository {
+class JourneyCharactersRepository :
+    CharactersRepository,
+    EpisodesRepository {
     val requestedIds = mutableListOf<Int>()
     var pageRequests = 0
     val requestedPages = mutableListOf<Int>()
@@ -65,6 +73,14 @@ class JourneyCharactersRepository : CharactersRepository {
         )
     }
 
+    override suspend fun getEpisodes(episodeIds: List<Int>): EpisodesResult = EpisodesResult.Success(
+        episodes = listOf(
+            Episode(id = 1, name = "Pilot", code = "S01E01", airDate = "December 2, 2013"),
+            Episode(id = 2, name = "Lawnmower Dog", code = "S01E02", airDate = "December 9, 2013"),
+            Episode(id = 3, name = "Anatomy Park", code = "S01E03", airDate = "December 16, 2013"),
+        ).filter { it.id in episodeIds },
+    )
+
     override suspend fun getDetails(characterId: Int): CharacterDetailsResult {
         requestedIds += characterId
         return try {
@@ -72,7 +88,7 @@ class JourneyCharactersRepository : CharactersRepository {
             detailResult ?: CharacterDetailsResult.Success(
                 character = CharacterDetails(
                     id = characterId, name = "Character $characterId", status = CharacterStatus.Alive, species = "Human", gender = "Male",
-                    type = null, origin = "Earth", location = "Earth", episodeCount = 3, imageUrl = null,
+                    type = null, origin = "Earth", location = "Earth", episodeCount = 3, imageUrl = null, episodeIds = listOf(1, 2, 3),
                 ),
             )
         } catch (error: CancellationException) {

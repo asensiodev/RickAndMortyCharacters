@@ -122,6 +122,12 @@ private fun CharacterDetailsDto.toResult(requestedId: Int): CharacterDetailsResu
             origin = origin.name,
             location = location.name,
             episodeCount = episode.size,
+            episodeIds = episode.mapNotNull {
+                it.toHttpUrlOrNull()?.pathSegments?.lastOrNull()?.toIntOrNull()?.takeIf { id ->
+                    id >
+                        0
+                }
+            }.distinct(),
             imageUrl = image?.takeIf { it.isNotBlank() },
         ),
     )

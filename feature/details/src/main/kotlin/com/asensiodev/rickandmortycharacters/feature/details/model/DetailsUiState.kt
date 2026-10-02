@@ -5,7 +5,8 @@ import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterDe
 sealed interface DetailsUiState {
     data object Loading : DetailsUiState
 
-    data class Content(val character: CharacterDetails) : DetailsUiState
+    data class Content(val character: CharacterDetails, val episodes: EpisodesUiState = EpisodesUiState.Empty) :
+        DetailsUiState
 
     data object Error : DetailsUiState
 
@@ -16,4 +17,6 @@ sealed interface DetailsAction {
     data class Load(val characterId: Int) : DetailsAction
 
     data object Retry : DetailsAction
+
+    data object RetryEpisodes : DetailsAction
 }

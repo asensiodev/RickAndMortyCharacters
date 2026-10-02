@@ -83,6 +83,32 @@ Use a fake monitor to verify initial Unknown, disconnection/recovery, duplicate 
 
 **O03 — Additional visual verification:** use focused screenshot tests for card/skeleton geometry, portrait composition, theme and large text after identifying the visual behavior they protect. Compose interaction tests remain at real screen/flow boundaries; screenshots do not replace callbacks, retries or navigation assertions. Avoid assertions that merely restate implementation details. Mandatory architecture checks belong to C05A.
 
+**O04 — Character episode appearances:** selected by the user on 2026-10-02 before screenshot testing; implemented and locally verified; accepted for commit/push by the user on 2026-10-02. Enrich Detail with a horizontal list of non-navigating episode cards below the character facts, showing episode code, title and air date. The API supplies episode references on characters and supports fetching multiple episodes in one request, but does not provide episode images or descriptions; use text cards without another content source. Preserve the existing appearance count and keep character information available while episodes load or fail, with section-local loading, empty and error/Retry states. Verify character identity, episode ordering, horizontal scrolling and recovery without adding destinations. [API documentation](https://rickandmortyapi.com/documentation/#episode-schema).
+
+### O04 implementation and verification — 2026-10-02
+
+Implemented at the user's request without creating or modifying an OpenSpec change. Observable boundaries reuse the existing repository, Details ViewModel, state-driven screen and production-navigation tests. Data resolves episode references through the existing HTTP client/cache, normalizes single-object/batch-array responses and validates identity/facts before restoring requested order. The ViewModel keeps character content and count available, guards pending section retries and owns cancellation. Text cards use existing theme/spacing and focused size tokens; no new dependency, artwork, destination or parallax tuning.
+
+Managed Gradle workflow `428af206b3d3d5cf12733b5475e67448` ran the following checks. Behavioral RED was observed before repository, state and rendering implementations. Compilation/static-analysis failures are not RED.
+
+| Run and question | Nested Gradle tasks | Observed result |
+|---|---|---|
+| 0001: Does the repository return episode facts in character order before implementation? | `:data:characters:testDebugUnitTest --tests '*RemoteEpisodesRepositoryTest'` | RED: expected episode facts, received empty list |
+| 0002: Does the implemented repository load ordered episode facts with one batch request? | Same focused repository test | GREEN |
+| 0003: Does Detail keep character facts visible while episode requests are pending before the state integration? | `:feature:details:testDebugUnitTest --tests '*DetailsViewModelTest'` | RED: character content had Empty rather than Loading episodes |
+| 0004: Do Detail facts remain visible during episode loading and do existing detail contracts still pass? | `:feature:details:testDebugUnitTest :data:characters:testDebugUnitTest` | GREEN |
+| 0005: Do episode scrolling and section-only Retry exist before rendering the section? | `:feature:details:connectedDebugAndroidTest`, filtered to DetailsContentTest | RED: episode list and section Retry were absent |
+| 0006: Do the episode data, isolated retry and cancellation tests pass, and does Detail support vertical and horizontal scrolling with Back? | Both affected JVM suites and Detail instrumentation | Compilation failed: placeholder API has no shape parameter; corrected to the existing clip modifier |
+| 0007: Do episode contracts and Detail scrolling pass after using the existing placeholder modifier API? | Both affected JVM suites and Detail instrumentation | GREEN: 47 data JVM, 11 Details ViewModel tests; nine screen tests on each API 37 Pixel/emulator |
+| 0008: Do the completion quality gate, release assembly and existing navigation journeys pass with the episode section? | `qualityCheck :app:assembleRelease :app:connectedDebugAndroidTest` | Detekt flagged return count/complex condition; simplified the identified branches |
+| 0009: Do quality, release assembly and navigation pass after simplifying episode validation to the project lint limits? | Same completion tasks | Navigation fixture compilation lacked the new episode binding; added a controlled dependency and episode data |
+| 0010: Do quality, release assembly and production navigation regressions pass with controlled episode dependencies? | Same completion tasks | Emulator: 18 navigation tests passed. Connected Pixel: instrumentation crashed during a test, without an assertion message; device navigation acceptance remains incomplete |
+| 0011: Do the standalone quality gate and release assembly pass independently of device instrumentation? | `qualityCheck :app:assembleRelease` | GREEN; aggregate JVM reports contain 87 tests including three architecture checks, zero failures/errors/skips |
+
+The wrapper rejected a `--scope completion` invocation and an attempt to select the emulator via an `env` launcher; neither executed Gradle or counts as a verification run. All successful invocations above used the managed launcher. Wrapper-owned logs were removed on finish; source and test reports remain.
+
+Native production smoke used emulator-5554 (Pixel 9a, API 37, 1080×2424, density 420, default font size). Rick #1 loaded 51 appearances with actual episode code/title/air date. Vertical scroll exposed the complete cards; horizontal swipe reached S01E03 “Anatomy Park” without moving the fixed Back control. Vertical movement was approximately 201 pixels, enough to inspect the existing subtle parallax but not a long page or measured performance result. Debug APK is installed on that emulator. Temporary visual-review pixels were deleted; no screenshot files are retained. Loading/error/Retry/cancellation and single-episode REST behavior are covered by controlled tests, rather than claimed as a full native failure matrix. Human visual acceptance and the connected Pixel navigation crash remain manual limitations.
+
 Each optional change is selected and reviewed independently before C12.
 
 ## Independently selected visual adjustment

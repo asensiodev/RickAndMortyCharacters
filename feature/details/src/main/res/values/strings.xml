@@ -18,4 +18,10 @@
     <string name="detail_error_description">Something went wrong. Please try again.</string>
     <string name="detail_not_found">Character not found</string>
     <string name="detail_not_found_description">This character is no longer available.</string>
+    <string name="episodes_heading">EPISODES</string>
+    <string name="episodes_list">Episode list</string>
+    <string name="episodes_loading">Loading episodes</string>
+    <string name="episodes_empty">No episode appearances available.</string>
+    <string name="episodes_error">Couldn\'t load episodes. Character details are still available.</string>
+    <string name="retry_episodes">Retry episodes</string>
 </resources>

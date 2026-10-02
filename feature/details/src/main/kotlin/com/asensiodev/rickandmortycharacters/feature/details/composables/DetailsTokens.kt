@@ -13,6 +13,8 @@ internal object DetailsTokens {
     const val FACT_VALUE_WEIGHT = 1f
     const val SKELETON_FACT_COUNT = 5
 
+    val episodeCardWidth = 240.dp
+    val episodeCardMinHeight = 148.dp
     val portraitMaxWidth = 256.dp
     val contentTopPadding = 64.dp
     val backTargetSize = 48.dp

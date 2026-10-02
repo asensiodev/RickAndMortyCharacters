@@ -52,6 +52,12 @@ Layer ownership remains shared for character data:
 
 Do not create empty `data` and `domain` folders inside each feature or duplicate the character model and cache. Feature-owned business rules can be introduced when there is actual behavior to own; reusable rules belong with the shared domain. Package boundaries within a module are conventions, while the project graph enforces module dependencies.
 
+## Selected O04: episode appearances
+
+`CharacterDetails` retains episode IDs alongside the independently computed appearance count. `EpisodesRepository` exposes a suspending batch request with pure Kotlin `Episode` values (ID, name, code and air date) and explicit success/failure results. Data owns the DTOs, object-versus-array REST normalization, validation and requested-order mapping. The existing Retrofit/OkHttp client and cache are reused; no module or dependency is added.
+
+Details injects both repository contracts directly. After character success, its ViewModel exposes the character immediately and loads episodes in its lifecycle scope. Episode loading/error/retry is durable nested content state; it never removes the character or starts another character request. Initialization and pending retries remain guarded, and cancellation propagates. The content composable owns vertical and horizontal scroll state; cards do not navigate.
+
 ## Source packages
 
 Group existing files by responsibility within their module:

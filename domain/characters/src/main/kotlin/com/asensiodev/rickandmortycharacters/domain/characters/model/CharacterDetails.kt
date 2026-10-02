@@ -11,4 +11,5 @@ data class CharacterDetails(
     val location: String,
     val episodeCount: Int,
     val imageUrl: String?,
+    val episodeIds: List<Int> = emptyList(),
 )

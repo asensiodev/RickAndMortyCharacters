@@ -7,12 +7,16 @@ import app.cash.turbine.test
 import com.asensiodev.rickandmortycharacters.core.testing.MainDispatcherRule
 import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterDetails
 import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterStatus
+import com.asensiodev.rickandmortycharacters.domain.characters.model.Episode
 import com.asensiodev.rickandmortycharacters.domain.characters.repository.CharacterDetailsResult
 import com.asensiodev.rickandmortycharacters.domain.characters.repository.CharacterRequestFailure
 import com.asensiodev.rickandmortycharacters.domain.characters.repository.CharactersPageResult
 import com.asensiodev.rickandmortycharacters.domain.characters.repository.CharactersRepository
+import com.asensiodev.rickandmortycharacters.domain.characters.repository.EpisodesRepository
+import com.asensiodev.rickandmortycharacters.domain.characters.repository.EpisodesResult
 import com.asensiodev.rickandmortycharacters.feature.details.model.DetailsAction
 import com.asensiodev.rickandmortycharacters.feature.details.model.DetailsUiState
+import com.asensiodev.rickandmortycharacters.feature.details.model.EpisodesUiState
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -29,13 +33,95 @@ class DetailsViewModelTest {
     @get:Rule
     val mainDispatcher = MainDispatcherRule()
     private val fakeCharactersRepository = FakeCharactersRepository()
+    private val fakeEpisodesRepository = FakeEpisodesRepository()
 
     private lateinit var detailsViewModel: DetailsViewModel
 
     @Before
     fun setUp() {
-        detailsViewModel = DetailsViewModel(repository = fakeCharactersRepository)
+        detailsViewModel = DetailsViewModel(repository = fakeCharactersRepository, episodesRepository = fakeEpisodesRepository)
     }
+
+    @Test
+    fun `GIVEN failed episodes WHEN repeated section retries succeed THEN it keeps the character and makes one episode retry`() =
+        runTest(mainDispatcher.dispatcher) {
+            val character = (fakeCharactersRepository.result as CharacterDetailsResult.Success).character.copy(episodeIds = listOf(27))
+            fakeCharactersRepository.result = CharacterDetailsResult.Success(character = character)
+            fakeEpisodesRepository.result = EpisodesResult.Failure(reason = CharacterRequestFailure.Network)
+            detailsViewModel.process(action = DetailsAction.Load(characterId = 361))
+            advanceUntilIdle()
+            assertEquals(DetailsUiState.Content(character = character, episodes = EpisodesUiState.Error), detailsViewModel.state.value)
+            fakeEpisodesRepository.pending = CompletableDeferred()
+            fakeEpisodesRepository.result = EpisodesResult.Success(episodes = fakeEpisodesRepository.episodes)
+
+            repeat(4) { detailsViewModel.process(action = DetailsAction.RetryEpisodes) }
+            advanceUntilIdle()
+
+            assertEquals(DetailsUiState.Content(character = character, episodes = EpisodesUiState.Loading), detailsViewModel.state.value)
+            assertEquals(listOf(361), fakeCharactersRepository.requestedIds)
+            assertEquals(listOf(listOf(27), listOf(27)), fakeEpisodesRepository.requestedIds)
+            fakeEpisodesRepository.pending?.complete(Unit)
+            advanceUntilIdle()
+            assertEquals(
+                DetailsUiState.Content(
+                    character = character,
+                    episodes = EpisodesUiState.Content(episodes = fakeEpisodesRepository.episodes),
+                ),
+                detailsViewModel.state.value,
+            )
+        }
+
+    @Test
+    fun `GIVEN pending episodes WHEN the ViewModel is cleared THEN it cancels without hiding character facts`() =
+        runTest(mainDispatcher.dispatcher) {
+            val character = (fakeCharactersRepository.result as CharacterDetailsResult.Success).character.copy(episodeIds = listOf(27))
+            fakeCharactersRepository.result = CharacterDetailsResult.Success(character = character)
+            fakeEpisodesRepository.pending = CompletableDeferred()
+            val store = ViewModelStore()
+            store.put("details", detailsViewModel)
+            detailsViewModel.process(action = DetailsAction.Load(characterId = 361))
+            advanceUntilIdle()
+
+            store.clear()
+            advanceUntilIdle()
+
+            assertTrue(fakeEpisodesRepository.cancelled)
+            assertEquals(DetailsUiState.Content(character = character, episodes = EpisodesUiState.Loading), detailsViewModel.state.value)
+        }
+
+    @Test
+    fun `GIVEN no episode references WHEN character detail loads THEN it shows empty episodes without a request`() =
+        runTest(mainDispatcher.dispatcher) {
+            detailsViewModel.process(action = DetailsAction.Load(characterId = 361))
+            advanceUntilIdle()
+
+            val content = detailsViewModel.state.value as DetailsUiState.Content
+            assertEquals(EpisodesUiState.Empty, content.episodes)
+            assertTrue(fakeEpisodesRepository.requestedIds.isEmpty())
+        }
+
+    @Test
+    fun `GIVEN pending episodes WHEN character detail loads THEN facts remain available while episodes load`() =
+        runTest(mainDispatcher.dispatcher) {
+            val character = (fakeCharactersRepository.result as CharacterDetailsResult.Success).character.copy(episodeIds = listOf(27))
+            fakeCharactersRepository.result = CharacterDetailsResult.Success(character = character)
+            fakeEpisodesRepository.pending = CompletableDeferred()
+
+            detailsViewModel.process(action = DetailsAction.Load(characterId = 361))
+            advanceUntilIdle()
+
+            assertEquals(DetailsUiState.Content(character = character, episodes = EpisodesUiState.Loading), detailsViewModel.state.value)
+            assertEquals(listOf(listOf(27)), fakeEpisodesRepository.requestedIds)
+            fakeEpisodesRepository.pending?.complete(Unit)
+            advanceUntilIdle()
+            assertEquals(
+                DetailsUiState.Content(
+                    character = character,
+                    episodes = EpisodesUiState.Content(episodes = fakeEpisodesRepository.episodes),
+                ),
+                detailsViewModel.state.value,
+            )
+        }
 
     @Test
     fun `GIVEN a failed detail request WHEN retry succeeds THEN it loads content for the same character`() =
@@ -198,6 +284,25 @@ private class FakeCharactersRepository : CharactersRepository {
 
     override suspend fun getDetails(characterId: Int): CharacterDetailsResult {
         requestedIds += characterId
+        return try {
+            pending?.await()
+            result
+        } catch (error: CancellationException) {
+            cancelled = true
+            throw error
+        }
+    }
+}
+
+private class FakeEpisodesRepository : EpisodesRepository {
+    val requestedIds = mutableListOf<List<Int>>()
+    val episodes = listOf(Episode(id = 27, name = "Rest and Ricklaxation", code = "S03E06", airDate = "August 27, 2017"))
+    var result: EpisodesResult = EpisodesResult.Success(episodes = episodes)
+    var pending: CompletableDeferred<Unit>? = null
+    var cancelled = false
+
+    override suspend fun getEpisodes(episodeIds: List<Int>): EpisodesResult {
+        requestedIds += episodeIds
         return try {
             pending?.await()
             result

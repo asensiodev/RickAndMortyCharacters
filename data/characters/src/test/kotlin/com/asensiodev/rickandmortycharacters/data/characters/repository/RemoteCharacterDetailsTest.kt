@@ -54,7 +54,7 @@ class RemoteCharacterDetailsTest {
                 character = CharacterDetails(
                     id = 361, name = "Toxic Rick", status = CharacterStatus.Dead, species = "Humanoid", gender = "Male",
                     type = "Rick's toxic side", origin = "Detoxifier", location = "Earth (Replacement Dimension)",
-                    episodeCount = 1, imageUrl = "https://rickandmortyapi.com/api/character/avatar/361.jpeg",
+                    episodeCount = 1, imageUrl = "https://rickandmortyapi.com/api/character/avatar/361.jpeg", episodeIds = listOf(27),
                 ),
             ),
             result,

@@ -52,13 +52,18 @@ fun DetailsContent(
     onRetry: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
+    onRetryEpisodes: () -> Unit = {},
 ) {
     Box(
         modifier = modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)
             .safeDrawingPadding(),
     ) {
         when (state) {
-            is DetailsUiState.Content -> CharacterDetailsContent(character = state.character, imageLoader = imageLoader)
+            is DetailsUiState.Content -> CharacterDetailsContent(
+                state = state,
+                imageLoader = imageLoader,
+                onRetryEpisodes = onRetryEpisodes,
+            )
 
             DetailsUiState.Loading -> DetailsSkeleton()
 
@@ -91,7 +96,12 @@ fun DetailsContent(
 }
 
 @Composable
-private fun CharacterDetailsContent(character: CharacterDetails, imageLoader: ImageLoader) {
+private fun CharacterDetailsContent(
+    state: DetailsUiState.Content,
+    imageLoader: ImageLoader,
+    onRetryEpisodes: () -> Unit,
+) {
+    val character = state.character
     val scrollState = rememberScrollState()
     Column(
         modifier = Modifier.fillMaxSize().verticalScroll(scrollState).padding(
@@ -106,6 +116,7 @@ private fun CharacterDetailsContent(character: CharacterDetails, imageLoader: Im
         DetailsPortrait(imageUrl = character.imageUrl, imageLoader = imageLoader, scrollState = scrollState)
         DetailsIdentity(character = character)
         DetailsFacts(character = character)
+        DetailsEpisodes(state = state.episodes, onRetry = onRetryEpisodes)
     }
 }
 

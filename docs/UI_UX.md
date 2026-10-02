@@ -150,13 +150,13 @@ Implement the selected detail composition with the following information hierarc
 | Identity | Character name as the main heading, status badge and species. Place immediately below the image or on a reliably contrasted lower hero surface. |
 | Character facts | Gender and Type when meaningful. Species stays in identity; avoid redundant display. |
 | Locations | Clearly labelled Origin and Last known location, allowing long names to wrap. |
-| Appearances | A visible “Episode appearances” label with a single count value/badge; no episode names or links to another screen. |
+| Appearances | Preserve the “Episode appearances” label/count in the facts. Below the facts, show a horizontal episode-card list with code, title and air date; cards do not navigate. |
 
 Use the selected grouped fact rows for gender, optional type, locations and the episode count. Preserve their labels and information priority. These regions are read-only; do not make them appear to navigate when no destination exists.
 
 The hero uses the existing character portrait, not an assumed second image. Prefer a contained or approximately square presentation over an oversized panoramic crop. A mild scroll-linked parallax moves the image more slowly than the content; constrain movement to its clipped bounds and keep the Back control steady. The title scrolls naturally with the content and does not become a collapsing top app bar. Explicit disabled-motion adaptation for scroll parallax is deferred to O02. Inspect image sharpness on a device before accepting the final hero size.
 
-An empty `type` omits that row. Unknown supplied values display “Unknown”; do not infer missing facts. Count the available episode references without fetching every episode. Long names and locations must not overlap the image or controls. Review the top, middle and end of the scroll: the fixed Back control must remain readable and every fact reachable, with sufficient system insets and scroll clearance.
+An empty `type` omits that row. Unknown supplied values display “Unknown”; do not infer missing facts. Count the available episode references independently of the episode request. O04 resolves their metadata in a separate batch after character content becomes available. Long names and locations must not overlap the image or controls. Review the top, middle and end of the scroll: the fixed Back control must remain readable and every fact reachable, with sufficient system insets and scroll clearance.
 
 | State | Visible response |
 |---|---|
@@ -165,6 +165,12 @@ An empty `type` omits that row. Unknown supplied values display “Unknown”; d
 | Request failure | “Couldn't load character”, “Retry” and Back |
 | Character unavailable | “Character not found” and Back; no endless retry for a confirmed missing ID |
 | Content | Scrollable information and Back; normal return preserves browsing context |
+
+### Episode appearances — selected O04
+
+Below the character facts, show an EPISODES heading and horizontally scrollable text cards with code, title and air date in the character reference order. The API supplies no episode artwork or synopsis; do not invent either or add a separate content source. Cards have no click action or destination. The section adds real content to the existing vertical Detail scroll; Back stays fixed and the existing bounded portrait parallax is retained.
+
+Loading uses a local placeholder. No references show “No episode appearances available.” A failed episode request shows a section-local message and “Retry episodes”; retry retains the identity, portrait, facts and appearance count without fetching the character again. Ignore duplicate retries while pending. These states remain below the facts, rather than replacing the screen.
 
 ## Connectivity feedback — Should
 

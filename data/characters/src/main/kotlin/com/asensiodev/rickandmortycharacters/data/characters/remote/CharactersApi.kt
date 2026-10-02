@@ -1,6 +1,7 @@
 package com.asensiodev.rickandmortycharacters.data.characters.remote
 
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import okhttp3.HttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -20,6 +21,9 @@ internal interface CharactersApi {
         @Query("name") name: String?,
         @Query("status") status: String?,
     ): Response<CharacterPageDto>
+
+    @GET("episode/{ids}")
+    suspend fun getEpisodes(@Path("ids") episodeIds: String): Response<JsonElement>
 
     @GET("character/{id}")
     suspend fun getDetails(@Path("id") characterId: Int): Response<CharacterDetailsDto>

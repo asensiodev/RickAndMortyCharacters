@@ -35,5 +35,7 @@ internal fun DetailsRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
     DetailsContent(state = state, imageLoader = imageLoader, onRetry = {
         viewModel.process(action = DetailsAction.Retry)
-    }, onBack = onBack, modifier = modifier)
+    }, onBack = onBack, modifier = modifier, onRetryEpisodes = {
+        viewModel.process(action = DetailsAction.RetryEpisodes)
+    })
 }

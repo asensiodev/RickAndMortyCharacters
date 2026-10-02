@@ -11,6 +11,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToIndex
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import coil3.ColorImage
@@ -21,7 +22,9 @@ import coil3.request.SuccessResult
 import com.asensiodev.rickandmortycharacters.core.designsystem.theme.RickAndMortyTheme
 import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterDetails
 import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterStatus
+import com.asensiodev.rickandmortycharacters.domain.characters.model.Episode
 import com.asensiodev.rickandmortycharacters.feature.details.model.DetailsUiState
+import com.asensiodev.rickandmortycharacters.feature.details.model.EpisodesUiState
 import kotlinx.coroutines.CompletableDeferred
 import org.junit.After
 import org.junit.Assert.assertEquals
@@ -233,6 +236,56 @@ class DetailsContentTest {
         compose.onNodeWithText(location).performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Episode appearances").performScrollTo().assertIsDisplayed()
         assertEquals(1, compose.onAllNodesWithText("0").fetchSemanticsNodes().size)
+        compose.onNodeWithContentDescription("Back").assertIsDisplayed()
+    }
+
+    @Test
+    fun GIVEN_episode_content_WHEN_both_directions_are_scrolled_THEN_episode_facts_and_back_remain_available() {
+        val episodes = listOf(
+            Episode(id = 1, name = "Pilot", code = "S01E01", airDate = "December 2, 2013"),
+            Episode(id = 2, name = "Lawnmower Dog", code = "S01E02", airDate = "December 9, 2013"),
+            Episode(id = 3, name = "Anatomy Park", code = "S01E03", airDate = "December 16, 2013"),
+        )
+        compose.setContent {
+            RickAndMortyTheme {
+                DetailsContent(
+                    state = DetailsUiState.Content(character = toxicRick(), episodes = EpisodesUiState.Content(episodes = episodes)),
+                    imageLoader = imageLoader,
+                    onRetry = {},
+                    onBack = {},
+                )
+            }
+        }
+
+        compose.onNodeWithContentDescription("Episode list").performScrollTo().performScrollToIndex(2)
+
+        compose.onNodeWithText("Anatomy Park").assertIsDisplayed().assertHasNoClickAction()
+        compose.onNodeWithText("S01E03").assertIsDisplayed()
+        compose.onNodeWithText("December 16, 2013").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Back").assertIsDisplayed()
+    }
+
+    @Test
+    fun GIVEN_episode_failure_WHEN_section_retry_is_selected_THEN_it_keeps_the_character_and_retries_only_episodes() {
+        var episodeRetries = 0
+        var detailRetries = 0
+        compose.setContent {
+            RickAndMortyTheme {
+                DetailsContent(
+                    state = DetailsUiState.Content(character = toxicRick(), episodes = EpisodesUiState.Error),
+                    imageLoader = imageLoader,
+                    onRetry = { detailRetries++ },
+                    onBack = {},
+                    onRetryEpisodes = { episodeRetries++ },
+                )
+            }
+        }
+
+        compose.onNodeWithText("Retry episodes").performScrollTo().assertIsDisplayed().performClick()
+
+        assertEquals(1, episodeRetries)
+        assertEquals(0, detailRetries)
+        compose.onNodeWithText("Toxic Rick").assertExists()
         compose.onNodeWithContentDescription("Back").assertIsDisplayed()
     }
 
