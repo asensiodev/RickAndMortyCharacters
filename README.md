@@ -89,7 +89,7 @@ Coil owns the shared image cache; a separate bounded OkHttp cache reuses eligibl
 
 ## Quality checks
 
-`qualityCheck` runs JVM tests, Konsist checks for internal implementation types and read-only exposed state, ktlint, Detekt, Android Lint, Paparazzi baseline verification and debug assembly. Repository tests use deterministic HTTP fixtures; ViewModel tests use controlled responses and scheduling. Compose tests exercise screen states and production navigation. The configured [GitHub Actions workflow](.github/workflows/quality.yml) runs the aggregate gate, followed by Home, Detail and app instrumented suites on an API 37 x86_64 emulator. Both jobs upload reports. Instrumentation includes Home large-text and control-reachability regressions; it does not validate TalkBack or certify accessibility.
+`qualityCheck` runs JVM tests, Konsist checks for internal implementation types and read-only exposed state, ktlint, Detekt, Android Lint, Paparazzi baseline verification and debug assembly. Repository tests use deterministic HTTP fixtures; ViewModel tests use controlled responses and scheduling. Compose tests exercise screen states and production navigation. The configured [GitHub Actions workflow](.github/workflows/quality.yml) runs the aggregate gate on pushes and pull requests. Manual runs also execute Home, Detail and app instrumented suites on an API 37 x86_64 emulator. Both jobs upload reports. Instrumentation includes Home large-text and control-reachability regressions; it does not validate TalkBack or certify accessibility.
 
 Run instrumented screen/navigation tests with a connected API 37 emulator or device:
 
@@ -105,11 +105,11 @@ Paparazzi checks bounded visual contracts using controlled fixtures and reviewed
 ./gradlew :feature:home:verifyPaparazziDebug :feature:details:verifyPaparazziDebug
 ```
 
-Baseline recording and rendering conditions are documented in the [visual-regression change](openspec/changes/add-paparazzi-visual-regressions/design.md). Screenshot tests complement interaction tests and hands-on app review. Existing validation records refer to the revisions checked at the time; final acceptance requires checks against the completed source revision.
+Screenshot tests complement interaction tests and hands-on app review. Existing validation records refer to the revisions checked at the time; final acceptance requires checks against the completed source revision.
 
 ## Development approach
 
-Development combines specification-driven development with OpenSpec, behavior-focused TDD and AI assistance. The author selects features and methodology, makes architectural decisions, refines specifications, reviews implementations and validates behavior through hands-on app testing. Codex assists with implementation, tests and investigation. Google Stitch supplied the reviewed visual references for native Compose components. [Development process](docs/DEVELOPMENT_PROCESS.md) describes the skills and human checkpoints.
+Built with OpenSpec, behavior-focused TDD and AI assistance, with human review and hands-on app validation. [Development process](docs/DEVELOPMENT_PROCESS.md) documents the workflow, toolchain and UI design process.
 
 ## Delivery scope
 
@@ -125,13 +125,7 @@ The app targets portrait phones with an English interface and the selected dark 
 | Outside this delivery | Light/system-theme variants, connectivity snackbar and shared-image navigation |
 | Outside this delivery | Guaranteed offline catalogue, accounts, onboarding, favourites and additional destinations |
 
-Dark appearance follows the reviewed design; a light palette needs its own state/contrast review. Contextual Retry provides recovery without an advisory connectivity monitor. Caching does not guarantee offline browsing: uncached or expired requests may need a connection. Search/filter state belongs to the Home ViewModel and survives configuration changes and Back while that owner remains alive; a new process starts with the default query. Native navigation and local Compose state saving remain in place, without promising restoration of the whole browsing session.
-
 Accessibility support in Home and Detail includes labelled actions, screen-reader headings and grouped content, status/error announcements, and layouts that accommodate larger text.
-
-## Further reading
-
-- [Development process](docs/DEVELOPMENT_PROCESS.md): SDD, TDD, AI assistance and human review.
 
 [OpenSpec](openspec/) preserves change specifications and evidence as optional deeper reading.
 

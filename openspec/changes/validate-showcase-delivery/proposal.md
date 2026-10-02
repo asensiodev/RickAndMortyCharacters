@@ -11,7 +11,7 @@ The user wants to freeze the implemented showcase and complete delivery verifica
 - Verify local automation, instrumented journeys, release assembly/runtime and the existing Quality CI job for an identified source revision.
 - Record results, unresolved limitations and human acceptance, including remaining C11/O03 review.
 
-The user owns manual physical-device testing and is editing documentation in parallel. C12 checks documentation consistency and links to their final material; it does not repeat that rewrite. O01/O02, connectivity monitoring, light theme, extra destinations, new screenshot matrices, performance claims and new CI infrastructure stay outside this increment.
+The user owns manual physical-device testing and is editing documentation in parallel. C12 checks documentation consistency and links to their final material; it does not repeat that rewrite. The user subsequently selected an API 37 instrumented CI job, bounded Home accessibility improvements and their manual demonstration on 2026-10-02. Process-death restoration, a full accessibility audit, O01, connectivity monitoring, light theme, extra destinations, new screenshot matrices and performance claims remain outside this increment.
 
 ## Capabilities
 
@@ -25,4 +25,4 @@ None. Any discovered behavior fix must remain bounded to the accepted product co
 
 ## Impact
 
-Delivery evidence, the manual QA document, existing build/test/CI tasks and final documentation consistency. No production change or dependency is planned. Remote publication, commits, pushes and archival remain separately authorized actions.
+Delivery evidence, the manual QA document, existing build/test/CI tasks and final documentation consistency. User-selected accessibility refinements cover Home and Detail semantics, without new dependencies. Remote publication, commits, pushes and archival remain separately authorized actions.

@@ -38,7 +38,11 @@ The existing Quality workflow SHALL be verified against the published candidate 
 
 #### Scenario: Verify remote quality
 - **WHEN** the authorized published candidate completes the Quality workflow
-- **THEN** its run URL, commit and result are recorded, with instrumentation and release/runtime results identified as separate local evidence
+- **THEN** its run URL, commit and quality result are recorded; API 37 instrumentation runs only on manual dispatch and its executed or skipped status is identified separately from release/runtime evidence
+
+#### Scenario: Prepare CI without publishing
+- **WHEN** the workflow is extended locally to run Home, Detail and app instrumented suites
+- **THEN** configuration validation is recorded separately from remote execution, and no successful CI run is inferred before the changed workflow runs on the published candidate
 
 ### Requirement: Coordinated documentation and human acceptance
 

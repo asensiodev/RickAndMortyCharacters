@@ -8,6 +8,7 @@
 - [x] 2.1 [Codex] Run or reuse justified final-candidate `qualityCheck :app:assembleRelease` evidence through the managed workflow; report real task/test results and reviewed nine golden images.
 - [ ] 2.2 [Codex, with device provided by User] Verify Home, Details and app instrumented suites on identified targets; recheck the prior physical-device instrumentation failure or record why it remains blocked.
 - [x] 2.3 [Codex + User] Verify the existing Quality CI run for the authorized published candidate; record SHA/run URL/outcome and inspect any cross-host screenshot difference before accepting an update.
+- [x] 2.4 [Codex] Configure and validate the user-selected manual-only API 37 instrumented CI job; publication is authorized and remote instrumented execution remains pending.
 
 ## 3. Human device review
 

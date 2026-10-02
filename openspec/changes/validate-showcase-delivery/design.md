@@ -20,7 +20,7 @@ Only regressions blocking the accepted browsing/recovery/navigation flow justify
 
 ### Local automation and device evidence
 
-After approval, use the documented managed Gradle wrapper to run/reuse justified evidence for `qualityCheck :app:assembleRelease`. The gate includes Paparazzi verification, not recording. Recheck the final nine goldens visually; never change them just to make CI pass. Instrumented suites are separate from this gate and CI:
+After approval, use the documented managed Gradle wrapper to run/reuse justified evidence for `qualityCheck :app:assembleRelease`. The gate includes Paparazzi verification, not recording. Recheck the final nine goldens visually; never change them just to make CI pass. Instrumented suites remain separate from the aggregate gate; the user-selected CI extension runs them in their own job:
 
 ```sh
 ./gradlew :feature:home:connectedDebugAndroidTest :feature:details:connectedDebugAndroidTest :app:connectedDebugAndroidTest
@@ -28,13 +28,13 @@ After approval, use the documented managed Gradle wrapper to run/reuse justified
 
 Record actual connected targets, test counts/results and command environment; empty/cached tasks are not newly executed behavior coverage. Revisit the earlier Pixel instrumentation failure on a connected physical target when available. If it recurs, capture the failing test/runner evidence and distinguish harness/device failure from an application crash; manual success alone does not diagnose its cause. Any unavailable/blocked check remains explicit for human disposition.
 
-The user executes the normal-flow manual checklist on at least one physical Android phone; an API 37 emulator remains useful for automated regressions and supplementary review. Do not infer a broad device/API matrix from that phone. UI review includes current font/display settings, safe areas, keyboard, portrait loading/crop, footer/counter clearance, episode scrolling, fixed Back and observed native motion. Extended accessibility/large-font/contrast audits remain O02; existing readable labels and reachable controls must be preserved.
+The user executes the normal-flow manual checklist on at least one physical Android phone; an API 37 emulator remains useful for automated regressions and supplementary review. Do not infer a broad device/API matrix from that phone. UI review includes current font/display settings, safe areas, keyboard, portrait loading/crop, footer/counter clearance, episode scrolling, fixed Back and observed native motion. The selected Home accessibility demonstration covers TalkBack, large text and contrast/touch-target review. A full accessibility audit remains outside this delivery; existing readable labels and reachable controls must be preserved on both screens.
 
 ### Release artifact and CI
 
 Assembling a release APK is distinct from installing/running it. Current app configuration has no release signing setup and no explicitly enabled minification. Record the artifact and how a locally installable release is produced for runtime review; keep signing material outside Git. Do not introduce publishing/signing services or enable R8 merely for this closure. If only debug is exercised, mark release runtime as unverified rather than equating it with successful assembly; final acceptance must explicitly address that limitation.
 
-Run or inspect the existing GitHub Actions Quality job for the candidate's published commit after publication is authorized. Record run URL, SHA and outcome. CI uses Ubuntu/Temurin while current goldens were generated on macOS/Zulu; any renderer mismatch requires review of the diff and environment before an intentional baseline update. The workflow does not run instrumentation or release assembly, so local evidence owns those checks. No commit, push or remote dispatch is authorized by preparing this draft alone.
+Run or inspect the GitHub Actions Quality workflow for the candidate's published commit after publication is authorized. Record run URL, SHA and each job's outcome. CI uses Ubuntu/Temurin while current goldens were generated on macOS/Zulu; any renderer mismatch requires review of the diff and environment before an intentional baseline update. The workflow runs the aggregate gate on pushes and pull requests. Manual workflow_dispatch runs also execute API 37 instrumentation; release assembly/runtime and manual accessibility remain separate evidence. No commit, push or remote dispatch is authorized by preparing this change alone.
 
 ### Documentation and acceptance
 
@@ -117,6 +117,14 @@ The user requested commit and push of the current working tree, including the bo
 
 During publication the user explicitly stated that the manual tests were already validated and everything is fine. This closes the physical manual review and affected-fix retest, including the reported pagination regression. QC04/QC06 remain not reproduced as recorded by the user. This confirmation does not manufacture missing automated device/CI results or archive the change.
 
+### Bounded interview-readiness follow-up — 2026-10-02
+
+The user excluded process-death restoration from this MVP and selected CI instrumentation plus a Home-only accessibility demonstration. No production feature or dependency was added. Home query state remains owned by its ViewModel; native navigation and local Compose saving remain because they support the existing Back/configuration behavior. Whole-session recovery after process death is explicitly outside scope. The review found no stub or unimplemented control requiring deletion in the implemented two-screen flow; pending manual verification is recorded separately from missing implementation.
+
+Quality now has a second job, restricted to workflow_dispatch and dependent on the aggregate gate, running Home, Detail and app instrumented suites on Ubuntu/KVM with the official `system-images;android-37.0;google_apis;x86_64` image and pinned emulator-runner action. Reports are uploaded even after failure. Existing Home large-text/reachability tests run with the full suite. No TalkBack automation or complete accessibility certification is implied; new manual Home cases remain unchecked and earlier human results are preserved.
+
+Validation: actionlint 1.7.12 passed for the workflow, Ruby YAML parsing passed, `openspec validate validate-showcase-delivery --strict` passed and `git diff --check` passed. The Android image was confirmed against Google's SDK catalogue and action inputs/install behavior against the pinned action source. No Gradle tests were rerun for configuration/documentation changes; no changed-workflow remote CI run, commit or push was performed. A remote result remains pending publication and execution of this revision.
+
 
 ### Home accessibility implementation — 2026-10-02
 
@@ -142,3 +150,8 @@ Managed workflow `6ff3c3354c11849fe0f71f84f082e597` generated the instrumented A
 ### Human accessibility acceptance and publication authorization — 2026-10-02
 
 The user explicitly confirmed completing the remaining Home/Detail accessibility validation and authorized commit and push of both screens. HA01–HA03, DA01–DA02 and tasks 3.4/3.7 are closed from that confirmation without inventing individual measurements or scanner captures. This accepts the bounded implementation and manual review; it does not convert unexecuted instrumented tests or remote CI to passes, and does not archive C12 or imply final release acceptance. The accessibility publication includes screen code, tests and its scoped validation record; the separate CI extension and unrelated documentation edits remain outside the commit. Latest qualityCheck/assembleDebug and twelve HomeSearchTest results are reused because no production source changed after those checks.
+
+
+### CI execution policy refinement — 2026-10-02
+
+The user selected automatic qualityCheck for pushes/PRs and manual-only API 37 instrumentation to keep routine feedback short while the emulator job gains remote execution evidence. The instrumented job is guarded by github.event_name == workflow_dispatch; README reflects that policy. Publication is authorized, but no remote instrumented success is claimed.
