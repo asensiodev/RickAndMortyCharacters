@@ -35,7 +35,10 @@ internal class DetailsViewModel @Inject constructor(
 
             DetailsAction.RetryEpisodes -> {
                 val content = mutableState.value as? DetailsUiState.Content ?: return
-                if (content.episodes == EpisodesUiState.Error) requestEpisodes(content = content)
+                if (content.episodes == EpisodesUiState.Error) {
+                    mutableState.value = content.copy(episodes = EpisodesUiState.Loading)
+                    viewModelScope.launch { requestEpisodes(content = content) }
+                }
             }
 
             DetailsAction.Retry -> {
@@ -57,26 +60,24 @@ internal class DetailsViewModel @Inject constructor(
         }
     }
 
-    private fun requestEpisodes(content: DetailsUiState.Content) {
+    private suspend fun requestEpisodes(content: DetailsUiState.Content) {
         if (content.character.episodeIds.isEmpty()) return
         mutableState.value = content.copy(episodes = EpisodesUiState.Loading)
-        viewModelScope.launch {
-            val episodes = when (
-                val result = episodesRepository.getEpisodes(
-                    episodeIds = content.character.episodeIds,
+        val episodes = when (
+            val result = episodesRepository.getEpisodes(
+                episodeIds = content.character.episodeIds,
+            )
+        ) {
+            is EpisodesResult.Success -> if (result.episodes.isEmpty()) {
+                EpisodesUiState.Empty
+            } else {
+                EpisodesUiState.Content(
+                    episodes = result.episodes,
                 )
-            ) {
-                is EpisodesResult.Success -> if (result.episodes.isEmpty()) {
-                    EpisodesUiState.Empty
-                } else {
-                    EpisodesUiState.Content(
-                        episodes = result.episodes,
-                    )
-                }
-
-                is EpisodesResult.Failure -> EpisodesUiState.Error
             }
-            mutableState.value = content.copy(episodes = episodes)
+
+            is EpisodesResult.Failure -> EpisodesUiState.Error
         }
+        mutableState.value = content.copy(episodes = episodes)
     }
 }
