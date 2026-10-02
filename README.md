@@ -21,9 +21,10 @@ The core flow is implemented, including pagination, contextual recovery and imag
 
 ## App screenshots
 
-| Character catalogue | Character detail |
-|---|---|
-| <img src="docs/screenshots/home.png" alt="Home with search, status filters, character cards and loaded counter" width="280"> | <img src="docs/screenshots/detail.png" alt="Rick Sanchez detail with portrait, character facts and episode cards" width="280"> |
+<p align="center">
+  <img src="docs/screenshots/home-2026-10-02.png" alt="Home with search, status filters, character cards and loaded counter" width="280" />
+  <img src="docs/screenshots/detail-2026-10-02.png" alt="Rick Sanchez detail with matching Alive and Human badges, portrait, character facts and episode cards" width="280" />
+</p>
 
 [Stitch references](docs/design/stitch/) document the original visual design.
 
