@@ -17,8 +17,6 @@
   <a href="gradle/libs.versions.toml"><img src="https://img.shields.io/badge/Compose%20BOM-2026.09.00-4285F4?logo=jetpackcompose&amp;logoColor=white" alt="Jetpack Compose BOM 2026.09.00" /></a>
 </p>
 
-The core flow is implemented, including pagination, contextual recovery and image/HTTP caching. Final integrated verification and delivery acceptance remain pending.
-
 ## App screenshots
 
 <p align="center">
