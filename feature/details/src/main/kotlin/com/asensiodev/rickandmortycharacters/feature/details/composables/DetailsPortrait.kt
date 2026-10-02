@@ -13,16 +13,11 @@ import androidx.compose.foundation.progressSemantics
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.MotionDurationScale
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -52,11 +47,6 @@ internal fun DetailsPortrait(imageUrl: String?, imageLoader: ImageLoader, scroll
         contentScale = ContentScale.Crop,
     )
     val state by painter.state.collectAsState()
-    var motionEnabled by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        val scale = coroutineContext[MotionDurationScale]
-        snapshotFlow { (scale?.scaleFactor ?: 0f) > 0f }.collect { motionEnabled = it }
-    }
     val loadingDescription = stringResource(R.string.portrait_loading)
     Box(
         modifier = Modifier.widthIn(max = DetailsTokens.portraitMaxWidth).fillMaxWidth()
@@ -65,19 +55,15 @@ internal fun DetailsPortrait(imageUrl: String?, imageLoader: ImageLoader, scroll
             .background(MaterialTheme.colorScheme.surfaceContainerHigh),
     ) {
         Image(
-            painter,
+            painter = painter,
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize().then(sizeResolver).graphicsLayer {
                 scaleX = DetailsTokens.PORTRAIT_SCALE
                 scaleY = DetailsTokens.PORTRAIT_SCALE
-                translationY = if (motionEnabled) {
-                    (scrollState.value * DetailsTokens.PARALLAX_FRACTION).coerceAtMost(
-                        size.height * DetailsTokens.PARALLAX_LIMIT_FRACTION,
-                    )
-                } else {
-                    0f
-                }
+                translationY = (scrollState.value * DetailsTokens.PARALLAX_FRACTION).coerceAtMost(
+                    size.height * DetailsTokens.PARALLAX_LIMIT_FRACTION,
+                )
             },
         )
         if (imageUrl.isNullOrBlank() || state is AsyncImagePainter.State.Error) {

@@ -101,7 +101,7 @@ Distinguish data loading from image loading:
 - Once data exists, show the real name/status immediately. Only the image region keeps its placeholder until that request finishes, then fades to the image. Image failure replaces that region with a neutral fallback; the card remains usable.
 - Loading another page preserves every loaded card and uses a small footer indicator. An append failure exposes a footer retry. Do not turn loaded cards back into skeletons.
 
-A subtle pulse or shimmer can make skeletons readable as loading. Keep a static equivalent for disabled motion, stop off-screen animation and avoid delaying fast results to display an effect. Loading placeholders do not repeat artificial character semantics to accessibility services.
+A subtle pulse or shimmer can make skeletons readable as loading. Use native Compose duration handling, stop off-screen animation and avoid delaying fast results to display an effect. Loading placeholders do not repeat artificial character semantics to accessibility services.
 
 ### Floating loaded/total counter
 
@@ -153,7 +153,7 @@ Implement the selected detail composition with the following information hierarc
 
 Use the selected grouped fact rows for gender, optional type, locations and the episode count. Preserve their labels and information priority. These regions are read-only; do not make them appear to navigate when no destination exists.
 
-The hero uses the existing character portrait, not an assumed second image. Prefer a contained or approximately square presentation over an oversized panoramic crop. A mild scroll-linked parallax moves the image more slowly than the content; constrain movement to its clipped bounds and keep the Back control steady. The title scrolls naturally with the content and does not become a collapsing top app bar. Provide a static motion alternative. Inspect image sharpness on a device before accepting the final hero size.
+The hero uses the existing character portrait, not an assumed second image. Prefer a contained or approximately square presentation over an oversized panoramic crop. A mild scroll-linked parallax moves the image more slowly than the content; constrain movement to its clipped bounds and keep the Back control steady. The title scrolls naturally with the content and does not become a collapsing top app bar. Explicit disabled-motion adaptation for scroll parallax is deferred to O02. Inspect image sharpness on a device before accepting the final hero size.
 
 An empty `type` omits that row. Unknown supplied values display “Unknown”; do not infer missing facts. Count the available episode references without fetching every episode. Long names and locations must not overlap the image or controls. Review the top, middle and end of the scroll: the fixed Back control must remain readable and every fact reachable, with sufficient system insets and scroll clearance.
 
@@ -183,8 +183,10 @@ Both screens share colour roles, type scale, spacing, radii, status treatment an
 | Image appears | Brief fade with stable image bounds, not replayed on every recomposition |
 | Chip selection | Contained feedback with an unambiguous static selected state |
 | Result replacement | Evaluate in C11 after screen integration; avoid grid-wide replays on every keystroke |
-| Detail scroll | Subtle bounded portrait parallax with a static alternative |
+| Detail scroll | Subtle bounded portrait parallax |
 | Navigation | Coherent forward/back transition; shared image transition remains optional |
+
+On 2026-10-02 the user chose native Compose duration handling and shared Coil fades without a custom system-scale adapter. Coil fades and scroll-linked parallax do not receive explicit disabled-motion adaptation; O02 owns that policy.
 
 Static mockups need motion annotations and do not validate performance. Prefer small native Compose animations and stop unnecessary off-screen work. [Android animation guidance](https://developer.android.com/develop/ui/compose/animation/choose-api).
 

@@ -21,8 +21,8 @@ internal object DetailsTokens {
     val statusDotSize = 6.dp
     val portraitFallbackSize = 48.dp
     val feedbackContainerSize = 80.dp
-    val feedbackIconSize = 36.dp
-    val retryMinWidth = 128.dp
+    val feedbackIconSize = 40.dp
+    val retryMinWidth = 140.dp
     val identitySkeletonWidth = 192.dp
     val identitySkeletonHeight = 32.dp
     val factSkeletonHeight = 24.dp

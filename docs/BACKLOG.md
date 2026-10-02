@@ -61,7 +61,7 @@ These statuses describe completed planning, not a working Android application. N
 
 ### C11 — Visual and motion consistency
 
-Depends on the implemented main flow. Reconcile cards, chips, detail, loading feedback, image fades and transitions with the approved design. Evaluate additional UI animations, including skeleton-to-content and navigation transitions, and add only motion that improves continuity or feedback without delaying data or disrupting interaction. Choose its scope and native Compose API after reviewing the integrated screens. Check system animation settings, narrow layouts, text size and image-heavy scrolling. Address observed issues and add regression tests where they protect behavior. Visual quality is implemented throughout earlier changes; this pass closes inconsistencies.
+**Scope approved; implementation and validation in progress.** See the [proposal](../openspec/changes/polish-visual-motion-consistency/proposal.md), [scenarios](../openspec/changes/polish-visual-motion-consistency/specs/visual-motion-consistency/spec.md), [design/test boundaries](../openspec/changes/polish-visual-motion-consistency/design.md) and [tasks](../openspec/changes/polish-visual-motion-consistency/tasks.md). OpenSpec owns C11's detailed scope and evidence. Accessibility-specific layout changes, previews and audits are deferred to O02 at the user's request. Prepared at the user's request; implementation follows review of its scope. C12 remains the final reproducible delivery increment.
 
 ### C12 — Reproducible release candidate
 
@@ -79,7 +79,7 @@ Use a fake monitor to verify initial Unknown, disconnection/recovery, duplicate 
 
 **O01 — Shared character image transition:** prototype on the stable navigation flow; verify matching identity, back behavior and missing-image cases. Keep the basic transition if the shared version introduces fragile behavior.
 
-**O02 — Catalogue accessibility demonstration:** verify TalkBack traversal of cards/search/chips/retry, meaningful announcements, large text and contrast. Record manual evidence and the exact screen scope.
+**O02 — Catalogue accessibility demonstration:** verify TalkBack traversal of cards/search/chips/retry, meaningful announcements, large text and contrast. Own the deferred Home/Detail enlarged-text layout and preview review from C11, including narrow and wide viewports without arbitrary font-scale breakpoints. Record manual evidence and the exact screen scope.
 
 **O03 — Additional visual verification:** use focused screenshot tests for card/skeleton geometry, portrait composition, theme and large text after identifying the visual behavior they protect. Compose interaction tests remain at real screen/flow boundaries; screenshots do not replace callbacks, retries or navigation assertions. Avoid assertions that merely restate implementation details. Mandatory architecture checks belong to C05A.
 

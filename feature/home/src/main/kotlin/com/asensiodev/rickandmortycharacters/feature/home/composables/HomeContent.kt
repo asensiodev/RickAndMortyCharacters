@@ -81,8 +81,6 @@ import com.asensiodev.rickandmortycharacters.feature.home.model.HomeUiState
 
 private const val PHONE_PREVIEW_WIDTH_DP = 412
 private const val PHONE_PREVIEW_HEIGHT_DP = 891
-private const val NARROW_PREVIEW_WIDTH_DP = 320
-private const val HOME_PREVIEW_FONT_SCALE = 2f
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -434,13 +432,6 @@ private fun HomeRetryButton(onRetry: () -> Unit, modifier: Modifier = Modifier, 
     name = "Home",
     widthDp = PHONE_PREVIEW_WIDTH_DP,
     heightDp = PHONE_PREVIEW_HEIGHT_DP,
-    showSystemUi = true,
-)
-@Preview(
-    name = "Narrow, large text",
-    widthDp = NARROW_PREVIEW_WIDTH_DP,
-    heightDp = PHONE_PREVIEW_HEIGHT_DP,
-    fontScale = HOME_PREVIEW_FONT_SCALE,
     showSystemUi = true,
 )
 @Composable
