@@ -4,9 +4,13 @@ package com.asensiodev.rickandmortycharacters.feature.home.composables
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -99,7 +103,7 @@ class HomeSearchTest {
     }
 
     @Test
-    fun GIVEN_an_active_search_WHEN_the_user_drags_results_THEN_it_hides_the_keyboard_and_preserves_the_query() {
+    fun GIVEN_an_active_search_WHEN_the_user_drags_results_THEN_it_hides_the_keyboard_and_clears_focus_without_changing_the_query() {
         var hideRequests = 0
         val actions = mutableListOf<HomeSearchAction>()
         val keyboard = object : SoftwareKeyboardController {
@@ -127,7 +131,6 @@ class HomeSearchTest {
             }
         }
         compose.onNodeWithContentDescription("Search characters").performClick()
-        compose.onNodeWithContentDescription("Search characters").performSemanticsAction(SemanticsActions.SetSelection) { it(1, 3, false) }
 
         compose.onNode(hasScrollToIndexAction()).performTouchInput { swipeUp() }
 
@@ -135,13 +138,51 @@ class HomeSearchTest {
             assertTrue(hideRequests > 0)
             assertTrue(actions.isEmpty())
         }
-        compose.onNodeWithContentDescription("Search characters").assertIsFocused()
+        compose.onNodeWithContentDescription("Search characters").assertIsNotFocused()
         val input = compose.onNodeWithContentDescription("Search characters").fetchSemanticsNode().config
         assertEquals("Rick", input[SemanticsProperties.EditableText].text)
-        assertEquals(TextRange(1, 3), input[SemanticsProperties.TextSelectionRange])
         compose.onNode(
             hasText("Alive") and SemanticsMatcher.expectValue(key = SemanticsProperties.Selected, expectedValue = true),
         ).assertIsSelected()
+    }
+
+    @Test
+    @OptIn(ExperimentalLayoutApi::class)
+    fun GIVEN_a_visible_search_keyboard_WHEN_system_Back_closes_it_THEN_focus_clears_and_editing_can_resume() {
+        var keyboardVisible by mutableStateOf(false)
+        val actions = mutableListOf<HomeSearchAction>()
+        val search = HomePagingState(searchText = "Rick", appliedName = "Rick", selectedStatus = CharacterStatus.Alive)
+        compose.setContent {
+            val visible = WindowInsets.isImeVisible
+            SideEffect { keyboardVisible = visible }
+            RickAndMortyTheme {
+                HomeContent(
+                    state = HomeUiState.Empty,
+                    imageLoader = imageLoader,
+                    onRetry = {},
+                    onCharacterSelected = {},
+                    searchState = search,
+                    onSearchAction = actions::add,
+                )
+            }
+        }
+        compose.onNodeWithContentDescription("Search characters").performClick()
+        compose.waitUntil { keyboardVisible }
+
+        Espresso.pressBack()
+        compose.waitUntil { !keyboardVisible }
+
+        compose.onNodeWithContentDescription("Search characters").assertIsNotFocused()
+        val input = compose.onNodeWithContentDescription("Search characters").fetchSemanticsNode().config
+        assertEquals("Rick", input[SemanticsProperties.EditableText].text)
+        compose.onNode(
+            hasText("Alive") and SemanticsMatcher.expectValue(key = SemanticsProperties.Selected, expectedValue = true),
+        ).assertIsSelected()
+        compose.runOnIdle { assertTrue(actions.isEmpty()) }
+        compose.onNodeWithContentDescription("Search characters").performClick()
+        compose.waitUntil { keyboardVisible }
+        compose.onNodeWithContentDescription("Search characters").assertIsFocused()
+        Espresso.pressBack()
     }
 
     @Test

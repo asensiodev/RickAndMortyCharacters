@@ -44,6 +44,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -104,11 +105,7 @@ fun HomeContent(
     }
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
-    LaunchedEffect(key1 = gridState, key2 = keyboard) {
-        gridState.interactionSource.interactions.collect { interaction ->
-            if (interaction is DragInteraction.Start) keyboard?.hide()
-        }
-    }
+    HomeSearchFocusEffects(gridState = gridState)
     val searchAction: (HomeSearchAction) -> Unit = { action ->
         onSearchAction(action)
         if (action is HomeSearchAction.Submit || action is HomeSearchAction.Suggest) {
@@ -149,6 +146,27 @@ fun HomeContent(
                 CharacterCard(character = character, imageLoader = imageLoader, onClick = selectCharacter)
             } else {
                 cardContent(index, character)
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun HomeSearchFocusEffects(gridState: LazyGridState) {
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    val keyboardVisible = WindowInsets.isImeVisible
+    var keyboardWasVisible by remember { mutableStateOf(false) }
+    LaunchedEffect(key1 = keyboardVisible, key2 = focusManager) {
+        if (keyboardWasVisible && !keyboardVisible) focusManager.clearFocus()
+        keyboardWasVisible = keyboardVisible
+    }
+    LaunchedEffect(key1 = gridState, key2 = keyboard) {
+        gridState.interactionSource.interactions.collect { interaction ->
+            if (interaction is DragInteraction.Start) {
+                focusManager.clearFocus()
+                keyboard?.hide()
             }
         }
     }

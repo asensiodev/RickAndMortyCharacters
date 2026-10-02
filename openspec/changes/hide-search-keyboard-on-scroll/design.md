@@ -1,6 +1,6 @@
 ## Decisions and approved boundary
 
-The human approved this refinement on 2026-10-01. Home already owns its LazyGridState, focus manager and software keyboard controller. Collect the grid's native drag interactions in a composition-owned LaunchedEffect and hide the keyboard on DragInteraction.Start. Do not observe isScrollInProgress, which also includes automatic scrolling. Preserve focus and query state; no ViewModel or new dependency is needed.
+The human approved this refinement on 2026-10-01. Home already owns its LazyGridState, focus manager and software keyboard controller. Collect the grid's native drag interactions in a composition-owned LaunchedEffect and hide the keyboard on DragInteraction.Start. Do not observe isScrollInProgress, which also includes automatic scrolling. The user refined this policy on 2026-10-02: clear focus when manually browsing or when a previously visible software keyboard closes, while preserving query/status. Programmatic scrolling and initial hidden keyboard state do not clear focus. No ViewModel or new dependency is needed.
 
 Use the real HomeContent screen with controlled images and a recording keyboard controller to verify a gesture requests dismissal, while programmatic scroll and a changed generation do not. Verify retained input/selection/status and no search actions from dragging. Run one behavioral RED before implementing GREEN. An API 37 native check verifies actual IME disappearance and reopening; controller assertions alone do not prove platform behavior.
 
