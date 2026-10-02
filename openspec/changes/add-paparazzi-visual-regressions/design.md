@@ -161,3 +161,15 @@ Managed incidental workflow `32b833e17c835b877ae899e0547c6041`:
 - “¿Pasan las capturas con foto local, el gate completo y release?” — `./gradlew qualityCheck :app:assembleRelease`; PASS in 7.164 s, 463 tasks (16 executed, 447 UP-TO-DATE). Home 5 and Details 4 screenshot tests report zero failures/errors/skips. Release task reuses unchanged production outputs. Strict OpenSpec and whitespace validation pass. Remote CI/human acceptance remain pending; no commit, push or archival.
 
 Workflow finish removed only wrapper-owned logs; the temporary before/after hash record was removed separately. The JPEG is a test-only resource, and the source PNGs remain reviewable.
+
+
+### Single-JDK development setup — 2026-10-02
+
+The user authorized removing the separate JDK 17 installation requirement. Gradle/Paparazzi and the two pure JVM modules now use JDK 21; Java/Kotlin output targets remain 17. CI installs only JDK 21 and README reflects that requirement. No production behavior, dependency, golden image or C12 artifact is changed.
+
+Managed workflow `1f31c7b2209dfd1d6803e91b172a6a42` verified with JDK auto-detection and auto-download disabled and the installations path restricted to the existing Zulu 21.0.11 installation:
+
+- “¿Pasan los checks de los módulos JVM usando únicamente la toolchain JDK 21 y bytecode Java 17?” — `./gradlew :domain:characters:check :core:testing:check`; PASS in 4.233 s. The initial sandbox attempt could not access the Gradle cache lock; the escalated run passed. Compiled Kotlin main class files in domain (20) and core/testing (1) use class-file major version 61 (Java 17).
+- “¿Pasan qualityCheck, Paparazzi y assembleRelease sin detectar ni descargar JDK 17, usando únicamente la toolchain JDK 21?” — `./gradlew qualityCheck :app:assembleRelease`; PASS in 4.243 s. Successful cached/up-to-date outputs may be reused; this does not claim every test reran. No baseline recording occurred.
+
+Both commands supplied `-Porg.gradle.java.installations.auto-detect=false`, `-Porg.gradle.java.installations.auto-download=false` and `-Porg.gradle.java.installations.paths=<JDK 21 Home>`. Strict OpenSpec validation passed for all 16 items. Managed finish removed only wrapper-owned logs. Remote CI and device checks were not rerun for this local configuration change; C12 remains separate.
