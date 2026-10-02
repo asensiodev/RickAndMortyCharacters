@@ -20,7 +20,7 @@ Only regressions blocking the accepted browsing/recovery/navigation flow justify
 
 ### Local automation and device evidence
 
-After approval, use the documented managed Gradle wrapper to run/reuse justified evidence for `qualityCheck :app:assembleRelease`. The gate includes Paparazzi verification, not recording. Recheck the final nine goldens visually; never change them just to make CI pass. Instrumented suites remain separate from the aggregate gate; the user-selected CI extension runs them in their own job:
+After approval, use the documented managed Gradle wrapper to run/reuse justified evidence for `qualityCheck :app:assembleRelease`. The gate includes Paparazzi verification, not recording. Recheck the final nine goldens visually; never change them just to make CI pass. Instrumented suites remain separate from the aggregate gate and run locally on a connected emulator or device:
 
 ```sh
 ./gradlew :feature:home:connectedDebugAndroidTest :feature:details:connectedDebugAndroidTest :app:connectedDebugAndroidTest
@@ -34,7 +34,7 @@ The user executes the normal-flow manual checklist on at least one physical Andr
 
 Assembling a release APK is distinct from installing/running it. Current app configuration has no release signing setup and no explicitly enabled minification. Record the artifact and how a locally installable release is produced for runtime review; keep signing material outside Git. Do not introduce publishing/signing services or enable R8 merely for this closure. If only debug is exercised, mark release runtime as unverified rather than equating it with successful assembly; final acceptance must explicitly address that limitation.
 
-Run or inspect the GitHub Actions Quality workflow for the candidate's published commit after publication is authorized. Record run URL, SHA and each job's outcome. CI uses Ubuntu/Temurin while current goldens were generated on macOS/Zulu; any renderer mismatch requires review of the diff and environment before an intentional baseline update. The workflow runs the aggregate gate on pushes and pull requests. Manual workflow_dispatch runs also execute API 37 instrumentation; release assembly/runtime and manual accessibility remain separate evidence. No commit, push or remote dispatch is authorized by preparing this change alone.
+Run or inspect the GitHub Actions Quality workflow for the candidate's published commit after publication is authorized. Record run URL, SHA and each job's outcome. CI uses Ubuntu/Temurin while current goldens were generated on macOS/Zulu; any renderer mismatch requires review of the diff and environment before an intentional baseline update. The workflow runs the aggregate gate on pushes, pull requests and manual dispatch. Instrumented suites run locally; release assembly/runtime and manual accessibility remain separate evidence. No commit, push or remote dispatch is authorized by preparing this change alone.
 
 ### Documentation and acceptance
 
@@ -163,3 +163,11 @@ The user authorized removing the instrumented job dependency on quality, publish
 
 
 Parallel trial [37036912920](https://github.com/asensiodev/RickAndMortyCharacters/actions/runs/37036912920), SHA 6c12a12: quality PASS in 3m34s; instrumentation FAILED in 6m19s before tests (all three XML suites report zero executed). App/Detail installation reported insufficient internal storage; Home installation reported unavailable package service. This is infrastructure failure, not failed app assertions. Configure the pinned emulator action supported disk-size input to 4G and repeat manually; automatic PR instrumentation remains conditional on a successful acceptable-duration run.
+
+
+Second parallel trial [37038001176](https://github.com/asensiodev/RickAndMortyCharacters/actions/runs/37038001176), SHA bb04492, disk-size 4G: quality PASS in 1m40s; instrumentation FAILED in 5m00s. App XML reports zero tests and INSTRUMENTATION_ABORTED: System has crashed; Home XML reports zero tests and a broken package-service pipe during APK installation. Detail records 11 failed cases at ActivityScenario startup, all unable to resolve ComponentActivity, before screen assertions. The reports do not establish whether the Detail launch failure is independent of the system/installation instability. Automatic PR instrumentation was not enabled because the user made it conditional on successful acceptable-duration execution. Keep the manual parallel job for diagnosis; no passing instrumented CI evidence is claimed.
+
+
+### Final CI policy — 2026-10-02
+
+After the two failed remote emulator trials, the user requested removing that job rather than introducing unreliable CI for delivery. Quality now runs only qualityCheck and uploads its reports on push, PR and manual dispatch. Home/Detail/app instrumented suites and local commands remain intact. Earlier emulator configuration and results above are historical; no instrumented CI success is claimed. This removes the observed emulator failure source without suppressing qualityCheck failures.

@@ -89,7 +89,7 @@ Coil owns the shared image cache; a separate bounded OkHttp cache reuses eligibl
 
 ## Quality checks
 
-`qualityCheck` runs JVM tests, Konsist checks for internal implementation types and read-only exposed state, ktlint, Detekt, Android Lint, Paparazzi baseline verification and debug assembly. Repository tests use deterministic HTTP fixtures; ViewModel tests use controlled responses and scheduling. Compose tests exercise screen states and production navigation. The configured [GitHub Actions workflow](.github/workflows/quality.yml) runs the aggregate gate on pushes and pull requests. Manual runs also execute Home, Detail and app instrumented suites on an API 37 x86_64 emulator. Both jobs upload reports. Instrumentation includes Home large-text and control-reachability regressions; it does not validate TalkBack or certify accessibility.
+`qualityCheck` runs JVM tests, Konsist checks for internal implementation types and read-only exposed state, ktlint, Detekt, Android Lint, Paparazzi baseline verification and debug assembly. Repository tests use deterministic HTTP fixtures; ViewModel tests use controlled responses and scheduling. Compose tests exercise screen states and production navigation. The configured [GitHub Actions workflow](.github/workflows/quality.yml) runs the aggregate gate on pushes and pull requests. Check reports are uploaded as artifacts. Instrumented suites run locally on a connected emulator or device. Instrumentation includes Home large-text and control-reachability regressions; it does not validate TalkBack or certify accessibility.
 
 Run instrumented screen/navigation tests with a connected API 37 emulator or device:
 
