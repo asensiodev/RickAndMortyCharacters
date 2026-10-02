@@ -1,25 +1,25 @@
 # C12 — Pruebas manuales del showcase
 
-Responsable: **tú**. Este documento es la lista que puedes ir marcando; [las tasks de C12](../openspec/changes/validate-showcase-delivery/tasks.md) enlazan a sus resultados. Estado: **pruebas manuales validadas por el usuario el 2026-10-02**.
+Responsable: **autor del proyecto**. Este documento conserva los casos y resultados de la revisión; [las tasks de C12](../openspec/changes/validate-showcase-delivery/tasks.md) enlazan a sus resultados. Estado: **pruebas manuales validadas por el usuario el 2026-10-02**.
 
-Marca `[x]` solo cuando hayas probado el caso y observado el resultado esperado. Si falla, déjalo sin marcar y añade una incidencia abajo. Si no puedes probarlo, registra «bloqueado» o «no reproducido» y el motivo. Una captura de Paparazzi o un test automatizado no marca una prueba manual por ti. Si cambia el código que afecta a un caso ya probado, vuelve a probar ese caso.
+Los casos marcados reflejan la confirmación del usuario. Los no reproducidos mantienen ese estado. Este registro es evidencia fechada, no una segunda lista activa de tareas; nuevas comprobaciones deben identificar su revisión y condiciones.
 
 ## Datos de la ejecución
 
 - Fecha: 2026-10-02
-- Persona que prueba:
+- Persona que prueba: autor del proyecto.
 - Commit/revisión y cambios locales relevantes: `b95a5bcd1475ef1c3e27cb87a608458e7d62c855` más las correcciones locales de foco de Home y recuperación de paginación ante HTTP 429.
-- APK/versionName/versionCode instalado para continuar: `app/build/outputs/apk/debug/app-debug.apk`; `0.1.0` / `1`.
-- Variante para las siguientes comprobaciones: debug (instalado y abierto en el Pixel). SHA-256: `8fbca399e9c964f29672b0444424e1950d31956bf16d94306caffeea28e029fd`. Los casos ya marcados se probaron antes del cambio de variante; el registro de C12 conserva el APK de esa ejecución.
+- APK/versionName/versionCode del retest de foco/paginación: `app/build/outputs/apk/debug/app-debug.apk`; `0.1.0` / `1`.
+- Variante del retest de foco/paginación: debug (instalado y abierto en el Pixel). SHA-256: `8fbca399e9c964f29672b0444424e1950d31956bf16d94306caffeea28e029fd`. Los casos ya marcados se probaron antes del cambio de variante; el registro de C12 conserva el APK de esa ejecución.
 - Dispositivo físico/modelo: Google Pixel 9a (`55211JEBF14578`).
 - Android/API: API 37.
-- Tamaño de pantalla/escala de visualización: resolución 1080 × 2424; escala de visualización pendiente de indicar.
+- Tamaño de pantalla/escala de visualización: resolución 1080 × 2424; escala de visualización no registrada.
 - Tamaño de letra: predeterminado (`font_scale=1.0`).
-- Navegación del sistema: gestos / botones:
-- Red y caché: Wi-Fi / datos; instalación nueva / datos previos:
+- Navegación del sistema: no registrada en la confirmación manual.
+- Red y caché: condiciones no registradas en la confirmación manual.
 - Emulador usado como complemento, si lo hay: API 37 arm64; automatización y smoke registrados en el design de C12.
 
-La ejecución principal debe ser en **un teléfono físico**. No hace falta repetir una matriz de tablets, tamaños de letra, temas o versiones de Android; la revisión ampliada de accesibilidad sigue en O02. La revisión final se realizó en debug; el usuario confirmó que las pruebas manuales están bien.
+La revisión principal se realizó en un teléfono físico y terminó en debug. La ampliación de accesibilidad de Home y Detail está registrada abajo. No se infiere una matriz de dispositivos ni restauración tras muerte del proceso.
 
 ## Preparación y arranque
 
@@ -55,7 +55,7 @@ La ejecución principal debe ser en **un teléfono físico**. No hace falta repe
 
 - [x] **QA19 — Segundo plano:** desde Home filtrado y luego desde Detail, envía la app al fondo brevemente y vuelve sin cerrar su proceso. El flujo sigue utilizable y conserva el contexto de navegación; no hay un cierre inesperado. Esto no verifica restauración tras matar el proceso.
 - [x] **QA20 — Revisión visual/movimiento:** observa skeleton → contenido, aparición de imágenes, chips, cambio de resultados y entrada/salida de Detail. No hay parpadeos, huecos o desplazamientos inesperados. Los controles visibles responden y pueden alcanzarse a tamaño normal.
-- [x] **QA21 — Capturas para entrega:** revisa las capturas reales que vas a publicar de Home y Detail contra el APK probado. Representan la app actual; no son Stitch ni fixtures de Paparazzi. Enlaza aquí las capturas que ya preparas en paralelo:
+- [x] **QA21 — Capturas para entrega:** revisa las capturas reales que vas a publicar de Home y Detail contra el APK probado. Representan la app actual; no son Stitch ni fixtures de Paparazzi. Capturas publicadas: [Home](screenshots/home-2026-10-02.png) y [Detail](screenshots/detail-2026-10-02.png).
 
 ## Casos condicionados por red, caché o datos
 
@@ -70,7 +70,7 @@ Estos casos pueden ser difíciles de provocar con la API real. Usa una petición
 
 ## Incidencias, casos no ejecutados y observaciones
 
-Añade una fila por caso que necesite contexto. Estados: pendiente / falló / bloqueado / no reproducido / pasó tras repetir. Un resultado automatizado va enlazado como evidencia separada.
+Las observaciones manuales y los resultados automatizados conservan evidencias separadas.
 
 | Caso | Estado | Qué hiciste / esperado y observado | Captura o evidencia | Repetición / resultado |
 |---|---|---|---|---|
@@ -78,11 +78,11 @@ Añade una fila por caso que necesite contexto. Estados: pendiente / falló / bl
 
 ## Home accessibility demonstration
 
-Alcance seleccionado el 2026-10-02: mejoras de accesibilidad en Home, sin añadir una pantalla de demostración. El usuario confirmó el 2026-10-02 que la validación de accesibilidad está completada; esta confirmación no modifica los resultados manuales anteriores. Los tests instrumentados cubren casos de texto al 200% y controles alcanzables; las nuevas pruebas de etiquetas y anuncios están compiladas, pendientes de ejecución. No sustituyen TalkBack ni la revisión de contraste.
+Alcance seleccionado el 2026-10-02: mejoras de accesibilidad en Home, sin añadir una pantalla de demostración. El usuario confirmó el 2026-10-02 que la validación de accesibilidad está completada; esta confirmación no modifica los resultados manuales anteriores. Existen tests instrumentados de texto al 200%, controles y semántica; los resultados ejecutados y las limitaciones de las nuevas pruebas se registran por separado en el design de C12. No sustituyen TalkBack ni la revisión de contraste.
 
-Registra revisión/APK, dispositivo/API, tamaño de fuente/pantalla y resultado antes de marcar cada caso. Usa la Home real y restaura los ajustes del dispositivo al terminar.
+La confirmación se refiere a Home real. El usuario no aportó un hash adicional del APK de accesibilidad ni detalles individuales de ajustes/mediciones; no se infieren del hash del retest anterior.
 
-- [x] **HA01 — TalkBack:** recorre búsqueda, limpiar, filtros y tarjetas. Comprueba nombres comprensibles, estado seleccionado anunciado, orden de foco coherente y activación de cada control. Abre un personaje para comprobar que la tarjeta permite navegar; la auditoría de Detail queda fuera de esta demo.
+- [x] **HA01 — TalkBack:** recorre búsqueda, limpiar, filtros y tarjetas. Comprueba nombres comprensibles, estado seleccionado anunciado, orden de foco coherente y activación de cada control. Abre un personaje para comprobar que la tarjeta permite navegar; la verificación de Detail se registra en DA01/DA02.
 - [x] **HA02 — Texto grande:** configura la fuente al 200%. Busca, cambia filtros y desplázate hasta el final. Comprueba que los controles siguen disponibles, el contador no tapa acciones y los mensajes y Retry se pueden leer y activar.
 - [x] **HA03 — Contraste y objetivos táctiles:** usa Accessibility Scanner sobre Home con resultados y, cuando sean reproducibles, estados vacíos y de error. Revisa contraste del texto y objetivos táctiles de al menos 48dp; registra los avisos y su resolución o justificación. Un estado no reproducido queda identificado como tal.
 
@@ -94,7 +94,7 @@ Registra revisión/APK, dispositivo/API, tamaño de fuente/pantalla y resultado 
 
 ## Detail accessibility verification
 
-Ampliación autorizada el 2026-10-02. Registra revisión/APK, dispositivo/API, ajustes y resultado. El usuario confirmó el 2026-10-02 que la validación de accesibilidad está completada; esta confirmación no reemplaza la validación manual anterior.
+Ampliación autorizada el 2026-10-02; las condiciones adicionales no comunicadas figuran como no detalladas. El usuario confirmó el 2026-10-02 que la validación de accesibilidad está completada; esta confirmación no reemplaza la validación manual anterior.
 
 - [x] **DA01 — Lectura por grupos:** con TalkBack, abre un personaje. Comprueba nombre y secciones como encabezados, estado/especie juntos, cada etiqueta/valor en una sola parada y cada episodio con código/título/fecha juntos. Back debe ser independiente y alcanzable; el retrato decorativo no debe añadir paradas.
 - [x] **DA02 — Recuperación y texto grande:** con fuente al 200%, comprueba que hechos, episodios y Back siguen disponibles. Si puedes reproducir un error, verifica su anuncio y Retry como control independiente; un fallo de episodios debe mantener disponible la ficha. Registra los estados que no puedas reproducir.

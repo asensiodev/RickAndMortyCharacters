@@ -5,7 +5,7 @@
 
 ## 2. Automated evidence
 
-- [x] 2.1 [Codex] Run or reuse justified final-candidate `qualityCheck :app:assembleRelease` evidence through the managed workflow; report real task/test results and reviewed nine golden images.
+- [x] 2.1 [Codex] Use the managed workflow to run or reuse justified candidate qualityCheck/build evidence for the selected variant; keep earlier release evidence dated and report real task/test results and reviewed nine golden images.
 - [ ] 2.2 [Codex, with device provided by User] Verify Home, Details and app instrumented suites on identified targets; recheck the prior physical-device instrumentation failure or record why it remains blocked.
 - [x] 2.3 [Codex + User] Verify the existing Quality CI run for the authorized published candidate; record SHA/run URL/outcome and inspect any cross-host screenshot difference before accepting an update.
 - [x] 2.4 [Codex] Evaluate instrumented CI and remove its emulator job at the user’s request after failed environment trials; retain local instrumented suites and automatic qualityCheck.
@@ -13,7 +13,7 @@
 ## 3. Human device review
 
 - [x] 3.1 [User] Execute and mark [the manual QA checklist](../../../docs/MANUAL_QA.md) on a physical phone, recording observations and conditional cases not reproduced.
-- [x] 3.2 [Codex + User] Identify an installable release artifact and record its critical-flow smoke result; if only debug is tested, keep release runtime explicitly unverified for acceptance.
+- [x] 3.2 [Codex + User] Record the earlier installable release/smoke and the subsequent user-selected debug review separately; do not claim final release-runtime acceptance.
 - [x] 3.3 [Codex] Investigate reported blocking regressions, apply only agreed bounded fixes and reverify affected boundaries; [User] repeat affected manual cases after those changes.
 - [x] 3.4 [User] Execute the bounded Home accessibility demonstration added to the manual checklist; preserve basic accessibility on both screens without claiming a complete audit.
 - [x] 3.5 [Codex] Apply the user-selected Home semantics improvements and verify compilation and the quality gate; leave manual TalkBack verification to the user.
@@ -27,11 +27,10 @@
 - [ ] 4.3 [User] Explicitly accept or defer delivery from the evidence. Archival, commit and push stay separate, explicitly authorized actions.
 
 
-## Execution status — 2026-10-02
+## Current status — 2026-10-02
 
-Candidate `b95a5bc`: local gate/release PASS, exact-SHA CI PASS, 54 fresh instrumented tests PASS on API 37 emulator, and locally signed release emulator smoke PASS. See design for commands, artifact hash, reused outputs and limits. Task 2.2 remains open: the physical Pixel is connected, but its complete instrumentation suite has not passed after the corrections. Task 3.2 records an installable release and emulator smoke; it does not mark the user's physical-device checklist or conditional recovery as passed. Human review of C11/O03, physical-device QA and final acceptance remain pending. The user authorized committing and pushing the current work on 2026-10-02. Final acceptance and archival remain pending; the earlier exact-SHA CI result is historical until the new published revision is checked.
+Manual browsing/recovery and bounded Home/Detail accessibility are validated by the user; QC04/QC06 remain not reproduced. Current delivery review uses debug. Earlier release builds/smokes remain dated historical evidence, not final release-runtime acceptance.
 
+Quality CI passed for `9fdb7fb`: [run 37039977135](https://github.com/asensiodev/RickAndMortyCharacters/actions/runs/37039977135). The emulator CI job was removed after failed trials. Task 2.2 remains open because no complete final physical-device instrumented suite has passed; compiled or aborted semantic tests are not successful executions.
 
-## Human manual validation — 2026-10-02
-
-The user explicitly confirmed that the manual tests are validated and everything works correctly after the fixes. Tasks 3.1 and 3.3 are complete. QC04 and QC06 remain honestly recorded as not reproduced; their status is not converted into a manual pass. Remaining automated closure/archival items retain their own status.
+Publication is authorized and completed. Tasks 4.2/4.3 track formal closure/archival decisions separately from the completed manual app review; no new acceptance or archival is inferred from this documentation update.

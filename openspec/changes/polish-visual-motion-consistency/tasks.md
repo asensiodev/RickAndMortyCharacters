@@ -7,7 +7,7 @@
 
 - [x] 2.1 Correct observed token/component inconsistencies and record before/after evidence; use behavioral RED → GREEN only where behavior changes.
 - [ ] 2.2 Verify the accepted phone layout at default font size, reachable controls, system/keyboard insets and final-card/footer clearance; add focused regressions for corrections.
-- Accessibility adaptations/previews and contrast/target audits are deferred to O02 by the user; preserve existing basics.
+- Accessibility was subsequently implemented and manually validated in C12; preserve its recorded bounded scope.
 
 ## 3. Motion continuity
 
@@ -19,7 +19,7 @@
 ## 4. Completion and acceptance
 
 - [x] 4.1 Run affected tests, the completion quality gate and release assembly; record exact executed commands/results and actual regression evidence.
-- [ ] 4.2 Complete native visual/motion matrix, record captures and remaining manual limitations, and update UI_UX only from verified behavior.
+- [ ] 4.2 Complete native visual/motion matrix, record captures and remaining manual limitations, and update the README/Development process handoff only from verified behavior.
 - [ ] 4.3 Validate OpenSpec strictly and obtain human acceptance before archival and C12; commit/push only with separate explicit authorization.
 
 ## User-approved motion simplification — 2026-10-02
@@ -31,3 +31,8 @@
 ## Publication acceptance — 2026-10-02
 
 - [x] Obtain explicit user acceptance to commit and push the implemented C11/polish corrections together with portrait recovery. Remaining integrated-review tasks and archival stay separate.
+
+
+## Current review state — 2026-10-02
+
+The user completed normal-flow manual review (including QA02, QA07, QA11, QA15/16 and QA20) and bounded Home/Detail accessibility in C12. Those results supersede earlier manual-pending statements for that scope. Unchecked full state-matrix/effect verification and formal closure tasks are not converted into exhaustive passes. UI_UX was retired; README and Development process now own the handoff documentation.

@@ -1,3 +1,9 @@
+## Current delivery status — 2026-10-02
+
+The user validated the normal browsing/recovery flow and bounded Home/Detail accessibility on a physical Pixel 9a in debug. The current CI runs only qualityCheck; [run 37039977135](https://github.com/asensiodev/RickAndMortyCharacters/actions/runs/37039977135) passed for `9fdb7fb`. Instrumented suites remain local after two failed remote emulator trials. Final full-device instrumentation, release-runtime acceptance and formal OpenSpec closure are not inferred from manual debug validation.
+
+The dated records below describe the candidate and policy at each point in time. Later decisions supersede earlier pending states, release preparation and CI configuration. Current scope lives in README; current formal work lives in tasks.md. This documentation reconciliation creates no new product spec, test result or archival claim.
+
 ## Context
 
 C12 closes the current product rather than extending it. Home includes paging, name/status constraints, recovery and image/HTTP caching; Detail includes the square portrait, facts and horizontal episode cards. O03 protects nine real-rendering scenes, with local photo fixtures and fixed animation frames. Recent local `qualityCheck :app:assembleRelease` passes are recorded in O03; they do not prove a remote CI run or manual physical-device acceptance.
@@ -20,7 +26,7 @@ Only regressions blocking the accepted browsing/recovery/navigation flow justify
 
 ### Local automation and device evidence
 
-After approval, use the documented managed Gradle wrapper to run/reuse justified evidence for `qualityCheck :app:assembleRelease`. The gate includes Paparazzi verification, not recording. Recheck the final nine goldens visually; never change them just to make CI pass. Instrumented suites remain separate from the aggregate gate and run locally on a connected emulator or device:
+Use the documented managed Gradle wrapper to run/reuse justified evidence for qualityCheck and assembly of the selected variant. The user selected debug for delivery review; earlier release results retain their tested revision. The gate includes Paparazzi verification, not recording. Recheck the final nine goldens visually; never change them just to make CI pass. Instrumented suites remain separate from the aggregate gate and run locally on a connected emulator or device:
 
 ```sh
 ./gradlew :feature:home:connectedDebugAndroidTest :feature:details:connectedDebugAndroidTest :app:connectedDebugAndroidTest
@@ -28,11 +34,11 @@ After approval, use the documented managed Gradle wrapper to run/reuse justified
 
 Record actual connected targets, test counts/results and command environment; empty/cached tasks are not newly executed behavior coverage. Revisit the earlier Pixel instrumentation failure on a connected physical target when available. If it recurs, capture the failing test/runner evidence and distinguish harness/device failure from an application crash; manual success alone does not diagnose its cause. Any unavailable/blocked check remains explicit for human disposition.
 
-The user executes the normal-flow manual checklist on at least one physical Android phone; an API 37 emulator remains useful for automated regressions and supplementary review. Do not infer a broad device/API matrix from that phone. UI review includes current font/display settings, safe areas, keyboard, portrait loading/crop, footer/counter clearance, episode scrolling, fixed Back and observed native motion. The selected Home accessibility demonstration covers TalkBack, large text and contrast/touch-target review. A full accessibility audit remains outside this delivery; existing readable labels and reachable controls must be preserved on both screens.
+The user executes the normal-flow manual checklist on at least one physical Android phone; an API 37 emulator remains useful for automated regressions and supplementary review. Do not infer a broad device/API matrix from that phone. UI review includes current font/display settings, safe areas, keyboard, portrait loading/crop, footer/counter clearance, episode scrolling, fixed Back and observed native motion. The selected Home/Detail accessibility review is completed as recorded in the manual results; it includes the reported TalkBack and enlarged-text cases and bounded Home contrast/touch-target review. A full accessibility audit remains outside this delivery; existing readable labels and reachable controls must be preserved on both screens.
 
 ### Release artifact and CI
 
-Assembling a release APK is distinct from installing/running it. Current app configuration has no release signing setup and no explicitly enabled minification. Record the artifact and how a locally installable release is produced for runtime review; keep signing material outside Git. Do not introduce publishing/signing services or enable R8 merely for this closure. If only debug is exercised, mark release runtime as unverified rather than equating it with successful assembly; final acceptance must explicitly address that limitation.
+Assembling a release APK is distinct from installing/running it. Current app configuration has no release signing setup and no explicitly enabled minification. Retain the earlier installable release artifact and its tested revision as historical evidence; current runtime review uses debug. Keep signing material outside Git. Do not introduce publishing/signing services or enable R8 merely for this closure. If only debug is exercised, mark release runtime as unverified rather than equating it with successful assembly; final acceptance must explicitly address that limitation.
 
 Run or inspect the GitHub Actions Quality workflow for the candidate's published commit after publication is authorized. Record run URL, SHA and each job's outcome. CI uses Ubuntu/Temurin while current goldens were generated on macOS/Zulu; any renderer mismatch requires review of the diff and environment before an intentional baseline update. The workflow runs the aggregate gate on pushes, pull requests and manual dispatch. Instrumented suites run locally; release assembly/runtime and manual accessibility remain separate evidence. No commit, push or remote dispatch is authorized by preparing this change alone.
 
@@ -171,3 +177,36 @@ Second parallel trial [37038001176](https://github.com/asensiodev/RickAndMortyCh
 ### Final CI policy — 2026-10-02
 
 After the two failed remote emulator trials, the user requested removing that job rather than introducing unreliable CI for delivery. Quality now runs only qualityCheck and uploads its reports on push, PR and manual dispatch. Home/Detail/app instrumented suites and local commands remain intact. Earlier emulator configuration and results above are historical; no instrumented CI success is claimed. This removes the observed emulator failure source without suppressing qualityCheck failures.
+
+
+## Historical episode implementation evidence
+
+The following original 2026-10-02 record predates the completed C12 manual review and subsequent publication. Its test results and temporary failures apply to the recorded revision; earlier publication restrictions and manual-pending statements are historical.
+
+### O04 implementation and verification — 2026-10-02
+
+Implemented at the user's request without creating or modifying an OpenSpec change. Observable boundaries reuse the existing repository, Details ViewModel, state-driven screen and production-navigation tests. Data resolves episode references through the existing HTTP client/cache, normalizes single-object/batch-array responses and validates identity/facts before restoring requested order. The ViewModel keeps character content and count available, guards pending section retries and owns cancellation. Text cards use existing theme/spacing and focused size tokens; no new dependency, artwork, destination or parallax tuning.
+
+Managed Gradle workflow `428af206b3d3d5cf12733b5475e67448` ran the following checks. Behavioral RED was observed before repository, state and rendering implementations. Compilation/static-analysis failures are not RED.
+
+| Run and question | Nested Gradle tasks | Observed result |
+|---|---|---|
+| 0001: Does the repository return episode facts in character order before implementation? | `:data:characters:testDebugUnitTest --tests '*RemoteEpisodesRepositoryTest'` | RED: expected episode facts, received empty list |
+| 0002: Does the implemented repository load ordered episode facts with one batch request? | Same focused repository test | GREEN |
+| 0003: Does Detail keep character facts visible while episode requests are pending before the state integration? | `:feature:details:testDebugUnitTest --tests '*DetailsViewModelTest'` | RED: character content had Empty rather than Loading episodes |
+| 0004: Do Detail facts remain visible during episode loading and do existing detail contracts still pass? | `:feature:details:testDebugUnitTest :data:characters:testDebugUnitTest` | GREEN |
+| 0005: Do episode scrolling and section-only Retry exist before rendering the section? | `:feature:details:connectedDebugAndroidTest`, filtered to DetailsContentTest | RED: episode list and section Retry were absent |
+| 0006: Do the episode data, isolated retry and cancellation tests pass, and does Detail support vertical and horizontal scrolling with Back? | Both affected JVM suites and Detail instrumentation | Compilation failed: placeholder API has no shape parameter; corrected to the existing clip modifier |
+| 0007: Do episode contracts and Detail scrolling pass after using the existing placeholder modifier API? | Both affected JVM suites and Detail instrumentation | GREEN: 47 data JVM, 11 Details ViewModel tests; nine screen tests on each API 37 Pixel/emulator |
+| 0008: Do the completion quality gate, release assembly and existing navigation journeys pass with the episode section? | `qualityCheck :app:assembleRelease :app:connectedDebugAndroidTest` | Detekt flagged return count/complex condition; simplified the identified branches |
+| 0009: Do quality, release assembly and navigation pass after simplifying episode validation to the project lint limits? | Same completion tasks | Navigation fixture compilation lacked the new episode binding; added a controlled dependency and episode data |
+| 0010: Do quality, release assembly and production navigation regressions pass with controlled episode dependencies? | Same completion tasks | Emulator: 18 navigation tests passed. Connected Pixel: instrumentation crashed during a test, without an assertion message; device navigation acceptance remains incomplete |
+| 0011: Do the standalone quality gate and release assembly pass independently of device instrumentation? | `qualityCheck :app:assembleRelease` | GREEN; aggregate JVM reports contain 87 tests including three architecture checks, zero failures/errors/skips |
+
+The wrapper rejected a `--scope completion` invocation and an attempt to select the emulator via an `env` launcher; neither executed Gradle or counts as a verification run. All successful invocations above used the managed launcher. Wrapper-owned logs were removed on finish; source and test reports remain.
+
+Native production smoke used emulator-5554 (Pixel 9a, API 37, 1080×2424, density 420, default font size). Rick #1 loaded 51 appearances with actual episode code/title/air date. Vertical scroll exposed the complete cards; horizontal swipe reached S01E03 “Anatomy Park” without moving the fixed Back control. Vertical movement was approximately 201 pixels, enough to inspect the existing subtle parallax but not a long page or measured performance result. Debug APK is installed on that emulator. Temporary visual-review pixels were deleted; no screenshot files are retained. Loading/error/Retry/cancellation and single-episode REST behavior are covered by controlled tests, rather than claimed as a full native failure matrix. Human visual acceptance and the connected Pixel navigation crash remain manual limitations.
+
+### Detail portrait size adjustment — 2026-10-02
+
+At the user's request, increased the shared portrait/skeleton width cap from 256dp to 288dp (12.5%), retaining the square aspect ratio, existing clipping and bounded parallax. No new behavior test or fabricated RED was added for this visual token adjustment. Managed workflow `bbae0baf4bb201c11e9b449c9b34a3f6` asked “Do quality and release assembly pass with the slightly larger square Detail portrait?” and ran `./gradlew qualityCheck :app:assembleRelease`: BUILD SUCCESSFUL in 20s. Native Rick #1 review on emulator-5554 confirmed the larger square image, available Back and episode content below; temporary review pixels were deleted. The debug APK is installed on that emulator. This verification includes the current working tree, including an independently edited Details ViewModel; this adjustment changes only the portrait token and associated documentation. Wrapper finish removed only its managed logs. The user accepted the square presentation and authorized committing this adjustment; no push is authorized in this request.

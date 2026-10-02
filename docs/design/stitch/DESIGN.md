@@ -144,6 +144,10 @@ spacing:
   space-xl: 2rem
 ---
 
+## Reference status
+
+Original Google Stitch design export, retained as historical visual reference. Its adaptive layouts, navigation components, typography and accessibility descriptions are design suggestions, not implemented capabilities or verified measurements. The native app targets portrait phones; [README](../../../README.md#delivery-scope) defines delivery scope and [Development process](../../DEVELOPMENT_PROCESS.md#ui-design) explains the reviewed handoff.
+
 ## Brand & Style
 
 This design system establishes a high-performance, polished native Android experience built with Jetpack Compose. Tailored for deep media exploration, it couples Material 3 foundational architecture with a restrained, dark visual style. Rather than leaning on over-saturated sci-fi tropes or neon glows, the interface acts as a cinematic viewfinder: quiet, deep obsidian surfaces step back to let character assets, status signatures, and episodic data command attention.

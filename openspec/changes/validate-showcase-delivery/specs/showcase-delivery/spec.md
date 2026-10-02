@@ -22,15 +22,15 @@ The project SHALL provide an editable manual QA checklist with steps, expected o
 
 ### Requirement: Automated and runtime verification evidence
 
-Delivery evidence SHALL record the documented quality gate, Paparazzi verification, release assembly and the implemented instrumented suites for the candidate. Reused outputs and empty tasks SHALL be disclosed. Release runtime review SHALL identify an installable artifact and SHALL NOT be inferred from assembly or debug runtime alone. The earlier physical-device instrumentation failure SHALL be rechecked or remain an explicit limitation for human disposition.
+Delivery evidence SHALL record the documented quality gate, Paparazzi verification, assembly of the selected variant and the implemented instrumented suites for the candidate. Reused outputs and empty tasks SHALL be disclosed. Runtime review SHALL identify an installable artifact and its variant. Release runtime SHALL NOT be inferred from assembly or debug runtime alone; earlier release evidence remains tied to its recorded revision. The earlier physical-device instrumentation failure SHALL be rechecked or remain an explicit limitation for human disposition.
 
 #### Scenario: Verify the accepted automation boundaries
-- **WHEN** local quality, release and connected test checks are evaluated
+- **WHEN** local quality, selected-variant assembly and connected test checks are evaluated
 - **THEN** actual commands, targets, counts and outcomes are recorded without inferring instrumentation from qualityCheck or attributing an unknown runner failure to normal app use
 
 #### Scenario: Only the debug build was exercised
-- **WHEN** release assembly passes but runtime review uses a debug APK
-- **THEN** release runtime remains unverified and is presented explicitly for acceptance rather than marked passed
+- **WHEN** the user selects debug for delivery runtime review
+- **THEN** the debug outcome is recorded, earlier release evidence remains historical and final release runtime is not marked passed
 
 ### Requirement: CI evidence belongs to the candidate
 

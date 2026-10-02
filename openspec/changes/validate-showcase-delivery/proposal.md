@@ -1,17 +1,17 @@
-**Status:** C12 execution authorized by the user on 2026-10-02. Automated verification is in progress; physical-device review and final human acceptance remain pending. Commit, push and archival are not authorized by this execution request.
+**Status:** Normal-flow and bounded Home/Detail accessibility review completed by the user in debug on 2026-10-02. Quality CI passes and publication is authorized. Complete final device instrumentation, release-runtime acceptance and formal closure/archival remain separate; see current tasks and dated evidence.
 
 ## Why
 
-The user wants to freeze the implemented showcase and complete delivery verification. Local quality/release and nine Paparazzi contracts pass, but final physical-device review, remote CI against the final revision and human acceptance remain outstanding. An earlier physical Pixel navigation instrumentation run crashed without an identified assertion; this is not a confirmed normal-use application crash.
+The user wants to freeze the implemented showcase and complete delivery verification. Local quality and nine Paparazzi contracts pass; current Quality CI and human debug review are recorded in the evidence. Earlier release checks retain their tested revision. An earlier physical Pixel navigation instrumentation run crashed without an identified assertion; this is not a confirmed normal-use application crash.
 
 ## What Changes
 
-- Define a bounded release-readiness checklist for the current two-screen product, without adding features or redesigning the UI.
+- Define a bounded delivery-verification checklist for the current two-screen product, without adding features or redesigning the UI.
 - Give the user a separate editable [manual QA checklist](../../../docs/MANUAL_QA.md); spec tasks link to its results instead of duplicating individual test cases.
-- Verify local automation, instrumented journeys, release assembly/runtime and the existing Quality CI job for an identified source revision.
+- Record local automation, instrumented journeys, the user-selected debug runtime review and Quality CI for identified revisions; retain earlier release evidence separately.
 - Record results, unresolved limitations and human acceptance, including remaining C11/O03 review.
 
-The user owns manual physical-device testing and is editing documentation in parallel. C12 checks documentation consistency and links to their final material; it does not repeat that rewrite. The user subsequently selected an API 37 instrumented CI job, bounded Home accessibility improvements and their manual demonstration on 2026-10-02. Process-death restoration, a full accessibility audit, O01, connectivity monitoring, light theme, extra destinations, new screenshot matrices and performance claims remain outside this increment.
+The user owns manual physical-device testing and is editing documentation in parallel. C12 checks documentation consistency and links to their final material; it does not repeat that rewrite. On 2026-10-02 the user selected bounded Home/Detail accessibility and validated it manually. The remote API 37 emulator job was trialled and removed after failures; CI now runs qualityCheck only. Process-death restoration, a full accessibility audit, O01, connectivity monitoring, light theme, extra destinations, new screenshot matrices and performance claims remain outside this increment.
 
 ## Capabilities
 

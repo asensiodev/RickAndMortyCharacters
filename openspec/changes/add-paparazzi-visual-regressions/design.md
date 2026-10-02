@@ -1,3 +1,7 @@
+## Current status — 2026-10-02
+
+Nine Paparazzi baselines are implemented and verified locally and in Quality CI (run 37039977135, revision 9fdb7fb). The current build uses JDK 21 for all toolchains with JVM output targets 17. Earlier smoke failures, proposed dependencies and pending-CI statements below are dated history. Formal baseline acceptance/archival remains tracked in tasks.md.
+
 ## Context
 
 The user selected screenshot testing after episode cards and a slightly larger square portrait. Existing Compose tests cover callbacks, recovery and scroll; Paparazzi is intended to detect visual differences, rather than replace those tests. C12 remains the final reproducible delivery increment.

@@ -1,3 +1,7 @@
+## Current status — 2026-10-02
+
+The visual/motion implementation and badge corrections are published. The user validated normal-flow layout/motion through C12 manual QA, and later validated bounded Home/Detail accessibility. Historical O02 deferrals and pending manual statements below describe their original stage; the current manual results are in docs/MANUAL_QA.md. Formal state-matrix/archival items remain tracked in tasks.md; no exhaustive motion or accessibility audit is claimed.
+
 ## Context and readiness
 
 C11 closes integrated visual/motion consistency, a Must in PRD. Earlier increments already implement visual foundations; this pass does not presume every component needs a rewrite. The user requested this draft; its draft status is not acceptance evidence. C09's publication acceptance is recorded.

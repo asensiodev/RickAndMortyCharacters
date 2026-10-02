@@ -4,7 +4,7 @@ context: |
   Product: Rick And Morty Characters, a native Android app in Kotlin/Compose.
   Read README.md (Delivery scope section) for scope, README.md (Architecture section) for module contracts,
   openspec/specs/ for screen behavior and docs/DEVELOPMENT_PROCESS.md for the workflow.
-  docs/BACKLOG.md is the ordered queue; prepare only the next bounded change.
+  docs/BACKLOG.md indexes implemented changes and deferred work; prepare only a user-selected bounded change.
 
 rules:
   tasks:
