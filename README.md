@@ -25,28 +25,15 @@ The core flow is implemented, including pagination, contextual recovery and imag
 |---|---|
 | <img src="docs/screenshots/home.png" alt="Home with search, status filters, character cards and loaded counter" width="280"> | <img src="docs/screenshots/detail.png" alt="Rick Sanchez detail with portrait, character facts and episode cards" width="280"> |
 
-Captured from the installed app on a Pixel 9a emulator, Android API 37, on 2026-10-02. These show the current app; they do not establish final release acceptance. [Stitch references](docs/design/stitch/) document the original visual design.
+[Stitch references](docs/design/stitch/) document the original visual design.
 
 ## Development setup
 
-Open the repository root in Android Studio and sync Gradle. Install:
-
-- **JDK 21** for the Gradle/Paparazzi runtime and **JDK 17** for JVM toolchains.
-- **Android SDK Platform 37.0**, **Build Tools 36.0.0** and **Platform Tools**.
-
-Configure the SDK in Android Studio, through `ANDROID_HOME`, or with an untracked `local.properties` containing `sdk.dir=/path/to/android-sdk`. Use the checked-in Gradle wrapper; dependency versions are pinned in the [version catalogue](gradle/libs.versions.toml).
-
-Build the debug APK:
+**Build requirements:** JDK 21, Android SDK Platform 37.0 and Build Tools 36.0.0.
 
 ```sh
 ./gradlew :app:assembleDebug
-```
-
-Run the `app` configuration in Android Studio with a connected device or emulator. Alternatively, install and launch the APK:
-
-```sh
-adb install --no-streaming -r app/build/outputs/apk/debug/app-debug.apk
-adb shell am start -W -n com.asensiodev.rickandmortycharacters/.MainActivity
+./gradlew qualityCheck
 ```
 
 ## Architecture
@@ -103,13 +90,7 @@ Coil owns the shared image cache; a separate bounded OkHttp cache reuses eligibl
 
 ## Quality checks
 
-Run the aggregate gate:
-
-```sh
-./gradlew qualityCheck
-```
-
-It runs JVM tests, Konsist checks for internal implementation types and read-only exposed state, ktlint, Detekt, Android Lint, Paparazzi baseline verification and debug assembly. Repository tests use deterministic HTTP fixtures; ViewModel tests use controlled responses and scheduling. Compose tests exercise screen states and production navigation. The configured [GitHub Actions workflow](.github/workflows/quality.yml) runs the aggregate gate; it does not run device tests.
+`qualityCheck` runs JVM tests, Konsist checks for internal implementation types and read-only exposed state, ktlint, Detekt, Android Lint, Paparazzi baseline verification and debug assembly. Repository tests use deterministic HTTP fixtures; ViewModel tests use controlled responses and scheduling. Compose tests exercise screen states and production navigation. The configured [GitHub Actions workflow](.github/workflows/quality.yml) runs the aggregate gate; it does not run device tests.
 
 Run instrumented screen/navigation tests with a connected API 37 emulator or device:
 
