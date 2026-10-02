@@ -99,6 +99,7 @@ Distinguish data loading from image loading:
 
 - Before character data arrives, show a small visible grid of card skeletons. Keep search and chips available; do not invent tappable characters or cover the screen with a spinner.
 - Once data exists, show the real name/status immediately. Only the image region keeps its placeholder until that request finishes, then fades to the image. Image failure replaces that region with a neutral fallback; the card remains usable.
+- A rate-limited image stays in portrait loading during one server-guided retry. Recovery does not require scrolling away and back. If the retry fails, retain the neutral fallback and available metadata; scrolling remains unrestricted.
 - Loading another page preserves every loaded card and uses a small footer indicator. An append failure exposes a footer retry. Do not turn loaded cards back into skeletons.
 
 A subtle pulse or shimmer can make skeletons readable as loading. Use native Compose duration handling, stop off-screen animation and avoid delaying fast results to display an effect. Loading placeholders do not repeat artificial character semantics to accessibility services.

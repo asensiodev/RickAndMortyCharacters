@@ -137,6 +137,8 @@ The reason for app ownership is visible behaviour: switching between home and de
 
 C03 configures Coil 3.6.3 through the application’s `SingletonImageLoader.Factory`. Home accepts the shared loader and uses `coil-compose-core`; its square portrait constraints bound request size. Coil owns a 20% memory cache and a 32 MiB disk cache in `cacheDir/character_images`, with a crossfade on success. Loading and failure affect only the portrait; metadata and selection remain available. Home maps domain summaries into the presentation-only `CharacterCardUiModel`. No independent bitmap cache is added. [Coil ImageLoader](https://coil-kt.github.io/coil/image_loaders/).
 
+The shared loader retries HTTP 429 once, respecting `Retry-After` seconds or HTTP-date with a one-second timing margin to avoid immediate or boundary retries. Missing or malformed guidance uses a ten-second delay; automatic waits including the margin are limited to sixty seconds, otherwise returning the existing fallback without retrying early. Coil owns cancellation and keeps the portrait loading until the final outcome. Other errors and a failed second attempt use the existing fallback. This policy applies to Home and Details without changing scrolling or API pagination.
+
 C09 configures the singleton API OkHttp client with a 10 MiB disk `Cache` in `cacheDir/character_http`, distinct from Coil's `character_images`. The internal client factory and Hilt composition belong to `data:characters`; catalogue and detail share the client. OkHttp owns storage and validation without a custom JSON store or header-rewriting interceptor.
 
 The reuse contract is:

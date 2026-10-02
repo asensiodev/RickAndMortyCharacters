@@ -7,6 +7,7 @@ import coil3.SingletonImageLoader
 import coil3.disk.DiskCache
 import coil3.memory.MemoryCache
 import coil3.request.crossfade
+import com.asensiodev.rickandmortycharacters.images.RateLimitedImageInterceptor
 import dagger.hilt.android.HiltAndroidApp
 import okio.Path.Companion.toOkioPath
 
@@ -29,6 +30,7 @@ class RickAndMortyApplication :
                 .maxSizeBytes(IMAGE_DISK_CACHE_BYTES)
                 .build()
         }
+        .components { add(RateLimitedImageInterceptor()) }
         .crossfade(true)
         .build()
 }

@@ -1,0 +1,6 @@
+- [x] 1. Reproduce the visible error and capture server retry guidance; keep metadata independently available.
+- [x] 2. Observe RED at the shared image-loader boundary and implement one bounded HTTP 429 retry.
+- [x] 3. Verify permanent errors, exhausted retry, server timing and cancellation through public request outcomes.
+- [x] 4. Verify Home metadata/selection and recovery without scroll; repeat the native rapid-scroll reproduction.
+- [x] 5. Run affected checks and the completion gate; remove temporary probes and update essential documentation.
+- [x] 6. Obtain human acceptance. Commit and push explicitly authorized on 2026-10-02; archival remains separate.
