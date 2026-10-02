@@ -13,6 +13,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
@@ -113,6 +114,49 @@ class HomeContentTest {
     @After
     fun tearDown() {
         imageLoader.shutdown()
+    }
+
+    @Test
+    fun GIVEN_a_character_WHEN_its_card_renders_THEN_accessibility_describes_the_details_action() {
+        var selectedId: Int? = null
+        compose.setContent {
+            RickAndMortyTheme {
+                CharacterCard(
+                    character = CharacterCardUiModel(1, "Rick Sanchez", "Human", CharacterStatus.Alive, null),
+                    imageLoader = imageLoader,
+                    onClick = { selectedId = it },
+                )
+            }
+        }
+
+        compose.onNodeWithText("Rick Sanchez").performClick()
+
+        val card = compose.onNodeWithText("Rick Sanchez").fetchSemanticsNode()
+        assertEquals("Open details for Rick Sanchez", card.config[SemanticsActions.OnClick].label)
+        assertEquals(1, selectedId)
+        compose.onNodeWithText("Human").assertIsDisplayed()
+        compose.onNodeWithText("Alive").assertIsDisplayed()
+    }
+
+    @Test
+    fun GIVEN_a_catalogue_error_WHEN_Home_renders_THEN_accessibility_announces_the_heading_and_labels_retry() {
+        compose.setContent {
+            RickAndMortyTheme {
+                HomeContent(
+                    state = HomeUiState.Error,
+                    imageLoader = imageLoader,
+                    onRetry = {},
+                    onCharacterSelected = {},
+                )
+            }
+        }
+
+        val heading = compose.onNodeWithText("Couldn't load characters").fetchSemanticsNode()
+        val retry = compose.onNodeWithText("Retry").fetchSemanticsNode()
+
+        assertTrue(heading.config.contains(SemanticsProperties.Heading))
+        assertEquals(LiveRegionMode.Polite, heading.config[SemanticsProperties.LiveRegion])
+        assertEquals("Retry loading characters", retry.config[SemanticsActions.OnClick].label)
     }
 
     @Test

@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.progressSemantics
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -17,7 +18,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import com.asensiodev.rickandmortycharacters.core.designsystem.composables.LoadingPlaceholder
 import com.asensiodev.rickandmortycharacters.core.designsystem.theme.Spacing
@@ -30,6 +34,7 @@ internal fun DetailsEpisodes(state: EpisodesUiState, onRetry: () -> Unit, modifi
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(Spacing.medium)) {
         Text(
             text = stringResource(R.string.episodes_heading),
+            modifier = Modifier.semantics { heading() },
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.primary,
         )
@@ -38,7 +43,8 @@ internal fun DetailsEpisodes(state: EpisodesUiState, onRetry: () -> Unit, modifi
                 val description = stringResource(R.string.episodes_loading)
                 LoadingPlaceholder(
                     modifier = Modifier.fillMaxWidth().heightIn(min = DetailsTokens.episodeCardMinHeight)
-                        .clip(DetailsTokens.factsShape).semantics { contentDescription = description },
+                        .clip(DetailsTokens.factsShape).progressSemantics()
+                        .semantics { contentDescription = description },
                 )
             }
 
@@ -56,6 +62,7 @@ internal fun DetailsEpisodes(state: EpisodesUiState, onRetry: () -> Unit, modifi
 
             EpisodesUiState.Empty -> Text(
                 text = stringResource(R.string.episodes_empty),
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -63,6 +70,7 @@ internal fun DetailsEpisodes(state: EpisodesUiState, onRetry: () -> Unit, modifi
             EpisodesUiState.Error -> {
                 Text(
                     text = stringResource(R.string.episodes_error),
+                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -81,7 +89,8 @@ internal fun DetailsEpisodes(state: EpisodesUiState, onRetry: () -> Unit, modifi
 @Composable
 private fun EpisodeCard(episode: Episode) {
     Surface(
-        modifier = Modifier.width(DetailsTokens.episodeCardWidth).heightIn(min = DetailsTokens.episodeCardMinHeight),
+        modifier = Modifier.width(DetailsTokens.episodeCardWidth).heightIn(min = DetailsTokens.episodeCardMinHeight)
+            .semantics(mergeDescendants = true) {},
         shape = DetailsTokens.factsShape,
         color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {

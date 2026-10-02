@@ -44,6 +44,11 @@ The existing Quality workflow SHALL be verified against the published candidate 
 
 C12 SHALL check the user's independently edited delivery documentation for consistency with verified behavior and remaining limitations. It SHALL preserve their concurrent work and reference actual app captures appropriately. Final acceptance SHALL be explicit, with remaining C11/O03 review reconciled from evidence; archival, commit and push SHALL require their separate authorizations.
 
+#### Scenario: Read Detail with accessibility services
+- **WHEN** the character detail is displayed
+- **THEN** the name and section titles expose heading semantics, status/species form a group, each fact label/value forms a group and each episode code/title/date forms a group
+- **AND** Back and Retry remain independent actions, decorative portrait feedback is hidden from accessibility traversal and error/empty feedback uses polite announcements
+
 #### Scenario: Close the showcase
 - **WHEN** candidate evidence and the human-owned checklist are reviewed
 - **THEN** failures and unexecuted checks are resolved or explicitly dispositioned, documentation reflects the accepted result and the user decides acceptance before archival

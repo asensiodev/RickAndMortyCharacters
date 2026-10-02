@@ -8,6 +8,9 @@
     <string name="catalogue_error">Couldn\'t load characters</string>
     <string name="catalogue_error_description">Something went wrong. Please try again.</string>
     <string name="retry">Retry</string>
+    <string name="retry_loading_characters">Retry loading characters</string>
+    <string name="retry_loading_more_characters">Retry loading more characters</string>
+    <string name="open_character_details">Open details for %1$s</string>
     <string name="catalogue_empty">No characters available.</string>
     <string name="catalogue_empty_description">The character catalogue is currently empty.</string>
     <string name="catalogue_append_loading">Loading more characters</string>

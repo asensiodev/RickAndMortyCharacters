@@ -116,3 +116,29 @@ The user requested commit and push of the current working tree, including the bo
 ### Human manual validation — 2026-10-02
 
 During publication the user explicitly stated that the manual tests were already validated and everything is fine. This closes the physical manual review and affected-fix retest, including the reported pagination regression. QC04/QC06 remain not reproduced as recorded by the user. This confirmation does not manufacture missing automated device/CI results or archive the change.
+
+
+### Home accessibility implementation — 2026-10-02
+
+The user requested implementing Home accessibility before their manual review. Kept native search, selected-chip semantics and existing large-font adaptation. Added descriptive card and initial/append Retry action labels, a filter traversal group, feedback headings with polite announcements, and excluded decorative portrait feedback from accessibility traversal. No global theme, navigation or Detail behavior changed. Added two controlled Compose contracts for card action labels/callbacks and error heading/announcement/retry semantics. These instrumented tests compile but were not executed; no behavioral RED or TalkBack pass is claimed.
+
+Managed workflow `6a4ed49e01aad2e446b9cf266eac5103`: initial sandbox cache-lock failure; the first escalated command identified that ktlintCheck belongs to the root, not Home. Corrected command `:feature:home:compileDebugAndroidTestKotlin ktlintCheck` passed; `qualityCheck :app:assembleDebug` passed. The gate reused unchanged task outputs where applicable. APK: `app/build/outputs/apk/debug/app-debug.apk`. Manual Home accessibility remains pending. No installation, commit or push was performed. Workflow finish removes only wrapper-owned logs.
+
+
+### Detail accessibility implementation — 2026-10-02
+
+The user authorized extending the bounded accessibility work to Detail. Added name/section heading semantics, merged status/species and each episode card, retained existing per-fact merges, kept Back and Retry independent, hid decorative portrait feedback from accessibility traversal, and added polite error/empty announcements plus a descriptive character Retry action. Episode loading exposes indeterminate progress. No new dependency or whole-page merge was introduced. New controlled Compose tests cover identity/fact grouping and episode grouping/non-interactivity; they compile but have not been executed. Manual DA01/DA02 remain pending, and no behavioral RED or TalkBack result is claimed.
+
+Managed workflow `dddfbbe210896c1ce1c56b57e0cae4d3` asked whether Detail and its semantic tests compile and ktlint passes: PASS after ordering test imports. The aggregate quality/APK question initially found DetailsFeedback LongMethod at 61 lines; concise formatting of the existing arrangement reduced it without adding an abstraction. Final `qualityCheck :app:assembleDebug`: PASS, 40 tasks executed and 227 up-to-date, including Detail unit/Paparazzi verification. Unchanged outputs were reused; instrumentation was not run. OpenSpec strict validation and diff whitespace checks passed. APK remains `app/build/outputs/apk/debug/app-debug.apk`; no installation, commit or push. Workflow finish removes only wrapper-owned logs.
+
+
+### Duplicate search announcement correction — 2026-10-02
+
+The user reported that TalkBack reads Search characters twice. The empty field exposed both its contentDescription and the same text from the placeholder. A controlled HomeSearchField semantics regression failed on emulator-5554 before the fix. Kept the persistent field label and cleared only the decorative placeholder semantics, preserving its visual text and editable field actions. Updated the one search test that selected the placeholder to select the field label.
+
+Managed workflow `6ff3c3354c11849fe0f71f84f082e597` generated the instrumented APK before and after the fix; ktlint passed. ADB explicitly installed/reran the Home library test APK on emulator-5554 only, without using the physical phone. Full HomeSearchTest passed: 12 tests, including the new regression, in 23.888 seconds. This verifies semantics, not actual TalkBack speech. `qualityCheck :app:assembleDebug` passed: 35 tasks executed, 5 from cache and 227 up-to-date. APK: `app/build/outputs/apk/debug/app-debug.apk`; physical manual retest remains pending. No commit or push. Workflow finish removes only wrapper-owned logs.
+
+
+### Human accessibility acceptance and publication authorization — 2026-10-02
+
+The user explicitly confirmed completing the remaining Home/Detail accessibility validation and authorized commit and push of both screens. HA01–HA03, DA01–DA02 and tasks 3.4/3.7 are closed from that confirmation without inventing individual measurements or scanner captures. This accepts the bounded implementation and manual review; it does not convert unexecuted instrumented tests or remote CI to passes, and does not archive C12 or imply final release acceptance. The accessibility publication includes screen code, tests and its scoped validation record; the separate CI extension and unrelated documentation edits remain outside the commit. Latest qualityCheck/assembleDebug and twelve HomeSearchTest results are reused because no production source changed after those checks.

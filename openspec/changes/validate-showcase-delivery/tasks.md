@@ -14,6 +14,10 @@
 - [x] 3.1 [User] Execute and mark [the manual QA checklist](../../../docs/MANUAL_QA.md) on a physical phone, recording observations and conditional cases not reproduced.
 - [x] 3.2 [Codex + User] Identify an installable release artifact and record its critical-flow smoke result; if only debug is tested, keep release runtime explicitly unverified for acceptance.
 - [x] 3.3 [Codex] Investigate reported blocking regressions, apply only agreed bounded fixes and reverify affected boundaries; [User] repeat affected manual cases after those changes.
+- [x] 3.4 [User] Execute the bounded Home accessibility demonstration added to the manual checklist; preserve basic accessibility on both screens without claiming a complete audit.
+- [x] 3.5 [Codex] Apply the user-selected Home semantics improvements and verify compilation and the quality gate; leave manual TalkBack verification to the user.
+- [x] 3.6 [Codex] Complete the user-selected Detail grouping, headings and feedback semantics; verify compilation and the quality gate.
+- [x] 3.7 [User] Verify Detail with TalkBack and large text using DA01/DA02.
 
 ## 4. Delivery acceptance
 

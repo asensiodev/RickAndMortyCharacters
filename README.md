@@ -119,14 +119,15 @@ The app targets portrait phones with an English interface and the selected dark 
 |---|---|
 | Implemented | Paginated grid/counter, combined name/status search, character facts and episode cards, retained browsing context on Back |
 | Implemented | Local image feedback, loading/empty/error states, contextual Retry, image/HTTP caching, automated checks and reproducible setup |
-| Pending verification | Final/release acceptance and the bounded [Home accessibility demonstration](docs/MANUAL_QA.md#home-accessibility-demonstration) |
+| Implemented and manually validated | Bounded accessibility support in Home and Detail |
+| Pending verification | Final/release acceptance |
 | Outside this delivery | Process-death restoration of search/filter state and loaded results; a complete accessibility audit across both screens |
 | Outside this delivery | Light/system-theme variants, connectivity snackbar and shared-image navigation |
 | Outside this delivery | Guaranteed offline catalogue, accounts, onboarding, favourites and additional destinations |
 
 Dark appearance follows the reviewed design; a light palette needs its own state/contrast review. Contextual Retry provides recovery without an advisory connectivity monitor. Caching does not guarantee offline browsing: uncached or expired requests may need a connection. Search/filter state belongs to the Home ViewModel and survives configuration changes and Back while that owner remains alive; a new process starts with the default query. Native navigation and local Compose state saving remain in place, without promising restoration of the whole browsing session.
 
-Basic accessibility remains required on both screens, including meaningful semantics, text-based status, readable text and reachable controls. Home adds labelled details/retry actions, grouped filter traversal, feedback headings and polite state announcements; decorative portrait loading stays out of accessibility traversal. Home is the selected scope for the manual TalkBack, large-text, contrast and touch-target demonstration. Detail keeps its existing foundations; no complete accessibility audit or compliance claim is made. The demonstration uses the real screen, with no runtime demo destination.
+Accessibility support in Home and Detail includes labelled actions, screen-reader headings and grouped content, status/error announcements, and layouts that accommodate larger text.
 
 ## Further reading
 

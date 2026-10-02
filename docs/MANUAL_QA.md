@@ -76,3 +76,32 @@ Añade una fila por caso que necesite contexto. Estados: pendiente / falló / bl
 |---|---|---|---|---|
 | QA10 / QC02 | Pasó tras repetir | El usuario observa append Retry que sigue fallando mientras cargan las imágenes de las tarjetas anteriores; recupera después. | Reporte durante QA física | HTTP 429 reproducido en emulador. Corrección instalada en debug: respeta Retry-After y reintenta una vez. El usuario confirma que repitió las pruebas manuales y todo funciona correctamente. |
 
+## Home accessibility demonstration
+
+Alcance seleccionado el 2026-10-02: mejoras de accesibilidad en Home, sin añadir una pantalla de demostración. El usuario confirmó el 2026-10-02 que la validación de accesibilidad está completada; esta confirmación no modifica los resultados manuales anteriores. Los tests instrumentados cubren casos de texto al 200% y controles alcanzables; las nuevas pruebas de etiquetas y anuncios están compiladas, pendientes de ejecución. No sustituyen TalkBack ni la revisión de contraste.
+
+Registra revisión/APK, dispositivo/API, tamaño de fuente/pantalla y resultado antes de marcar cada caso. Usa la Home real y restaura los ajustes del dispositivo al terminar.
+
+- [x] **HA01 — TalkBack:** recorre búsqueda, limpiar, filtros y tarjetas. Comprueba nombres comprensibles, estado seleccionado anunciado, orden de foco coherente y activación de cada control. Abre un personaje para comprobar que la tarjeta permite navegar; la auditoría de Detail queda fuera de esta demo.
+- [x] **HA02 — Texto grande:** configura la fuente al 200%. Busca, cambia filtros y desplázate hasta el final. Comprueba que los controles siguen disponibles, el contador no tapa acciones y los mensajes y Retry se pueden leer y activar.
+- [x] **HA03 — Contraste y objetivos táctiles:** usa Accessibility Scanner sobre Home con resultados y, cuando sean reproducibles, estados vacíos y de error. Revisa contraste del texto y objetivos táctiles de al menos 48dp; registra los avisos y su resolución o justificación. Un estado no reproducido queda identificado como tal.
+
+| Caso | Revisión/APK y dispositivo | Ajustes | Resultado y evidencia |
+|---|---|---|---|
+| HA01 | Candidato local de accesibilidad | No detallados | Validado por el usuario el 2026-10-02 |
+| HA02 | Candidato local de accesibilidad | No detallados | Validado por el usuario el 2026-10-02 |
+| HA03 | Candidato local de accesibilidad | No detallados | Validado por el usuario el 2026-10-02 |
+
+## Detail accessibility verification
+
+Ampliación autorizada el 2026-10-02. Registra revisión/APK, dispositivo/API, ajustes y resultado. El usuario confirmó el 2026-10-02 que la validación de accesibilidad está completada; esta confirmación no reemplaza la validación manual anterior.
+
+- [x] **DA01 — Lectura por grupos:** con TalkBack, abre un personaje. Comprueba nombre y secciones como encabezados, estado/especie juntos, cada etiqueta/valor en una sola parada y cada episodio con código/título/fecha juntos. Back debe ser independiente y alcanzable; el retrato decorativo no debe añadir paradas.
+- [x] **DA02 — Recuperación y texto grande:** con fuente al 200%, comprueba que hechos, episodios y Back siguen disponibles. Si puedes reproducir un error, verifica su anuncio y Retry como control independiente; un fallo de episodios debe mantener disponible la ficha. Registra los estados que no puedas reproducir.
+
+| Caso | Revisión/APK y dispositivo | Ajustes | Resultado y evidencia |
+|---|---|---|---|
+| DA01 | Candidato local de accesibilidad | No detallados | Validado por el usuario el 2026-10-02 |
+| DA02 | Candidato local de accesibilidad | No detallados | Validado por el usuario el 2026-10-02 |
+
+La validación manual se cierra por confirmación explícita del usuario. No se atribuyen herramientas, mediciones o capturas específicas que no haya comunicado; las pruebas instrumentadas conservan sus resultados independientes.

@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
@@ -44,7 +45,7 @@ internal fun HomeSearchField(text: String, onAction: (HomeSearchAction) -> Unit,
             if (it.text != text) onAction(HomeSearchAction.Edit(name = it.text))
         },
         modifier = modifier.fillMaxWidth().semantics { contentDescription = description },
-        placeholder = { Text(text = stringResource(R.string.search_characters)) },
+        placeholder = { Text(text = description, modifier = Modifier.clearAndSetSemantics {}) },
         leadingIcon = {
             Icon(painterResource(R.drawable.ic_search), null, Modifier.size(HomeLayoutTokens.searchIconSize))
         },

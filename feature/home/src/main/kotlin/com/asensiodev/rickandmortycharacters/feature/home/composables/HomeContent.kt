@@ -58,8 +58,12 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -385,6 +389,10 @@ private fun HomeFeedback(
         }
         Text(
             title,
+            modifier = Modifier.semantics {
+                heading()
+                liveRegion = LiveRegionMode.Polite
+            },
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Center,
@@ -412,13 +420,18 @@ private fun HomeAppendFooter(state: HomeAppendState, onRetry: () -> Unit) {
     ) {
         Text(
             stringResource(R.string.catalogue_append_error),
-            modifier = feedbackModifier,
+            modifier = feedbackModifier.semantics { liveRegion = LiveRegionMode.Polite },
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
         )
         Box(contentAlignment = Alignment.Center) {
-            HomeRetryButton(onRetry = onRetry, modifier = feedbackModifier, enabled = !loading)
+            HomeRetryButton(
+                onRetry = onRetry,
+                modifier = feedbackModifier,
+                enabled = !loading,
+                actionLabel = stringResource(R.string.retry_loading_more_characters),
+            )
             if (loading) {
                 val description = stringResource(R.string.catalogue_append_loading)
                 CircularProgressIndicator(
@@ -432,11 +445,16 @@ private fun HomeAppendFooter(state: HomeAppendState, onRetry: () -> Unit) {
 }
 
 @Composable
-private fun HomeRetryButton(onRetry: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+private fun HomeRetryButton(
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    actionLabel: String = stringResource(R.string.retry_loading_characters),
+) {
     Button(
         onClick = onRetry,
         enabled = enabled,
-        modifier = modifier.sizeIn(
+        modifier = modifier.semantics { onClick(label = actionLabel, action = null) }.sizeIn(
             minWidth = HomeLayoutTokens.retryMinWidth,
             minHeight = HomeLayoutTokens.retryMinHeight,
         ),

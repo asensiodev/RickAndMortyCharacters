@@ -1,6 +1,7 @@
 <resources>
     <string name="back">Back</string>
     <string name="retry">Retry</string>
+    <string name="retry_loading_character">Retry loading character details</string>
     <string name="entity_profile">ENTITY PROFILE #%1$d</string>
     <string name="character_specifications">CHARACTER SPECIFICATIONS</string>
     <string name="type">Type</string>

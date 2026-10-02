@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.hideFromAccessibility
 import androidx.compose.ui.semantics.semantics
 import coil3.ImageLoader
 import coil3.compose.AsyncImagePainter
@@ -52,7 +53,8 @@ internal fun DetailsPortrait(imageUrl: String?, imageLoader: ImageLoader, scroll
         modifier = Modifier.widthIn(max = DetailsTokens.portraitMaxWidth).fillMaxWidth()
             .aspectRatio(DetailsTokens.PORTRAIT_ASPECT_RATIO)
             .clip(MaterialTheme.shapes.large)
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .semantics { hideFromAccessibility() },
     ) {
         Image(
             painter = painter,

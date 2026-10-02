@@ -24,12 +24,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import com.asensiodev.rickandmortycharacters.core.designsystem.theme.Spacing
 import com.asensiodev.rickandmortycharacters.feature.details.R
 
 @Composable
 internal fun DetailsFeedback(title: String, description: String, onRetry: (() -> Unit)? = null) {
+    val retryLabel = stringResource(R.string.retry_loading_character)
     BoxWithConstraints(
         Modifier.fillMaxSize().padding(top = DetailsTokens.contentTopPadding),
     ) {
@@ -37,10 +43,7 @@ internal fun DetailsFeedback(title: String, description: String, onRetry: (() ->
             Modifier.fillMaxWidth().verticalScroll(rememberScrollState())
                 .heightIn(min = maxHeight).padding(Spacing.extraLarge),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(
-                Spacing.extraLarge,
-                Alignment.CenterVertically,
-            ),
+            verticalArrangement = Arrangement.spacedBy(Spacing.extraLarge, Alignment.CenterVertically),
         ) {
             Surface(shape = CircleShape, color = MaterialTheme.colorScheme.surfaceContainerHigh) {
                 Box(
@@ -57,6 +60,10 @@ internal fun DetailsFeedback(title: String, description: String, onRetry: (() ->
             }
             Text(
                 title,
+                modifier = Modifier.semantics {
+                    heading()
+                    liveRegion = LiveRegionMode.Polite
+                },
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center,
@@ -70,7 +77,7 @@ internal fun DetailsFeedback(title: String, description: String, onRetry: (() ->
             onRetry?.let {
                 Button(
                     onClick = it,
-                    modifier = Modifier.sizeIn(
+                    modifier = Modifier.semantics { onClick(label = retryLabel, action = null) }.sizeIn(
                         minWidth = DetailsTokens.retryMinWidth,
                         minHeight = DetailsTokens.backTargetSize,
                     ),

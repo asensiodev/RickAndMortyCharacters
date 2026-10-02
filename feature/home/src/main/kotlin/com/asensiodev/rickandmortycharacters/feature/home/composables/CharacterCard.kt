@@ -30,6 +30,8 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.hideFromAccessibility
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -58,9 +60,10 @@ fun CharacterCard(
     onClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val openDetailsLabel = stringResource(R.string.open_character_details, character.name)
     Surface(
         onClick = { onClick(character.id) },
-        modifier = modifier,
+        modifier = modifier.semantics { onClick(label = openDetailsLabel, action = null) },
         shape = MaterialTheme.shapes.large,
         color = MaterialTheme.colorScheme.surfaceContainer,
     ) {
@@ -159,7 +162,8 @@ private fun CharacterPortrait(imageUrl: String?, imageLoader: ImageLoader) {
     val loadingDescription = stringResource(R.string.portrait_loading)
     Box(
         modifier = Modifier.fillMaxWidth().aspectRatio(CharacterCardTokens.PORTRAIT_ASPECT_RATIO)
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .semantics { hideFromAccessibility() },
     ) {
         Image(
             painter = painter,

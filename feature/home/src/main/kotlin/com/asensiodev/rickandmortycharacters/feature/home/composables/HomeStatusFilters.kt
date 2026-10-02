@@ -21,6 +21,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.semantics
 import com.asensiodev.rickandmortycharacters.core.designsystem.theme.Spacing
 import com.asensiodev.rickandmortycharacters.core.designsystem.theme.StatusColors
 import com.asensiodev.rickandmortycharacters.domain.characters.model.CharacterStatus
@@ -44,7 +46,8 @@ internal fun HomeStatusFilters(
         modifier = modifier
             .fillMaxWidth()
             .horizontalScroll(rememberScrollState())
-            .selectableGroup(),
+            .selectableGroup()
+            .semantics { isTraversalGroup = true },
         horizontalArrangement = Arrangement.spacedBy(Spacing.small),
     ) {
         statuses.forEachIndexed { index, status ->

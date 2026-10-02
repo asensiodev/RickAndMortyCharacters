@@ -2,8 +2,10 @@
 
 package com.asensiodev.rickandmortycharacters.feature.details.composables
 
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertHasNoClickAction
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithText
@@ -69,6 +71,48 @@ class DetailsContentTest {
     @After
     fun tearDown() {
         imageLoader.shutdown()
+    }
+
+    @Test
+    fun GIVEN_character_facts_WHEN_detail_renders_THEN_accessibility_groups_each_fact_and_the_identity_badges() {
+        compose.setContent {
+            RickAndMortyTheme {
+                DetailsContent(
+                    state = DetailsUiState.Content(character = toxicRick()),
+                    imageLoader = imageLoader,
+                    onRetry = {},
+                    onBack = {},
+                )
+            }
+        }
+
+        val name = compose.onNodeWithText("Toxic Rick").fetchSemanticsNode()
+        compose.onNode(hasText("Dead") and hasText("Humanoid")).assertIsDisplayed()
+        compose.onNode(hasText("Origin") and hasText("Detoxifier")).performScrollTo()
+
+        assertTrue(name.config.contains(SemanticsProperties.Heading))
+        compose.onNode(hasText("Origin") and hasText("Detoxifier")).assertIsDisplayed()
+        compose.onNodeWithContentDescription("Back").assertIsDisplayed()
+    }
+
+    @Test
+    fun GIVEN_an_episode_WHEN_the_section_renders_THEN_accessibility_groups_its_code_title_and_date() {
+        compose.setContent {
+            RickAndMortyTheme {
+                DetailsEpisodes(
+                    state = EpisodesUiState.Content(
+                        episodes = listOf(Episode(1, "Pilot", "S01E01", "December 2, 2013")),
+                    ),
+                    onRetry = {},
+                )
+            }
+        }
+
+        val heading = compose.onNodeWithText("EPISODES").fetchSemanticsNode()
+        val episode = compose.onNode(hasText("S01E01") and hasText("Pilot") and hasText("December 2, 2013"))
+
+        assertTrue(heading.config.contains(SemanticsProperties.Heading))
+        episode.assertIsDisplayed().assertHasNoClickAction()
     }
 
     @Test

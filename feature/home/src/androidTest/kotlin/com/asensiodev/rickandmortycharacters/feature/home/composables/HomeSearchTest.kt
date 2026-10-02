@@ -103,6 +103,22 @@ class HomeSearchTest {
     }
 
     @Test
+    fun GIVEN_an_empty_search_WHEN_the_field_renders_THEN_accessibility_exposes_its_label_once() {
+        compose.setContent {
+            RickAndMortyTheme {
+                HomeSearchField(text = "", onAction = {})
+            }
+        }
+
+        val field = compose.onNodeWithContentDescription("Search characters").fetchSemanticsNode()
+
+        assertEquals(listOf("Search characters"), field.config[SemanticsProperties.ContentDescription])
+        val text = field.config.getOrElse(SemanticsProperties.Text) { emptyList() }
+        assertTrue(text.none { it.text == "Search characters" })
+        assertTrue(field.config.contains(SemanticsActions.SetText))
+    }
+
+    @Test
     fun GIVEN_an_active_search_WHEN_the_user_drags_results_THEN_it_hides_the_keyboard_and_clears_focus_without_changing_the_query() {
         var hideRequests = 0
         val actions = mutableListOf<HomeSearchAction>()
@@ -548,7 +564,7 @@ class HomeSearchTest {
             }
         }
 
-        compose.onNodeWithText("Search characters").performClick().performTextInput("Rick")
+        compose.onNodeWithContentDescription("Search characters").performClick().performTextInput("Rick")
         compose.onNodeWithContentDescription("Search characters").performSemanticsAction(SemanticsActions.SetSelection) { it(1, 3, false) }
         compose.onNodeWithText("Dead").performClick()
         compose.onNodeWithText("Dead").assertIsSelected()
