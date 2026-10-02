@@ -15,7 +15,7 @@ internal object DetailsTokens {
 
     val episodeCardWidth = 240.dp
     val episodeCardMinHeight = 148.dp
-    val portraitMaxWidth = 256.dp
+    val portraitMaxWidth = 288.dp
     val contentTopPadding = 64.dp
     val backTargetSize = 48.dp
     val iconSize = 20.dp

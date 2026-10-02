@@ -109,6 +109,10 @@ The wrapper rejected a `--scope completion` invocation and an attempt to select 
 
 Native production smoke used emulator-5554 (Pixel 9a, API 37, 1080×2424, density 420, default font size). Rick #1 loaded 51 appearances with actual episode code/title/air date. Vertical scroll exposed the complete cards; horizontal swipe reached S01E03 “Anatomy Park” without moving the fixed Back control. Vertical movement was approximately 201 pixels, enough to inspect the existing subtle parallax but not a long page or measured performance result. Debug APK is installed on that emulator. Temporary visual-review pixels were deleted; no screenshot files are retained. Loading/error/Retry/cancellation and single-episode REST behavior are covered by controlled tests, rather than claimed as a full native failure matrix. Human visual acceptance and the connected Pixel navigation crash remain manual limitations.
 
+### Detail portrait size adjustment — 2026-10-02
+
+At the user's request, increased the shared portrait/skeleton width cap from 256dp to 288dp (12.5%), retaining the square aspect ratio, existing clipping and bounded parallax. No new behavior test or fabricated RED was added for this visual token adjustment. Managed workflow `bbae0baf4bb201c11e9b449c9b34a3f6` asked “Do quality and release assembly pass with the slightly larger square Detail portrait?” and ran `./gradlew qualityCheck :app:assembleRelease`: BUILD SUCCESSFUL in 20s. Native Rick #1 review on emulator-5554 confirmed the larger square image, available Back and episode content below; temporary review pixels were deleted. The debug APK is installed on that emulator. This verification includes the current working tree, including an independently edited Details ViewModel; this adjustment changes only the portrait token and associated documentation. Wrapper finish removed only its managed logs. The user accepted the square presentation and authorized committing this adjustment; no push is authorized in this request.
+
 Each optional change is selected and reviewed independently before C12.
 
 ## Independently selected visual adjustment
