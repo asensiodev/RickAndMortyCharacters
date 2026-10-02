@@ -15,11 +15,15 @@ import com.asensiodev.rickandmortycharacters.domain.characters.repository.Charac
 import com.asensiodev.rickandmortycharacters.domain.characters.repository.CharactersRepository
 import java.io.IOException
 import javax.inject.Inject
+import kotlinx.coroutines.delay
 import kotlinx.serialization.SerializationException
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import retrofit2.Response
 
 private const val HTTP_NOT_FOUND = 404
+private const val HTTP_TOO_MANY_REQUESTS = 429
+private const val MAX_RETRY_WAIT_SECONDS = 60L
+private const val MILLIS_PER_SECOND = 1_000L
 
 internal class RemoteCharactersRepository @Inject constructor(private val api: CharactersApi) :
     CharactersRepository {
@@ -45,7 +49,7 @@ internal class RemoteCharactersRepository @Inject constructor(private val api: C
         val requestedName = name?.trim()?.takeIf { it.isNotEmpty() }
         val requestedStatus = status.toApiValue()
         val hasConstraints = requestedName != null || status != null
-        val response = api.getPage(page = page, name = requestedName, status = requestedStatus)
+        val response = api.getPageWithRateLimitRetry(page = page, name = requestedName, status = requestedStatus)
         if (!response.isSuccessful) {
             if ((page > 1 || hasConstraints) && response.hasApiError(expectedMessage = "There is nothing here")) {
                 if (page > 1) {
@@ -68,6 +72,21 @@ internal class RemoteCharactersRepository @Inject constructor(private val api: C
     } catch (_: IOException) {
         CharactersPageResult.Failure(reason = CharacterRequestFailure.Network)
     }
+}
+
+private suspend fun CharactersApi.getPageWithRateLimitRetry(
+    page: Int,
+    name: String?,
+    status: String?,
+): Response<CharacterPageDto> {
+    val response = getPage(page = page, name = name, status = status)
+    val waitSeconds = response.headers()["Retry-After"]?.trim()?.toLongOrNull()
+    if (response.code() != HTTP_TOO_MANY_REQUESTS || waitSeconds == null || waitSeconds !in 0..MAX_RETRY_WAIT_SECONDS) {
+        return response
+    }
+    response.errorBody()?.close()
+    delay((waitSeconds + 1) * MILLIS_PER_SECOND)
+    return getPage(page = page, name = name, status = status)
 }
 
 private fun CharacterPageDto.toResult(requestedPage: Int): CharactersPageResult {

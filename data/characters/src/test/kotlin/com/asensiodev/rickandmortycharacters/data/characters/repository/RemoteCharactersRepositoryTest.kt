@@ -11,6 +11,7 @@ import com.asensiodev.rickandmortycharacters.domain.characters.repository.Charac
 import com.asensiodev.rickandmortycharacters.domain.characters.repository.CharactersRepository
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
@@ -41,6 +42,49 @@ class RemoteCharactersRepositoryTest {
     @After
     fun tearDown() {
         server.close()
+    }
+
+    @Test
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun `GIVEN a rate limited append WHEN the server allows retry THEN it waits and recovers the same page`() = runTest {
+        server.enqueue(MockResponse.Builder().code(429).addHeader("Retry-After", "1").body("{}").build())
+        val body = requireNotNull(javaClass.getResource("/characters-page.json")).readText()
+            .replace("character?page=2", "character?page=3")
+        server.enqueue(MockResponse.Builder().body(body).build())
+
+        val result = charactersRepository.getPage(page = 2, name = "Rick", status = CharacterStatus.Alive)
+
+        assertTrue(result is CharactersPageResult.Success)
+        assertEquals(2, server.requestCount)
+        val expectedUrl = server.url("/api/character?page=2&name=Rick&status=alive")
+        assertEquals(expectedUrl, server.takeRequest().url)
+        assertEquals(expectedUrl, server.takeRequest().url)
+        assertTrue(testScheduler.currentTime >= 1_000)
+    }
+
+    @Test
+    fun `GIVEN a persistent rate limit WHEN the append retries THEN it reports failure without looping`() = runTest {
+        repeat(2) {
+            server.enqueue(MockResponse.Builder().code(429).addHeader("Retry-After", "1").body("{}").build())
+        }
+
+        val result = charactersRepository.getPage(page = 2)
+
+        assertEquals(CharactersPageResult.Failure(reason = CharacterRequestFailure.Service), result)
+        assertEquals(2, server.requestCount)
+    }
+
+    @Test
+    fun `GIVEN invalid or excessive retry guidance WHEN a page is rate limited THEN it reports failure without waiting`() = runTest {
+        val headers = listOf("invalid", "-1", "61", Long.MAX_VALUE.toString())
+        for ((index, header) in headers.withIndex()) {
+            server.enqueue(MockResponse.Builder().code(429).addHeader("Retry-After", header).body("{}").build())
+
+            val result = charactersRepository.getPage(page = 2)
+
+            assertEquals(CharactersPageResult.Failure(reason = CharacterRequestFailure.Service), result)
+            assertEquals(index + 1, server.requestCount)
+        }
     }
 
     @Test
