@@ -2,7 +2,7 @@
 
 C04 is accepted and archived. Home exposes an ID callback, a repository-backed ViewModel and a lazily rendered first page. The Details module is still a scaffold, and MainActivity leaves selection unconnected. This change completes one user flow across those existing modules.
 
-Read [architecture](../../../../docs/ARCHITECTURE.md), [UI/UX](../../../../docs/UI_UX.md#detail-hierarchy-and-components) and the selected [content](../../../../docs/design/stitch/details/content/screen.png), [loading](../../../../docs/design/stitch/details/loading/screen.png) and [error](../../../../docs/design/stitch/details/error/screen.png) references. Preserve the rendered palette and remove the unsupported Share glyph from the loading reference. Back is the only screen-level detail action.
+Read [architecture](../../../../README.md#architecture), [detail contract](../../../specs/character-detail/spec.md) and the selected [content](../../../../docs/design/stitch/details/content/screen.png), [loading](../../../../docs/design/stitch/details/loading/screen.png) and [error](../../../../docs/design/stitch/details/error/screen.png) references. Preserve the rendered palette and remove the unsupported Share glyph from the loading reference. Back is the only screen-level detail action.
 
 ## Detail contracts and data ownership
 

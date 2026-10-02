@@ -6,7 +6,7 @@ The main Home → Detail → Back flow has grown through separate increments. Be
 
 ## What Changes
 
-- Review Home and Detail together against the selected Stitch references and the corrections in `docs/UI_UX.md`; record actual findings before changing components.
+- Review Home and Detail together against the selected Stitch references and the corrections in `docs/DEVELOPMENT_PROCESS.md` (UI design section); record actual findings before changing components.
 - Correct observed differences in typography, spacing, shapes, surfaces, status treatment, icons and contextual loading/error feedback through existing tokens and component owners.
 - Verify local image fades, skeleton feedback, chip feedback, bounded detail parallax and forward/back transitions using native Compose duration handling and shared image-loader defaults.
 - Evaluate skeleton-to-content and result-replacement motion; retain immediate replacement unless a small native effect improves continuity without stale content or disrupted input.

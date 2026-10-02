@@ -2,7 +2,7 @@
 
 Status: product/design preparation complete; OpenSpec initialized. C01 is accepted and archived; C02 is accepted, validated locally and in CI, and archived. C03 is accepted and archived; C04 is accepted, locally validated and archived; C05 is accepted, locally validated and archived; C05A is accepted, locally validated and archived; C06 is accepted, locally validated and archived; C07 is accepted, locally validated and archived; later identifiers remain queued tickets. Work advances after acceptance and human review. No time estimates are assigned.
 
-Move each ticket into its OpenSpec change when it is prepared, then replace its detailed entry here with a link. OpenSpec owns that change's tasks and evidence from then on. Retire this temporary file when the remaining queue has been migrated; do not maintain two copies. Product priorities live in [PRD](PRD.md), screen design in [UI/UX Definition](UI_UX.md), technical decisions in [ARCHITECTURE](ARCHITECTURE.md), and the shared process in [DEVELOPMENT](DEVELOPMENT.md).
+Move each ticket into its OpenSpec change when it is prepared, then replace its detailed entry here with a link. OpenSpec owns that change's tasks and evidence from then on. Retire this temporary file when the remaining queue has been migrated; do not maintain two copies. Product priorities live in [Delivery scope](../README.md#delivery-scope), screen design in [Design handoff](DEVELOPMENT_PROCESS.md#ui-design), technical decisions in [ARCHITECTURE](../README.md#architecture), and the shared process in [Development process](DEVELOPMENT_PROCESS.md).
 
 Before implementation, expand only the next ticket into a change with observable scenarios, agreed public test interfaces and small tasks. A capability spec can evolve through several changes. Split a ticket if its diff contains independent decisions that cannot be reviewed comfortably together.
 
@@ -11,7 +11,7 @@ Before implementation, expand only the next ticket into a change with observable
 | Ticket | Reviewed result |
 |---|---|
 | P01 — Requirements and module contracts | Scope, priorities and the six-production-module graph selected in PRD/ARCHITECTURE; toolchain compatibility verified in C01 |
-| P02 — Content screens | Selected Home/Detail references and API-backed fields reviewed in UI/UX Definition |
+| P02 — Content screens | Selected Home/Detail references and API-backed fields reviewed in the Stitch design handoff |
 | P03 — Home state variants | Visual references reviewed; loading/contrast adjustments recorded for Compose implementation |
 | P04 — Detail states and handoff | Content/loading/error references reviewed; Share-glyph omission recorded for implementation |
 
@@ -71,7 +71,9 @@ Depends on all Must changes, including C05A Konsist checks, and selected optiona
 
 ### S01 — Connectivity awareness — Should
 
-Depends on C09 and is selected independently after the core request/error and cache flows exist. Add the native app-level monitor and snackbar described in ARCHITECTURE and UI/UX Definition. The visible outcome is one warning per disconnected period, including initial confirmed disconnection, with existing content and contextual Retry preserved. Recovery dismisses the warning without automatically reloading a screen.
+**Outside the current delivery.** Retained as a future enhancement; contextual errors and Retry are part of the implemented core. Light appearance and system-theme switching are also outside this delivery; see [Delivery scope decisions](../README.md#delivery-scope).
+
+Depends on C09 and is selected independently after the core request/error and cache flows exist. Add the native app-level monitor and snackbar described in this ticket. The visible outcome is one warning per disconnected period, including initial confirmed disconnection, with existing content and contextual Retry preserved. Recovery dismisses the warning without automatically reloading a screen.
 
 Use a fake monitor to verify initial Unknown, disconnection/recovery, duplicate signals, navigation and foreground/background behaviour, including return with connectivity restored rather than replaying an old warning. Confirm snackbar placement leaves Retry reachable. Verify requests still work through their normal repository/cache path when the monitor reports unavailable. Review callback cleanup and manually check network loss/recovery on a device. Keep the agreed module graph and offline boundary. Record this Should separately from mandatory API error/retry behaviour and complete it before C12 if selected.
 
@@ -81,7 +83,7 @@ Use a fake monitor to verify initial Unknown, disconnection/recovery, duplicate 
 
 **O02 — Catalogue accessibility demonstration:** verify TalkBack traversal of cards/search/chips/retry, meaningful announcements, large text and contrast. Own the deferred Home/Detail enlarged-text layout and preview review from C11, including narrow and wide viewports without arbitrary font-scale breakpoints. Record manual evidence and the exact screen scope.
 
-**O03 — Additional visual verification:** use focused screenshot tests for card/skeleton geometry, portrait composition, theme and large text after identifying the visual behavior they protect. Compose interaction tests remain at real screen/flow boundaries; screenshots do not replace callbacks, retries or navigation assertions. Avoid assertions that merely restate implementation details. Mandatory architecture checks belong to C05A.
+**O03 — Additional visual verification:** Paparazzi 2.0.0-alpha05.1 is implemented with a Java 21 build runtime, existing AGP 9.2.1 and unchanged JVM targets 17. Nine bounded Home/Detail baselines supplement interaction tests. [Design and evidence](../openspec/changes/add-paparazzi-visual-regressions/design.md) and [tasks](../openspec/changes/add-paparazzi-visual-regressions/tasks.md) own verification and pending human acceptance; remote CI awaits its first run. O02 retains enlarged-text/accessibility review. Commit and push authorized by the user on 2026-10-02; human acceptance and archival remain pending.
 
 **O04 — Character episode appearances:** selected by the user on 2026-10-02 before screenshot testing; implemented and locally verified; accepted for commit/push by the user on 2026-10-02. Enrich Detail with a horizontal list of non-navigating episode cards below the character facts, showing episode code, title and air date. The API supplies episode references on characters and supports fetching multiple episodes in one request, but does not provide episode images or descriptions; use text cards without another content source. Preserve the existing appearance count and keep character information available while episodes load or fail, with section-local loading, empty and error/Retry states. Verify character identity, episode ordering, horizontal scrolling and recovery without adding destinations. [API documentation](https://rickandmortyapi.com/documentation/#episode-schema).
 

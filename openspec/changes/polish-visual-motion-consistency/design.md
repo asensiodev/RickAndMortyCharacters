@@ -2,7 +2,7 @@
 
 C11 closes integrated visual/motion consistency, a Must in PRD. Earlier increments already implement visual foundations; this pass does not presume every component needs a rewrite. The user requested this draft; its draft status is not acceptance evidence. C09's publication acceptance is recorded.
 
-Read [UI/UX Definition](../../../docs/UI_UX.md) for the selected references, handoff corrections and screen-state contracts. Home-loading's PNG is stale for the counter; Detail-loading's Share glyph is unsupported. Review against the documented native behavior rather than copying those discrepancies.
+Read [Design handoff](../../../docs/DEVELOPMENT_PROCESS.md#ui-design) for the selected references and handoff corrections; OpenSpec scenarios define screen-state contracts. Home-loading's PNG is stale for the counter; Detail-loading's Share glyph is unsupported. Review against the documented native behavior rather than copying those discrepancies.
 
 ## Current source evidence
 

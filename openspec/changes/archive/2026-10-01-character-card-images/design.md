@@ -1,6 +1,6 @@
 ## Context and scope
 
-C03 implements the card and image contract from `docs/UI_UX.md`, using the reviewed Home content export. C04 introduces the real catalogue. The existing six-module graph remains unchanged.
+C03 implements the card and image contract from `docs/DEVELOPMENT_PROCESS.md` (UI design section), using the reviewed Home content export. C04 introduces the real catalogue. The existing six-module graph remains unchanged.
 
 ## Decisions
 

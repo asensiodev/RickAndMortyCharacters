@@ -11,7 +11,7 @@ The project SHALL include a Gradle wrapper, a version catalogue with pinned comp
 
 ### Requirement: Six-module dependency boundaries
 
-The project SHALL contain `:app`, `:feature:home`, `:feature:details`, `:domain:characters`, `:data:characters` and `:core:designsystem`. Project dependency declarations SHALL follow [ARCHITECTURE](../../../../../../docs/ARCHITECTURE.md#module-boundaries).
+The project SHALL contain `:app`, `:feature:home`, `:feature:details`, `:domain:characters`, `:data:characters` and `:core:designsystem`. Project dependency declarations SHALL follow [ARCHITECTURE](../../../../../../README.md#architecture).
 
 #### Scenario: Independent feature compilation
 

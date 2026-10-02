@@ -3,7 +3,7 @@
 ## Scope and workflow
 
 - Before implementation, read the approved change in `openspec/changes/` and its specs, design and tasks; implement only that increment.
-- For product scope, read `docs/PRD.md`; for module/API changes, `docs/ARCHITECTURE.md`; for UI behavior, `docs/UI_UX.md`; for validation or archival, `docs/DEVELOPMENT.md` and `openspec/config.yaml`.
+- For product scope, read `README.md` (Delivery scope section); for module/API changes, `README.md` (Architecture section); for UI behavior, read the relevant `openspec/specs/` contract and `docs/DEVELOPMENT_PROCESS.md` (UI design section); for validation or archival, `docs/DEVELOPMENT_PROCESS.md` and `openspec/config.yaml`.
 - Use the approved test boundaries for behavior-focused TDD: observe RED, implement GREEN, then refactor. Record actual commands/results in the change; environment or compilation failures are not behavioral RED.
 - Check tasks after verification. Human acceptance precedes archival and the next change.
 

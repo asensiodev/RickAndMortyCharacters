@@ -1,99 +1,154 @@
-# Rick And Morty Characters
+<p align="center">
+  <img src="app/src/main/res/drawable-nodpi/portal_gun.png" width="112" alt="Rick And Morty Characters portal gun app icon" />
+</p>
 
-An Android app for exploring Rick and Morty characters, searching by name, filtering by status and viewing character details.
+<h1 align="center">Rick And Morty Characters</h1>
 
-**Status:** Home browses remote pages with Paging 3, contextual append Retry and a real loaded/total counter. Character detail opens by ID; Back retains loaded data and scroll. Both screens handle applicable loading/error states; detail also handles missing characters. C01–C05 and C05A are accepted and archived. [C06 pagination](openspec/changes/archive/2026-10-01-complete-catalogue-pagination/design.md) is accepted, locally validated on API 37 and archived. [C07 name search](openspec/changes/archive/2026-10-01-search-characters-by-name/design.md) is accepted, locally validated and archived, with debounce, keyboard submission, clear and no-match shortcuts. [C08 status filters](openspec/changes/filter-characters-by-status/design.md#implementation-and-validation-record) implements combined name/status queries, is accepted and locally validated on API 37; archival pending. [C09 HTTP response caching](openspec/changes/cache-character-http-responses/design.md#implementation-and-validation-record) configures a shared 10 MiB OkHttp disk cache for catalogue/detail; accepted for publication; archival pending.
+<p align="center">
+  Browse characters, search by name, filter by status,<br />
+  and explore character details and episode appearances.
+</p>
 
-## Planned experience
+<p align="center">
+  <a href="https://github.com/asensiodev/RickAndMortyCharacters/actions/workflows/quality.yml"><img src="https://github.com/asensiodev/RickAndMortyCharacters/actions/workflows/quality.yml/badge.svg" alt="Quality workflow status" /></a>
+  <a href="app/build.gradle.kts"><img src="https://img.shields.io/badge/App-0.1.0-2F3437" alt="App version 0.1.0" /></a>
+  <img src="https://img.shields.io/badge/Android-API%2026%2B-3DDC84?logo=android&amp;logoColor=white" alt="Android API 26 and above" />
+  <a href="gradle/libs.versions.toml"><img src="https://img.shields.io/badge/Kotlin-2.4.20-7F52FF?logo=kotlin&amp;logoColor=white" alt="Kotlin 2.4.20" /></a>
+  <a href="gradle/libs.versions.toml"><img src="https://img.shields.io/badge/Compose%20BOM-2026.09.00-4285F4?logo=jetpackcompose&amp;logoColor=white" alt="Jetpack Compose BOM 2026.09.00" /></a>
+</p>
 
-- Paginated character grid with images, names and status.
-- Name search combined with All, Alive, Dead and Unknown filter chips, plus quick searches when no matches are found.
-- Character details and navigation back to the browsing context.
-- Loading, empty and error states, retries and coherent motion.
-- English UI, Compose/Material 3, image caching and HTTP response caching.
+The core flow is implemented, including pagination, contextual recovery and image/HTTP caching. Final integrated verification and delivery acceptance remain pending.
 
-## Design preview
+## App screenshots
 
-Selected Stitch mockups for the planned native app. See [UI/UX Definition](docs/UI_UX.md) for states and implementation adjustments.
-
-| Home | Character detail |
+| Character catalogue | Character detail |
 |---|---|
-| ![Home design](docs/design/stitch/home/content/screen.png) | ![Character detail design](docs/design/stitch/details/content/screen.png) |
+| <img src="docs/screenshots/home.png" alt="Home with search, status filters, character cards and loaded counter" width="280"> | <img src="docs/screenshots/detail.png" alt="Rick Sanchez detail with portrait, character facts and episode cards" width="280"> |
 
-## Technical direction
-
-Home and details have separate feature modules. They share pure character-domain contracts, data access and a design system; the app composes navigation and dependencies. The six production modules and test-only `:core:testing` support module are shown in [ARCHITECTURE](docs/ARCHITECTURE.md).
-
-Presentation follows unidirectional data flow with ViewModel/StateFlow and explicit actions. ViewModels consume repository interfaces directly; use cases are introduced where business logic warrants them. Coil 3 is configured with a shared image loader and bounded memory/disk caches. Compose interaction tests cover implemented screen states and navigation journeys; screenshot checks remain later visual verification. Paging 3.5.1 owns page loading and retry through a Home-owned adapter, with one cached ViewModel generation and no duplicated item list. Hilt creates entry-scoped Home and Details ViewModels through Navigation 3; Retrofit/OkHttp and kotlinx.serialization stay inside data. Repository tests use real HTTP fixtures through MockWebServer; ViewModel tests use fakes, coroutines-test, Turbine and Paging snapshot helpers, with a shared JUnit 4 dispatcher rule from the test-only `:core:testing` module; Home/Details screen tests use Compose with controlled images; navigation tests run the production Activity with test-only Hilt repository replacement. ktlint, Detekt, Konsist, Android Lint and a GitHub Actions workflow are configured. The previously published Quality run passed; C05A's extended gate is verified locally and awaits a remote run. The foundation toolchain and setup are documented below; the remaining libraries and checks land in their corresponding changes.
+Captured from the installed app on a Pixel 9a emulator, Android API 37, on 2026-10-02. These show the current app; they do not establish final release acceptance. [Stitch references](docs/design/stitch/) document the original visual design.
 
 ## Development setup
 
-Open this repository root in Android Studio and sync Gradle. The tracked daemon criteria select JDK 17; install it locally and install Android SDK Platform 37.0, Build Tools 36.0.0 and Platform Tools. Configure the SDK through Android Studio, `ANDROID_HOME` or an untracked `local.properties` containing `sdk.dir=/path/to/android-sdk`.
+Open the repository root in Android Studio and sync Gradle. Install:
 
-| Foundation tool | Pinned version |
-|---|---|
-| Gradle wrapper | 9.4.1; distribution checksum pinned |
-| Android Gradle Plugin | 9.2.1 |
-| Kotlin / Compose compiler plugin | 2.4.20 |
-| Compose BOM | 2026.09.00 |
-| Activity Compose | 1.13.0 |
-| Java / JVM target | 17 |
-| Android compile / target / minimum SDK | 37.0 / 37 / 26 |
+- **JDK 21** for the Gradle/Paparazzi runtime and **JDK 17** for JVM toolchains.
+- **Android SDK Platform 37.0**, **Build Tools 36.0.0** and **Platform Tools**.
 
-Plugin/library versions and SDK levels live in [the version catalogue](gradle/libs.versions.toml), accessed through `libs.*`. Local module dependencies use generated `projects.*` accessors, enabled in `settings.gradle.kts`; convention plugins are not required. AGP provides Kotlin support in Android modules; the domain module applies Kotlin/JVM. Build output caching, parallel module tasks and parallel IDE tooling actions are enabled in `gradle.properties`; the daemon heap remains 2 GB. No build-time improvement has been measured.
+Configure the SDK in Android Studio, through `ANDROID_HOME`, or with an untracked `local.properties` containing `sdk.dir=/path/to/android-sdk`. Use the checked-in Gradle wrapper; dependency versions are pinned in the [version catalogue](gradle/libs.versions.toml).
 
-With JDK 17 selected, run from the repository root:
+Build the debug APK:
 
 ```sh
-./gradlew :app:assembleDebug :domain:characters:build
+./gradlew :app:assembleDebug
 ```
 
-The APK is written to `app/build/outputs/apk/debug/app-debug.apk`. Run the `app` configuration in Android Studio, or install and launch on a connected device:
+Run the `app` configuration in Android Studio with a connected device or emulator. Alternatively, install and launch the APK:
 
 ```sh
 adb install --no-streaming -r app/build/outputs/apk/debug/app-debug.apk
 adb shell am start -W -n com.asensiodev.rickandmortycharacters/.MainActivity
 ```
 
-The application opens the real Home grid using the shared dark Material 3 theme and loads further pages for the applied name as the grid approaches the loaded end. Search is debounced; keyboard Search submits immediately, and Clear removes the name constraint. The floating counter uses presented items and the API total; append failures retain cards with footer Retry. Selecting a card opens its detail through Navigation 3. See [C01 evidence](openspec/changes/archive/2026-09-30-android-foundation/design.md#assistance-and-validation-record) for the foundation checks and [C03 evidence](openspec/changes/archive/2026-10-01-character-card-images/design.md#validation-record) for implementation and verification.
+## Architecture
 
-Components have standard Android Studio previews. Home includes previews for Loading, Content, Empty, Error and append progress/error, including ordinary and narrow/large-text sizes. Details includes ordinary-size Content, Loading, Error and NotFound previews. Previews live beside their rendering composables, with controlled images and private fixtures.
+Material 3 and Navigation 3 provide the UI/navigation; ViewModel, StateFlow and Coroutines coordinate state. Hilt composes dependencies; Retrofit, OkHttp, kotlinx.serialization, Paging and Coil handle remote data and images. ViewModels consume repositories directly; there are no use-case classes.
+
+| Module | Responsibility |
+|---|---|
+| `:app` | Entry point, Hilt composition, navigation and shared image loader |
+| `:feature:home` | Catalogue UI, query state and Paging integration |
+| `:feature:details` | Character/episode UI and request state |
+| `:domain:characters` | Pure Kotlin models, repository contracts and results |
+| `:data:characters` | API/DTOs, mapping, repositories and HTTP cache |
+| `:core:designsystem` | Theme, tokens and generic Compose primitives |
+| `:core:testing` | Shared test support; no production dependency |
+
+```mermaid
+flowchart TB
+    App[":app"]
+
+    subgraph Features["Features"]
+        direction LR
+        Home[":feature:home"]
+        Details[":feature:details"]
+    end
+
+    subgraph Shared["Shared modules"]
+        Data[":data:characters"]
+        Domain[":domain:characters"]
+        UI[":core:designsystem"]
+    end
+
+    Testing[":core:testing"]
+
+    App --> Home
+    App --> Details
+    App --> Data
+    App --> UI
+    Home --> Domain
+    Details --> Domain
+    Home --> UI
+    Details --> UI
+    Data --> Domain
+    Home -. testImplementation .-> Testing
+    Details -. testImplementation .-> Testing
+
+    Home ~~~ Data
+    Details ~~~ UI
+```
+
+Solid arrows are production project dependencies; dotted arrows are test dependencies. Home and Detail do not depend on each other or on data implementation. Domain has no Android, Compose, Retrofit or Paging dependency.
+
+Coil owns the shared image cache; a separate bounded OkHttp cache reuses eligible API responses according to HTTP headers. Portrait failures remain local, and neither cache guarantees offline browsing.
 
 ## Quality checks
 
+Run the aggregate gate:
+
 ```sh
 ./gradlew qualityCheck
-./gradlew konsistCheck
-./gradlew installGitHooks
 ```
 
-`qualityCheck` runs ktlint 1.8.0, Detekt 2.0.0-alpha.6, Konsist 0.17.3 architecture checks, Android debug lint, JVM test tasks and debug assembly. Detekt uses its isolated CLI for source analysis without type resolution; the pinned alpha is build tooling only. Tool versions live in the catalogue. See [C02](openspec/changes/archive/2026-09-30-shared-quality-checks/design.md) for compatibility and executed validation.
+It runs JVM tests, Konsist checks for internal implementation types and read-only exposed state, ktlint, Detekt, Android Lint, Paparazzi baseline verification and debug assembly. Repository tests use deterministic HTTP fixtures; ViewModel tests use controlled responses and scheduling. Compose tests exercise screen states and production navigation. The configured [GitHub Actions workflow](.github/workflows/quality.yml) runs the aggregate gate; it does not run device tests.
 
-`konsistCheck` verifies internal data implementation types, internal feature ViewModels and explicitly read-only state, with private mutable flow owners. It scans main sources from the six production modules through test-only dependencies in domain; it also runs through `qualityCheck` and the module's `check`. See [C05A evidence](openspec/changes/archive/2026-10-01-konsist-architecture-checks/design.md#implementation-and-validation-record).
-
-Install the hook explicitly once per clone. The pre-commit runs `ktlintCheck detekt` against working-tree source, including unstaged Kotlin changes. It never formats, stages or stashes files. Installation is repeatable and refuses to replace custom hook configuration. Full tests/build/lint remain in `qualityCheck` and CI.
-
-C08 validates 63 JVM tests (27 repository + 28 ViewModel + 5 PagingSource + 3 architecture) and 42 instrumented tests on API 37 (25 Home + 7 Details + 10 production navigation journeys), with zero failures/errors/skips. The full local quality gate and release assembly pass; [C08 evidence](openspec/changes/filter-characters-by-status/design.md#implementation-and-validation-record) records TDD, regressions and native combined-filter/error recovery. Human acceptance is complete. Run the screen/journey suites with a connected API 37 emulator/device:
+Run instrumented screen/navigation tests with a connected API 37 emulator or device:
 
 ```sh
 ./gradlew :feature:home:connectedDebugAndroidTest :feature:details:connectedDebugAndroidTest :app:connectedDebugAndroidTest
 ```
 
-Instrumented tests are not included in the current `qualityCheck` or CI workflow; they currently run locally. Screenshot regression tooling remains later optional work.
+### Screenshot regressions
 
-Reports: `build/reports/ktlint/ktlint.xml`, `build/reports/detekt/`, and each Android module's `build/reports/lint-results-debug.html`. JVM test reports appear in module `build/reports/tests/` when tests exist; architecture reports are in `domain/characters/build/reports/tests/konsistCheck/`. The [Quality workflow](.github/workflows/quality.yml) runs the full gate for pull requests, main pushes and manual dispatch, with pinned actions and read-only repository permissions. Reports are uploaded even after failed checks; deployment is not configured.
+Paparazzi checks bounded visual contracts using controlled fixtures and reviewed PNG baselines:
 
-## Documentation
+```sh
+./gradlew :feature:home:verifyPaparazziDebug :feature:details:verifyPaparazziDebug
+```
 
-| Document | Purpose |
+Baseline recording and rendering conditions are documented in the [visual-regression change](openspec/changes/add-paparazzi-visual-regressions/design.md). Screenshot tests complement interaction tests and hands-on app review. Existing validation records refer to the revisions checked at the time; final acceptance requires checks against the completed source revision.
+
+## Development approach
+
+Development combines specification-driven development with OpenSpec, behavior-focused TDD and AI assistance. The author selects features and methodology, makes architectural decisions, refines specifications, reviews implementations and validates behavior through hands-on app testing. Codex assists with implementation, tests and investigation. Google Stitch supplied the reviewed visual references for native Compose components. [Development process](docs/DEVELOPMENT_PROCESS.md#ai-toolchain) describes the skills and human checkpoints.
+
+## Delivery scope
+
+The app targets portrait phones with an English interface and the selected dark appearance. Final verification and acceptance remain pending.
+
+| Status | Scope |
 |---|---|
-| [PRD](docs/PRD.md) | Product scope, priorities and acceptance |
-| [UI/UX Definition](docs/UI_UX.md) | Screen content, components, interactions and reviewed visual references |
-| [ARCHITECTURE](docs/ARCHITECTURE.md) | Module graph, state/data contracts and technical decisions |
-| [DEVELOPMENT](docs/DEVELOPMENT.md) | Toolchain, design workflow, tests, CI, TDD and AI assistance |
+| Implemented | Paginated grid/counter, combined name/status search, character facts and episode cards, retained browsing context on Back |
+| Implemented | Local image feedback, loading/empty/error states, contextual Retry, image/HTTP caching, automated checks and reproducible setup |
+| Pending verification | Final integrated/manual review, release acceptance and accessibility contrast/touch-target checks |
+| Outside this delivery | Light/system-theme variants, connectivity snackbar, shared-image navigation and a TalkBack/large-text demonstration |
+| Outside this delivery | Guaranteed offline catalogue, accounts, onboarding, favourites and additional destinations |
 
-OpenSpec holds each prepared change's requirements, tasks and evidence. [BACKLOG](docs/BACKLOG.md) preserves the remaining ordered queue and links to migrated changes; it will be retired when migration is complete. Review one bounded change before implementing it and advancing to the next.
+Dark appearance follows the reviewed design; a light palette needs its own state/contrast review. Contextual Retry provides recovery without an advisory connectivity monitor. Caching does not guarantee offline browsing: uncached or expired requests may need a connection. Basic accessibility remains required, including meaningful semantics, text-based status, adequate contrast and targets of at least 48dp; deferring the demonstration does not waive those foundations.
 
-Implementation claims, screenshots and setup instructions are added with verified changes.
+## Further reading
 
-Data source: [The Rick and Morty API](https://rickandmortyapi.com/documentation).
+- [Development process](docs/DEVELOPMENT_PROCESS.md): SDD, TDD, AI assistance and human review.
+
+[OpenSpec](openspec/) preserves change specifications and evidence as optional deeper reading.
+
+Data and character artwork: [The Rick and Morty API](https://rickandmortyapi.com/documentation).

@@ -1,6 +1,6 @@
 ## Context
 
-C03 is accepted and archived. The app has the selected theme, Home-owned card/skeleton components and a shared Coil loader, but its runtime entry point is still the shell. C04 is the next vertical slice from a remote first page to Home. [Architecture](../../../../docs/ARCHITECTURE.md) owns the module boundaries; [UI/UX](../../../../docs/UI_UX.md) owns the final appearance and interaction contracts.
+C03 is accepted and archived. The app has the selected theme, Home-owned card/skeleton components and a shared Coil loader, but its runtime entry point is still the shell. C04 is the next vertical slice from a remote first page to Home. [Architecture](../../../../README.md#architecture) owns the module boundaries; [Design handoff](../../../../docs/DEVELOPMENT_PROCESS.md#ui-design) documents visual references and native corrections; accepted OpenSpec scenarios own interaction contracts.
 
 ## Goals / Non-Goals
 

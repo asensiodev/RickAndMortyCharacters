@@ -6,7 +6,7 @@ The product and visual references are defined, but there is no runnable Android 
 
 ## What Changes
 
-- Create the six Gradle modules defined in [ARCHITECTURE](../../../../docs/ARCHITECTURE.md).
+- Create the six Gradle modules defined in [ARCHITECTURE](../../../../README.md#architecture).
 - Pin a compatible build toolchain with a Gradle wrapper and version catalogue.
 - Add a minimal launchable Compose application with English resources and portrait phone configuration.
 - Document reproducible setup, build and launch checks.

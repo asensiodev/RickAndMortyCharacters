@@ -1,6 +1,6 @@
 ## Context
 
-At proposal creation, planning and the visual handoff were complete and no Android code existed. The foundation is now implemented and validated; the reviewer accepted progression to C02. This is C01 in the [ordered queue](../../../../docs/BACKLOG.md#c01--android-foundation). [ARCHITECTURE](../../../../docs/ARCHITECTURE.md#module-boundaries) owns the module graph; [DEVELOPMENT](../../../../docs/DEVELOPMENT.md) owns the shared process.
+At proposal creation, planning and the visual handoff were complete and no Android code existed. The foundation is now implemented and validated; the reviewer accepted progression to C02. This is C01 in the [ordered queue](../../../../docs/BACKLOG.md#c01--android-foundation). [ARCHITECTURE](../../../../README.md#architecture) owns the module graph; [Development process](../../../../docs/DEVELOPMENT_PROCESS.md) owns the shared process.
 
 ## Goals / Non-Goals
 

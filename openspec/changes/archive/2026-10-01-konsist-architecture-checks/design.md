@@ -1,6 +1,6 @@
 ## Context and scope
 
-C05 is accepted and archived. Read [architecture](../../../../docs/ARCHITECTURE.md), [development](../../../../docs/DEVELOPMENT.md) and the [accepted quality contract](../../../specs/shared-quality-checks/spec.md). C05A adds only the mandatory architecture checks before pagination. It changes no rendered behavior.
+C05 is accepted and archived. Read [architecture](../../../../README.md#architecture), [development process](../../../../docs/DEVELOPMENT_PROCESS.md) and the [accepted quality contract](../../../specs/shared-quality-checks/spec.md). C05A adds only the mandatory architecture checks before pagination. It changes no rendered behavior.
 
 ## Selected rules
 
