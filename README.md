@@ -105,7 +105,7 @@ Paparazzi checks bounded visual contracts using controlled fixtures and reviewed
 ./gradlew :feature:home:verifyPaparazziDebug :feature:details:verifyPaparazziDebug
 ```
 
-Screenshot tests complement interaction tests and hands-on app review. Existing validation records refer to the revisions checked at the time; final acceptance requires checks against the completed source revision.
+Screenshot tests complement interaction tests and hands-on app review.
 
 ## Development approach
 
@@ -113,14 +113,13 @@ Built with OpenSpec, behavior-focused TDD and AI assistance, with human review a
 
 ## Delivery scope
 
-The app targets portrait phones with an English interface and the selected dark appearance. Final verification and acceptance remain pending.
+The app targets portrait phones with an English interface and the selected dark appearance. The browsing flow and bounded accessibility support were manually validated in debug on a physical Pixel 9a.
 
 | Status | Scope |
 |---|---|
 | Implemented | Paginated grid/counter, combined name/status search, character facts and episode cards, retained browsing context on Back |
 | Implemented | Local image feedback, loading/empty/error states, contextual Retry, image/HTTP caching, automated checks and reproducible setup |
 | Implemented and manually validated | Bounded accessibility support in Home and Detail |
-| Pending verification | Final/release acceptance |
 | Outside this delivery | Process-death restoration of search/filter state and loaded results; a complete accessibility audit across both screens |
 | Outside this delivery | Light/system-theme variants, connectivity snackbar and shared-image navigation |
 | Outside this delivery | Guaranteed offline catalogue, accounts, onboarding, favourites and additional destinations |
